@@ -1,0 +1,26 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://emons.id/</loc>
+        <lastmod>2024-04-25T02:00:00.021Z</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>1</priority>
+    </url>
+    <url>
+        <loc>https://emons.id/about</loc>
+        <lastmod>2024-04-25T02:00:00.021Z</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://emons.id/products</loc>
+        <lastmod>2024-04-25T02:00:00.021Z</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://emons.id/contact</loc>
+        <lastmod>2024-04-25T02:00:00.021Z</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+</urlset>
