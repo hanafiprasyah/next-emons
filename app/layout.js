@@ -1,5 +1,6 @@
 import { Quicksand } from "next/font/google";
 import "./globals.css";
+import PrelineScript from "./components/PrelineScript";
 import ScrollToTopButton from "./components/ScrollToTopButton";
 
 const q = Quicksand({ subsets: ["latin"] });
@@ -92,6 +93,7 @@ export default function RootLayout({ children }) {
           {/* Landing Footer */}
         </div>
       </body>
+      <PrelineScript />
     </html>
   );
 }
