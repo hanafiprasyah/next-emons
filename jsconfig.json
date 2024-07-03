@@ -1,7 +1,18 @@
 {
   "compilerOptions": {
+    "baseUrl": "app/",
+    "pretty": true,
+    "checkJs": true,
+    "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/container/*": ["container/*"],
+      "@/components/*": ["components/*"],
+      "@/landing/*": ["(landing)/*"],
+      "@/dashboard/*": ["(dashboard)/*"],
+      "@/auth/*": ["(auth)/*"],
+      "@/api/*": ["lib/api/*"],
+      "@/helper/*": ["lib/helper/*"],
     }
   }
 }

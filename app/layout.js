@@ -1,7 +1,7 @@
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import PrelineScript from "./components/PrelineScript";
-import ScrollToTopButton from "./components/ScrollToTopButton";
+import PrelineScript from "@/components/PrelineScript";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 
 const q = Quicksand({ subsets: ["latin"] });
 
@@ -80,19 +80,14 @@ export default function RootLayout({ children }) {
   return (
     <html className="dark" lang="en">
       <body
-        className={`${quicksand.className} scroll-smooth bg-black max-h-[400px] overflow-y-auto transition duration-300 ease-in-out antialiased [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500`}
+        className={`${q.className} antialiased scroll-smooth bg-black max-h-[400px] overflow-y-auto transition duration-300 ease-in-out [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500`}
       >
-        <div
-          aria-label="rootNode"
-          title="Electricity Monitoring System"
-          className="rootNode"
-        >
-          {/* Landing Navigation */}
-          <main>{children}</main>
-          <ScrollToTopButton />
-          {/* Landing Footer */}
+        <div aria-label="rootNode" className="rootNode">
+          {children}
         </div>
+        <ScrollToTopButton />
       </body>
+
       <PrelineScript />
     </html>
   );

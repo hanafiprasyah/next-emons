@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 import { IStaticMethods } from "preline/preline";
@@ -11,7 +11,7 @@ declare global {
 }
 
 export default function PrelineScript() {
-    const path = usePathname();
+    // const path = usePathname();
 
     useEffect(() => {
         const loadPreline = async () => {
@@ -28,7 +28,7 @@ export default function PrelineScript() {
                 console.log('loadPreline function injected')
             }
         })
-    }, [path]);
+    }, []);
 
     return null;
 }
