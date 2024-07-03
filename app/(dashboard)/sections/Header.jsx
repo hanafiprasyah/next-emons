@@ -4,14 +4,12 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import React from "react";
 import Han from "../../../public/images/hanafi.jpeg";
+import AccountDropdown from "@/components/AccountDropdown";
 
-const AccountDropdown = dynamic(() => import("@/components/AccountDropdown"), {
-  ssr: true,
-});
-const NotificationDropdown = dynamic(
-  () => import("@/components/NotificationDropdown"),
-  { ssr: true }
-);
+// const NotificationDropdown = dynamic(
+//   () => import("@/components/NotificationDropdown"),
+//   { ssr: true }
+// );
 
 export default function DashboardHeader() {
   return (
