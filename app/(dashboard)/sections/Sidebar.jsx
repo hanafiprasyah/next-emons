@@ -483,7 +483,7 @@ export default function DashboardSidebar() {
                         : "dark:bg-neutral-800"
                     }`}
                     href="/alarm-logger"
-                    prefetch
+                    prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <svg
@@ -513,7 +513,7 @@ export default function DashboardSidebar() {
                         : "dark:bg-neutral-800"
                     }`}
                     href="/database-logger"
-                    prefetch
+                    prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <svg

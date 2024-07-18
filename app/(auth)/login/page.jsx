@@ -9,7 +9,7 @@ function Login() {
           Log in to your EMONS Account
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-neutral-500">
-          Provide your registered email!
+          Provide your registered username!
         </p>
       </div>
 

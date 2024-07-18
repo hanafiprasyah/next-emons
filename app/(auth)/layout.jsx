@@ -16,12 +16,11 @@ export default function Layout({ children }) {
             <div className="flex-none inline-block text-xl font-semibold rounded-md focus:outline-none focus:opacity-80">
               {/* SVG or JPG (36x36) */}
               <Image
-                priority
                 className="h-auto w-36"
                 src={EmonsLogo}
                 alt="EMONS"
-                width={500}
-                height={500}
+                width={36}
+                height={36}
               />
             </div>
           </div>
@@ -33,11 +32,12 @@ export default function Layout({ children }) {
 
             <Image
               priority
-              className="block"
-              width={500}
-              height={500}
+              className="block w-auto antialiased"
+              width={36}
+              height={36}
               src={ImageDark}
               alt="EMONS"
+              quality={75}
             />
           </div>
 

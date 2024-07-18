@@ -53,9 +53,7 @@ function Hero() {
           <Link
             className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-center text-white border border-transparent rounded-full gap-x-3 bg-gradient-to-tl from-blue-600 to-violet-600 hover:from-violet-600 hover:to-blue-600 dark:focus:ring-offset-gray-800"
             href="/login"
-            rel="noopener noreferrer"
-            prefetch
-            target="_self"
+            prefetch={true}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

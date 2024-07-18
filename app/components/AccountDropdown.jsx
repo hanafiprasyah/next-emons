@@ -105,8 +105,7 @@ export default function AccountDropdown() {
           <Link
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
             href={"/login"}
-            prefetch
-            rel="noopener noreferrer"
+            prefetch={true}
           >
             Sign out
           </Link>

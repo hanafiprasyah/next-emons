@@ -22,7 +22,7 @@ function ForgotPassword() {
         <Link
           className="inline-flex items-center text-sm font-medium text-blue-600 gap-x-1 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-500"
           href={"/login"}
-          prefetch
+          prefetch={true}
         >
           Sign in
           <svg
