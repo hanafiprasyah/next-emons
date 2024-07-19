@@ -30,6 +30,9 @@ yarn-error.log*
 .env*.production
 .env*
 
+# middleware
+middleware.ts
+
 # vercel
 .vercel
 
