@@ -1,9 +1,48 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Han from "../../public/images/hanafi.jpeg";
+import { useRouter } from "next/navigation";
 
 export default function AccountDropdown() {
+  const [signedOut, setSignOut] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout/logout-user", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // Clear storage if response OK
+        window.localStorage.removeItem("userName");
+
+        setSignOut(true);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error when trying to sign out the user:" + error);
+      }
+      throw new Error(`${error}`);
+    }
+  };
+
+  useEffect(() => {
+    const storedLocalValue = localStorage.getItem("userName");
+
+    if (!storedLocalValue) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Local key: " + storedLocalValue);
+      }
+
+      signedOut ? router.replace("/login") : null;
+    }
+  }, [router, signedOut]);
+
   return (
     <div
       className="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-10 bg-white rounded-xl shadow-[0_10px_40px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_10px_rgba(0,0,0,0.2)] dark:bg-neutral-900"
@@ -104,7 +143,8 @@ export default function AccountDropdown() {
         <div className="p-1 border-t px-2 py-1.5 border-gray-200 dark:border-neutral-800">
           <Link
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
-            href={"/login"}
+            href={""}
+            onClick={handleLogout}
             prefetch={true}
           >
             Sign out
