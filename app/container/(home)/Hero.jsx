@@ -1,7 +1,30 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function Hero() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const router = useRouter();
+
+  const handleDirectButton = async (e) => {
+    e.preventDefault();
+    const storedLocalValue = await localStorage.getItem("userName");
+
+    if (storedLocalValue) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Local key: " + storedLocalValue);
+      }
+
+      setLoggedIn(true);
+      router.replace("/dashboard");
+    } else {
+      setLoggedIn(false);
+      router.push("/login");
+    }
+  };
+
   return (
     <div className="grid relative place-items-center h-screen overflow-hidden before:absolute before:top-0 before:start-1/2 before:bg-[url('/images/squared-bg-element.svg')] dark:before:bg-[url('/images/dark-squared-bg-element.svg')] before:bg-no-repeat before:bg-top before:size-full before:-z-[1] before:transform before:-translate-x-1/2 after:absolute after:bottom-0 after:left-0 after:w-full after:h-16 lg:after:h-24 after:bg-gradient-to-b after:from-black/0 after:to-black/70 after:z-10">
       <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10">
@@ -52,7 +75,8 @@ function Hero() {
         <div className="flex justify-center gap-3 mt-8">
           <Link
             className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-center text-white border border-transparent rounded-full gap-x-3 bg-gradient-to-tl from-blue-600 to-violet-600 hover:from-violet-600 hover:to-blue-600 dark:focus:ring-offset-gray-800"
-            href="/login"
+            href=""
+            onClick={handleDirectButton}
             prefetch={true}
           >
             <svg
@@ -69,7 +93,7 @@ function Hero() {
                 d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
               />
             </svg>
-            Login to Dashboard
+            {loggedIn ? "Redirect to Dashboard" : "Login"}
           </Link>
         </div>
       </div>
