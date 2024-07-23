@@ -1,15 +1,11 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Han from "../../public/images/hanafi.jpeg";
 import { useRouter } from "next/navigation";
 
 export default function AccountDropdown() {
-  const [signedOut, setSignOut] = useState(false);
   const router = useRouter();
-
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/logout/logout-user", {
@@ -20,8 +16,7 @@ export default function AccountDropdown() {
       if (response.ok) {
         // Clear storage if response OK
         window.localStorage.removeItem("userName");
-
-        setSignOut(true);
+        router.replace("/login");
       }
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
@@ -30,18 +25,6 @@ export default function AccountDropdown() {
       throw new Error(`${error}`);
     }
   };
-
-  useEffect(() => {
-    const storedLocalValue = localStorage.getItem("userName");
-
-    if (!storedLocalValue) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Local key: " + storedLocalValue);
-      }
-
-      signedOut ? router.replace("/login") : null;
-    }
-  }, [router, signedOut]);
 
   return (
     <div
@@ -145,7 +128,6 @@ export default function AccountDropdown() {
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
             href={""}
             onClick={handleLogout}
-            prefetch={true}
           >
             Sign out
           </Link>
