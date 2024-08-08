@@ -24,13 +24,13 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
           "Access-Control-Allow-Origin": "http://45.13.132.175/",
           "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
+          "Cache-Control": "s-maxage=10",
           tenant: tenant,
-          token: "jwatdata",
+          token: process.env.AUTH_TOKEN,
         },
         body: JSON.stringify({
           userName: userName,
@@ -42,7 +42,9 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       if (process.env.NODE_ENV === "development") {
-        res.status(401).json({ message: "Status: " + response.status });
+        res
+          .status(response.status)
+          .json({ message: "Status: " + response.status });
       }
       throw new Error("Service Unavailable");
     } else {
@@ -54,7 +56,9 @@ export default async function handler(req, res) {
       );
 
       const data = await response.json();
-      res.status(200).json({ message: "Login successfully", datalogin: data });
+      res
+        .status(response.status)
+        .json({ message: "Login successfully", datalogin: data });
     }
   } catch (e) {
     console.error(e);

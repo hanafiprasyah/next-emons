@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     throw new Error("Error 405");
   }
 
-  const { password } = req.query;
+  const { password, tenant } = req.query;
 
   try {
     const response = await fetch(
@@ -18,25 +18,30 @@ export default async function handler(req, res) {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "http://45.13.132.175/",
-          "Access-Control-Allow-Methods": "GET",
+          "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: "alif",
-          token: "jwatdata",
+          "Cache-Control": "s-maxage=10",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
         },
       }
     );
 
     if (!response.ok) {
       if (process.env.NODE_ENV === "development") {
-        res.status(401).json({ message: "Status: " + response.status });
+        res
+          .status(response.status)
+          .json({ message: "Status: " + response.status });
       }
       throw new Error("Service Unavailable");
     }
 
     const data = await response.json();
 
-    res.status(200).json({ message: "Encrypted successfully", passdata: data });
+    res
+      .status(response.status)
+      .json({ message: "Encrypted successfully", passdata: data });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });
