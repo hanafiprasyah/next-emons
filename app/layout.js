@@ -1,9 +1,10 @@
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import PrelineScript from "@/components/PrelineScript";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+import { Suspense } from "react";
+import Loader from "@/loading";
 
-const q = Quicksand({ subsets: ["latin"] });
+const quicksandFont = Quicksand({ subsets: ["latin"] });
 
 export const viewport = {
   colorScheme: "dark",
@@ -80,15 +81,13 @@ export default function RootLayout({ children }) {
   return (
     <html className="dark" lang="en">
       <body
-        className={`${q.className} antialiased scroll-smooth bg-black max-h-[400px] overflow-y-auto transition duration-300 ease-in-out [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500`}
+        className={`${quicksandFont.className} antialiased scroll-smooth bg-black max-h-[400px] overflow-y-auto transition duration-300 ease-in-out [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500`}
       >
         <div aria-label="rootNode" className="rootNode">
-          {children}
+          <Suspense fallback={<Loader />}>{children}</Suspense>
+          <ScrollToTopButton />
         </div>
-        <ScrollToTopButton />
       </body>
-
-      <PrelineScript />
     </html>
   );
 }

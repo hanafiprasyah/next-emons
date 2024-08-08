@@ -1,12 +1,19 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Han from "../../public/images/hanafi.jpeg";
+import MonitoringPicture from "../../public/images/monitoring-system.jpg";
 import { useRouter } from "next/navigation";
 
 export default function AccountDropdown() {
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("");
   const router = useRouter();
+
   const handleLogout = async () => {
+    setLoading(true);
+
     try {
       const response = await fetch("/api/logout/logout-user", {
         method: "POST",
@@ -15,16 +22,30 @@ export default function AccountDropdown() {
 
       if (response.ok) {
         // Clear storage if response OK
+        setLoading(false);
         window.localStorage.removeItem("userName");
         router.replace("/login");
       }
     } catch (error) {
+      setLoading(false);
       if (process.env.NODE_ENV === "development") {
         console.log("Error when trying to sign out the user:" + error);
       }
       throw new Error(`${error}`);
     }
   };
+
+  useEffect(() => {
+    const getLocalValue = async () => {
+      const data = await localStorage.getItem("userName");
+      if (data && data != "") {
+        setUsername(data);
+      }
+      return username;
+    };
+
+    getLocalValue();
+  });
 
   return (
     <div
@@ -33,22 +54,22 @@ export default function AccountDropdown() {
     >
       <>
         {/* Profile */}
-        <div className="p-1 border-b border-gray-200 dark:border-neutral-800">
+        <div className="p-1 border-b border-gray-200 pointer-events-none dark:border-neutral-800">
           <div className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
             <Image
               width={500}
               height={500}
               className="flex-shrink-0 rounded-full size-8"
-              src={Han}
+              src={MonitoringPicture}
               alt="EMONS"
             />
 
             <div className="grow">
               <span className="text-sm font-semibold text-gray-800 text-wrap dark:text-neutral-300">
-                Muhammad Hanafi Prasyah
+                {username ?? "Loading.."}
               </span>
               <p className="text-xs text-gray-500 dark:text-neutral-500">
-                RS Otak Bukittinggi
+                Customer Name
               </p>
             </div>
           </div>
@@ -56,8 +77,8 @@ export default function AccountDropdown() {
         {/* Activity */}
         <div className="p-1">
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-            href="#"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            href=""
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -76,8 +97,8 @@ export default function AccountDropdown() {
             Devices
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-            href="#"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            href=""
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -101,8 +122,9 @@ export default function AccountDropdown() {
             Locations
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-            href="#"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            href=""
+            prefetch={true}
           >
             <svg
               className="flex-shrink-0 mt-0.5 size-4"
@@ -128,8 +150,9 @@ export default function AccountDropdown() {
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
             href={""}
             onClick={handleLogout}
+            prefetch={false}
           >
-            Sign out
+            {loading ? "Credential disposal.." : "Sign out"}
           </Link>
         </div>
       </>

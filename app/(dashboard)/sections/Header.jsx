@@ -1,15 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import React from "react";
-import Han from "../../../public/images/hanafi.jpeg";
+import MonitoringPicture from "../../../public/images/monitoring-system.jpg";
 import AccountDropdown from "@/components/AccountDropdown";
-
-// const NotificationDropdown = dynamic(
-//   () => import("@/components/NotificationDropdown"),
-//   { ssr: true }
-// );
+// import NotificationDropdown from "@/components/NotificationDropdown";
 
 export default function DashboardHeader() {
   return (
@@ -100,7 +95,7 @@ export default function DashboardHeader() {
           </div>
 
           {/* Divider */}
-          <div className="border-e border-gray-200 w-px h-6 mx-1.5 dark:border-neutral-700"></div>
+          {/* <div className="border-e border-gray-200 w-px h-6 mx-1.5 dark:border-neutral-700"></div> */}
 
           <div className="h-[38px] ">
             {/* Account Dropdown */}
@@ -111,17 +106,18 @@ export default function DashboardHeader() {
                 className="inline-flex items-center flex-shrink-0 rounded-full gap-x-3 text-start focus:outline-none"
               >
                 {/* This image is shown as Circlet Avatar and clickable */}
+                {/* Set the user image from API */}
                 <Image
                   width={500}
                   height={500}
                   className="flex-shrink-0 size-[38px] rounded-full"
-                  src={Han}
+                  src={MonitoringPicture}
                   alt="EMONS"
                 />
               </button>
 
               {/**
-               * Dynamic import from /root/app/components/
+               * Import from /root/app/components/
                */}
               <AccountDropdown />
             </div>
