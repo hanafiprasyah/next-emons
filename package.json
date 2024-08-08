@@ -9,11 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@preline/collapse": "^2.3.0",
-    "@preline/dropdown": "^2.3.0",
-    "@preline/overlay": "^2.3.0",
-    "@preline/scrollspy": "^2.3.0",
-    "@preline/select": "^2.3.0",
+    "@popperjs/core": "^2.11.8",
+    "@preline/collapse": "^2.4.1",
+    "@preline/dropdown": "^2.4.1",
+    "@preline/overlay": "^2.4.1",
+    "@preline/scrollspy": "^2.4.1",
+    "@preline/select": "^2.4.1",
     "@syncfusion/ej2-react-base": "^26.1.35",
     "@syncfusion/ej2-react-charts": "^26.1.40",
     "@syncfusion/ej2-react-circulargauge": "^26.1.38",
@@ -21,7 +22,7 @@
     "@syncfusion/ej2-react-maps": "^26.1.35",
     "contentful": "^10.12.7",
     "next": "14.2.4",
-    "preline": "^2.3.0",
+    "preline": "^2.4.1",
     "react": "^18",
     "react-dom": "^18"
   },
