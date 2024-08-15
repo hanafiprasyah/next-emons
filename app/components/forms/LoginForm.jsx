@@ -24,6 +24,8 @@ function LoginForm() {
   function handleSubmit(e) {
     e.preventDefault();
 
+    const regex = /\\$/;
+
     // First, we will check if user input their data or not
     if (username == "" || password == "") {
       setError("Please fill in the username and password!");
@@ -31,6 +33,14 @@ function LoginForm() {
     // then check if user input their team name or not
     else if (!username.includes("/")) {
       setError("You have to set your team name first!");
+    }
+    // then check if user input on username field completely or not
+    else if (
+      username.endsWith("/") ||
+      username.endsWith("\\") ||
+      regex.test(username)
+    ) {
+      setError("Fill in the form correctly!");
     }
     // if all clear, continue the process
     else {
@@ -201,12 +211,42 @@ function LoginForm() {
       <form onSubmit={handleSubmit}>
         {/* If they had an error, show the message */}
         {errors ? (
-          <div className="my-2">
+          <div className="mb-4 md:mt-2 md:mb-6">
             <div
-              className="p-4 text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-lg dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500"
+              className="p-4 text-sm text-yellow-800 border border-yellow-200 rounded-lg bg-yellow-50 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500"
               role="alert"
+              tabIndex="-1"
+              aria-labelledby="hs-with-description-label"
             >
-              <span className="font-bold">Warning!</span>&nbsp;{errors}
+              <div className="flex">
+                <div className="shrink-0">
+                  <svg
+                    className="shrink-0 size-4 mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <path d="M12 9v4"></path>
+                    <path d="M12 17h.01"></path>
+                  </svg>
+                </div>
+                <div className="ms-4">
+                  <h3
+                    id="hs-with-description-label"
+                    className="text-sm font-semibold"
+                  >
+                    Oops! Something happen..
+                  </h3>
+                  <div className="mt-1 text-sm text-yellow-700">{errors}</div>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

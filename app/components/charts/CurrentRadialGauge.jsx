@@ -62,7 +62,7 @@ const Default = ({ id, key, alt, title, value }) => {
         <AxesDirective>
           <AxisDirective
             minimum={0}
-            maximum={50}
+            maximum={200}
             hideIntersectingLabel={true}
             labelStyle={{
               hiddenLabel: "Last",
@@ -112,8 +112,8 @@ const Default = ({ id, key, alt, title, value }) => {
                   startValue: "0%",
                   endValue: "100%",
                   colorStop: [
-                    { color: "#fff", offset: "0%", opacity: 0.9 },
-                    { color: "#fff", offset: "80%", opacity: 0.9 },
+                    { color: "#fff", offset: "0%", opacity: 0.5 },
+                    { color: "#fff", offset: "80%", opacity: 0.5 },
                   ],
                 }}
                 cap={{
@@ -142,7 +142,7 @@ const Default = ({ id, key, alt, title, value }) => {
                 angle={0}
                 radius="-30%"
                 zIndex="1"
-                content={`<div><div><span> ${value} V</span></div></div>`}
+                content={`<div><div><span> ${value} A</span></div></div>`}
               />
             </AnnotationsDirective>
           </AxisDirective>
@@ -155,9 +155,9 @@ const Default = ({ id, key, alt, title, value }) => {
             ? currentExportInputHandler
             : currentExportOutputHandler
         }
-        className="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-lg gap-x-2 hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+        className="inline-flex items-center px-3 py-2 mt-0 mb-4 md:mt-1.5 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-lg gap-x-2 hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
       >
-        Export
+        Export {alt} {title}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
