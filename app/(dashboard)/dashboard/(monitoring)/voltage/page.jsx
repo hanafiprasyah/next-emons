@@ -169,12 +169,25 @@ export default function Voltage() {
         end_date: "",
       }),
     })
-      .then((res) => res.json())
-      .then((datas) =>
-        selectDev.length != 0
-          ? setDataVolt(datas.voltage["data"])
-          : setDataVolt([])
-      );
+      .then((res) => {
+        if (!res.ok) {
+          setChannel("Unreachable");
+        }
+        return res.json();
+      })
+      .then((datas) => {
+        try {
+          if (datas) {
+            selectDev.length != 0
+              ? setDataVolt(datas.voltage["data"])
+              : setDataVolt([]);
+          } else {
+            setChannel("Unreachable");
+          }
+        } catch (e) {
+          throw new Error(e);
+        }
+      });
   };
 
   // SWR
@@ -211,13 +224,13 @@ export default function Voltage() {
       }
 
       if (dataSite.message == "OK") {
-        // delay signal and channel status by 250ms after connection ready
+        setDataLoc(dataSite.site["data"]);
+
+        // delay signal and channel status by 100ms after connection ready
         setTimeout(() => {
           setSignal(true);
           setChannel("Stable");
-        }, 500);
-
-        setDataLoc(dataSite.site["data"]);
+        }, 100);
 
         if (selectLoc.length != 0) {
           // [2] fetch the device location
@@ -239,33 +252,9 @@ export default function Voltage() {
 
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
-
-              // NOT REALTIME
-              // if (selectDev.length != 0) {
-              //   // [3] fetch voltage if ready
-              //   fetchVoltage(
-              //     currentUser,
-              //     selectDev.length === 0
-              //       ? "0"
-              //       : JSON.stringify(selectDev[0]).toString(),
-              //     "",
-              //     "",
-              //     "",
-              //     "",
-              //     "",
-              //     ""
-              //   ).then((data) => {
-              //     if (process.env.NODE_ENV === "development") {
-              //       console.log(data.voltage["data"]);
-              //     }
-
-              //     if (data.message == "OK") {
-              //       setDataVolt(data.voltage["data"]);
-              //     } else {
-              //       setDataVolt([]);
-              //     }
-              //   });
-              // }
+            } else {
+              setSignal(false);
+              setChannel("Unreachable");
             }
           });
         }
@@ -590,7 +579,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -606,7 +616,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -620,7 +651,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
@@ -676,7 +707,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -692,7 +744,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -706,7 +779,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
@@ -762,7 +835,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -778,7 +872,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -792,7 +907,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
@@ -852,7 +967,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -868,7 +1004,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -882,7 +1039,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
@@ -938,7 +1095,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -954,7 +1132,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -968,7 +1167,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
@@ -1024,7 +1223,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="w-full h-full md:w-1/2">
@@ -1040,7 +1260,28 @@ export default function Voltage() {
                               />
                             );
                           }
-                          return null;
+                          return (
+                            <div key={index}>
+                              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                                <svg
+                                  className="shrink-0 size-3"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                  <line x1="12" x2="12" y1="2" y2="12"></line>
+                                </svg>
+                                No device installed
+                              </span>
+                            </div>
+                          );
                         })}
                       </div>
                     </div>
@@ -1054,7 +1295,7 @@ export default function Voltage() {
                           <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
                           <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
                         </span>
-                        Updated every 5 seconds
+                        Updated every seconds
                       </span>
                     </div>
                     <div>
