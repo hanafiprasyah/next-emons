@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `http://45.13.132.175:8802/device/getdatavoltage`,
+      `http://45.13.132.175:8802/device/getlastdatavoltage`,
       {
         method: "POST",
         headers: {
