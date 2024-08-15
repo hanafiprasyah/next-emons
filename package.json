@@ -25,6 +25,7 @@
     "preline": "^2.4.1",
     "react": "^18",
     "react-dom": "^18",
+    "sharp": "^0.33.4",
     "swr": "^2.2.5"
   },
   "devDependencies": {
