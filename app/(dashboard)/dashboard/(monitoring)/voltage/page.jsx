@@ -5,21 +5,110 @@ import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
 import Loader from "@/loading";
 import Link from "next/link";
+import useSWR from "swr";
 
-const RadialDynamicGauge = dynamic(() =>
-  import("@/components/charts/VoltageRadialGauge")
+const RadialDynamicGauge = dynamic(
+  () => import("@/components/charts/VoltageRadialGauge"),
+  {
+    ssr: false,
+  }
 );
 
 export default function Voltage() {
+  // local Value
+  const [localTenant, setLocalTenant] = useState("");
+  // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
   const [channel, setChannel] = useState("Connecting");
+  // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
-  const [dataDev, setDataDev] = useState([]);
   const [selectLoc, setSelectLoc] = useState([]);
-  const [showDev, isShowDev] = useState(false);
+  // Used to set the /tool/dataLocation API
+  const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
+  // Used to set the /device/getdatavoltage API
+  const [dataVolt, setDataVolt] = useState([]);
+  /**
+   * Used to conditioning the device dropdown pointer event
+   * if location === 0, then disable the device dropdown
+   */
+  const [showDev, isShowDev] = useState(false);
 
-  // Function to fetch the /device/getdatavoltage API
+  // Function to fetch the /tool/dataside API
+  const fetchSite = async (
+    tenant,
+    locationid,
+    lane,
+    status,
+    value,
+    side,
+    start_trancation_date,
+    end_trancation_date
+  ) => {
+    const response = await fetch("/api/tools/site/getsite", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        locationid: locationid ?? 0,
+        lane: lane ?? "",
+        status: status ?? "",
+        value: value ?? "",
+        side: side ?? "",
+        start_trancation_date: start_trancation_date ?? "",
+        end_trancation_date: end_trancation_date ?? "",
+        tenant: tenant ?? "",
+      }),
+    });
+
+    return response.json();
+  };
+
+  // Function to fetch the /tool/dataLocation API
+  const fetchDevice = async (
+    tenant,
+    locationid,
+    lane,
+    status,
+    value,
+    side,
+    start_trancation_date,
+    end_trancation_date
+  ) => {
+    const response = await fetch("/api/tools/location/getlocation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        locationid: locationid ?? 0,
+        lane: lane ?? "",
+        status: status ?? "",
+        value: value ?? "",
+        side: side ?? "0",
+        start_trancation_date: start_trancation_date ?? "",
+        end_trancation_date: end_trancation_date ?? "",
+        tenant: tenant ?? "",
+      }),
+    });
+
+    return response.json();
+  };
+
+  // Function to fetch the /device/getdatavoltage API [NOT REALTIME]
   const fetchVoltage = async (
     tenant,
     locationid,
@@ -56,42 +145,143 @@ export default function Voltage() {
     return response.json();
   };
 
-  useEffect(() => {
-    // local item
-    const currentUser = localStorage.getItem("tenant");
+  // Function to fetch the /device/getdatavoltage API [REALTIME]
+  const fetchVoltageRealtime = async (url, tenant, locationid) => {
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        tenant: tenant,
+        locationid: locationid,
+        lane: "",
+        status: "",
+        value: "",
+        side: "",
+        start_date: "",
+        end_date: "",
+      }),
+    })
+      .then((res) => res.json())
+      .then((datas) =>
+        selectDev.length != 0
+          ? setDataVolt(datas.voltage["data"])
+          : setDataVolt([])
+      );
+  };
 
-    fetchVoltage(
+  // SWR
+  const { data, error } = useSWR(
+    "/api/monitoring/voltage/getdata",
+    fetchVoltageRealtime,
+    {
+      refreshInterval: 1000,
+    },
+    localTenant ?? "",
+    selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
+  );
+
+  useEffect(() => {
+    // local tenant item
+    const currentUser = localStorage.getItem("tenant");
+    if (localStorage.length != 0) {
+      setLocalTenant(`${currentUser.toString()}`);
+    }
+
+    // [1] fetch the site
+    fetchSite(
       currentUser,
-      selectLoc.length === 0 ? 0 : selectLoc,
+      0,
       "",
       "",
       "",
       "",
-      "2023-08-01 00:49:04",
-      "2024-08-01 00:49:04"
-    ).then((data) => {
+      "2023-01-01 00:00:00",
+      "2024-12-30 00:00:00"
+    ).then((dataSite) => {
       if (process.env.NODE_ENV === "development") {
-        console.log(data.voltage["data"]);
+        console.log(dataSite.site["data"]);
       }
 
-      if (data.message == "OK") {
+      if (dataSite.message == "OK") {
         // delay signal and channel status by 250ms after connection ready
         setTimeout(() => {
           setSignal(true);
           setChannel("Stable");
-        }, 250);
+        }, 500);
+
+        setDataLoc(dataSite.site["data"]);
 
         if (selectLoc.length != 0) {
-          setDataDev(data.voltage["data"]);
-        } else {
-          setDataLoc(data.voltage["data"]);
+          // [2] fetch the device location
+          fetchDevice(
+            currentUser,
+            0,
+            "",
+            "",
+            "",
+            selectLoc.length === 0
+              ? "0"
+              : JSON.stringify(selectLoc[0]).toString(),
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00"
+          ).then((dataLocation) => {
+            if (process.env.NODE_ENV === "development") {
+              console.log(dataLocation.loc["data"]);
+            }
+
+            if (dataLocation.message == "OK") {
+              setDataDev(dataLocation.loc["data"]);
+
+              // NOT REALTIME
+              // if (selectDev.length != 0) {
+              //   // [3] fetch voltage if ready
+              //   fetchVoltage(
+              //     currentUser,
+              //     selectDev.length === 0
+              //       ? "0"
+              //       : JSON.stringify(selectDev[0]).toString(),
+              //     "",
+              //     "",
+              //     "",
+              //     "",
+              //     "",
+              //     ""
+              //   ).then((data) => {
+              //     if (process.env.NODE_ENV === "development") {
+              //       console.log(data.voltage["data"]);
+              //     }
+
+              //     if (data.message == "OK") {
+              //       setDataVolt(data.voltage["data"]);
+              //     } else {
+              //       setDataVolt([]);
+              //     }
+              //   });
+              // }
+            }
+          });
         }
       } else {
         setSignal(false);
         setChannel("Unreachable");
       }
     });
-  }, [selectLoc]);
+  }, [selectLoc, selectDev]);
+
+  // If SWR connection error then show this widget below
+  if (error) {
+    <div>
+      Something happened. Please check your connection or refresh this tab.
+    </div>;
+  }
 
   return (
     <div id="voltage-template" className="grid grid-cols-1 gap-4">
@@ -180,6 +370,7 @@ export default function Voltage() {
               {/* End Breadcrumb */}
             </div>
           </div>
+          {/* Title */}
           <h4 className="pt-2 pb-2 text-4xl font-semibold text-gray-800 md:pb-4 md:pt-2 dark:text-neutral-200">
             Voltage
           </h4>
@@ -203,7 +394,7 @@ export default function Voltage() {
                   >
                     {signal
                       ? selectLoc.length != 0
-                        ? selectLoc
+                        ? selectLoc[1]
                         : "Select location"
                       : "Loading location"}
                     <svg
@@ -231,7 +422,7 @@ export default function Voltage() {
                       .filter(
                         (obj, index) =>
                           dataLoc.findIndex(
-                            (item) => item.location_id === obj.location_id
+                            (item) => item.code === obj.code
                           ) === index
                       )
                       .map((item, index) => (
@@ -241,16 +432,16 @@ export default function Voltage() {
                           href=""
                           onClick={(e) => {
                             e.preventDefault();
-                            setSelectLoc(item.location_id);
+                            setSelectLoc([item.code, item.name]);
                             isShowDev(true);
                             setSelectDev([]);
                           }}
                         >
                           <span className="inline-flex text-sm text-white">
-                            {item.location_id}
+                            {item.name}
                           </span>
                           <span className="inline-flex text-xs text-gray-400">
-                            {selectLoc === item.location_id ? "Selected" : ""}
+                            {selectLoc[0] === item.code ? "Selected" : ""}
                           </span>
                         </a>
                       ))}
@@ -276,7 +467,7 @@ export default function Voltage() {
                   >
                     {signal
                       ? selectDev.length != 0
-                        ? selectDev
+                        ? selectDev[1]
                         : "Select device"
                       : "Loading device"}
                     <svg
@@ -307,14 +498,14 @@ export default function Voltage() {
                         href=""
                         onClick={(e) => {
                           e.preventDefault();
-                          setSelectDev(item.id);
+                          setSelectDev([item.code, item.name]);
                         }}
                       >
                         <span className="inline-flex text-sm text-white">
-                          {item.id}
+                          {item.name}
                         </span>
                         <span className="inline-flex text-xs text-gray-400">
-                          {selectDev === item.id ? "Selected" : ""}
+                          {selectDev[0] === item.code ? "Selected" : ""}
                         </span>
                       </a>
                     ))}
@@ -358,526 +549,733 @@ export default function Voltage() {
 
         {selectLoc.length != 0 ? (
           selectDev.length != 0 ? (
-            // Voltage gauge list
-            <>
-              {/* R-N */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
+            dataVolt ? (
+              // Voltage gauge list
+              <>
+                {/* R-N, S-N and T-N will always have their own value, because they are the SINGLE PHASE section */}
+                {/* ===== SINGLE PHASE ===== */}
 
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">R to N</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rn-input"}
-                              key={"rn-input"}
-                              alt={"R-N"}
-                              title="Input"
-                              value={item.v_rn_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rn-output"}
-                              key={"rn-output"}
-                              alt={"R-N"}
-                              title="Output"
-                              value={item.v_rn_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
+                {/* R-N */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
                       <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
                       >
-                        {channel}
+                        {signal ? "Online" : "Offline"}
                       </span>
-                    </label>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">R to N</h2>
+                    </div>
                   </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rn-input"}
+                                key={"rn-input"}
+                                alt={"R-N"}
+                                title="Input"
+                                value={item.v_rn_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rn-output"}
+                                key={"rn-output"}
+                                alt={"R-N"}
+                                title="Output"
+                                value={item.v_rn_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {/* S-N */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
+                      <span
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
+                      >
+                        {signal ? "Online" : "Offline"}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">S to N</h2>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-sn-input"}
+                                key={"sn-input"}
+                                alt={"S-N"}
+                                title="Input"
+                                value={item.v_sn_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-sn-output"}
+                                key={"sn-output"}
+                                alt={"S-N"}
+                                title="Output"
+                                value={item.v_sn_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {/* T-N */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
+                      <span
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
+                      >
+                        {signal ? "Online" : "Offline"}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">T to N</h2>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-tn-input"}
+                                key={"tn-input"}
+                                alt={"T-N"}
+                                title="Input"
+                                value={item.v_tn_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-tn-output"}
+                                key={"tn-output"}
+                                alt={"T-N"}
+                                title="Output"
+                                value={item.v_tn_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* As long as you know that R-S, S-T and R-T are part of THREE PHASE, sometimes it may have no value (zero) */}
+                {/* ===== THREE PHASE ===== */}
+
+                {/* R-S */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
+                      <span
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
+                      >
+                        {signal ? "Online" : "Offline"}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">R to S</h2>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rs-input"}
+                                key={"rs-input"}
+                                alt={"R-S"}
+                                title="Input"
+                                value={item.v_rs_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rs-output"}
+                                key={"rs-output"}
+                                alt={"R-S"}
+                                title="Output"
+                                value={item.v_rs_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {/* S-T */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
+                      <span
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
+                      >
+                        {signal ? "Online" : "Offline"}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">S to T</h2>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-st-input"}
+                                key={"st-input"}
+                                alt={"S-T"}
+                                title="Input"
+                                value={item.v_st_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-st-output"}
+                                key={"st-output"}
+                                alt={"S-T"}
+                                title="Output"
+                                value={item.v_st_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {/* R-T */}
+                <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Header */}
+                  <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+                    <div>
+                      <span
+                        className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                          signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+                        } dark:text-neutral-200`}
+                      >
+                        {signal ? "Online" : "Offline"}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+                      <h2 className="text-2xl">R to T</h2>
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+                    <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rt-input"}
+                                key={"rt-input"}
+                                alt={"R-T"}
+                                title="Input"
+                                value={item.v_rt_input}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="w-full h-full md:w-1/2">
+                        {dataVolt.map((item, index) => {
+                          if (item.location_id === selectDev[0]) {
+                            return (
+                              <RadialDynamicGauge
+                                id={"voltage-rt-output"}
+                                key={"rt-output"}
+                                alt={"R-T"}
+                                title="Output"
+                                value={item.v_rt_output}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+                    <div>
+                      <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
+                          <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                        </span>
+                        Updated every 5 seconds
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="hs-pro-dupccn1"
+                        className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                      >
+                        <span
+                          className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                            channel == "Stable"
+                              ? "dark:text-emerald-400"
+                              : "dark:text-gray-500"
+                          }`}
+                        >
+                          {channel}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Empty voltage data widget
+              <div className="flex flex-col items-center justify-center p-5 text-center min-h-96">
+                <svg
+                  className="w-48 mx-auto mb-4"
+                  width={178}
+                  height={90}
+                  viewBox="0 0 178 90"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x={27}
+                    y="50.5"
+                    width={124}
+                    height={39}
+                    rx="7.5"
+                    fill="currentColor"
+                    className="fill-white dark:fill-neutral-800"
+                  />
+                  <rect
+                    x={27}
+                    y="50.5"
+                    width={124}
+                    height={39}
+                    rx="7.5"
+                    stroke="currentColor"
+                    className="stroke-gray-50 dark:stroke-neutral-700/10"
+                  />
+                  <rect
+                    x="34.5"
+                    y={58}
+                    width={24}
+                    height={24}
+                    rx={4}
+                    fill="currentColor"
+                    className="fill-gray-50 dark:fill-neutral-700/30"
+                  />
+                  <rect
+                    x="66.5"
+                    y={61}
+                    width={60}
+                    height={6}
+                    rx={3}
+                    fill="currentColor"
+                    className="fill-gray-50 dark:fill-neutral-700/30"
+                  />
+                  <rect
+                    x="66.5"
+                    y={73}
+                    width={77}
+                    height={6}
+                    rx={3}
+                    fill="currentColor"
+                    className="fill-gray-50 dark:fill-neutral-700/30"
+                  />
+                  <rect
+                    x="19.5"
+                    y="28.5"
+                    width={139}
+                    height={39}
+                    rx="7.5"
+                    fill="currentColor"
+                    className="fill-white dark:fill-neutral-800"
+                  />
+                  <rect
+                    x="19.5"
+                    y="28.5"
+                    width={139}
+                    height={39}
+                    rx="7.5"
+                    stroke="currentColor"
+                    className="stroke-gray-100 dark:stroke-neutral-700/30"
+                  />
+                  <rect
+                    x={27}
+                    y={36}
+                    width={24}
+                    height={24}
+                    rx={4}
+                    fill="currentColor"
+                    className="fill-gray-100 dark:fill-neutral-700/70"
+                  />
+                  <rect
+                    x={59}
+                    y={39}
+                    width={60}
+                    height={6}
+                    rx={3}
+                    fill="currentColor"
+                    className="fill-gray-100 dark:fill-neutral-700/70"
+                  />
+                  <rect
+                    x={59}
+                    y={51}
+                    width={92}
+                    height={6}
+                    rx={3}
+                    fill="currentColor"
+                    className="fill-gray-100 dark:fill-neutral-700/70"
+                  />
+                  <g filter="url(#filter19)">
+                    <rect
+                      x={12}
+                      y={6}
+                      width={154}
+                      height={40}
+                      rx={8}
+                      fill="currentColor"
+                      className="fill-white dark:fill-neutral-800"
+                      shapeRendering="crispEdges"
+                    />
+                    <rect
+                      x="12.5"
+                      y="6.5"
+                      width={153}
+                      height={39}
+                      rx="7.5"
+                      stroke="currentColor"
+                      className="stroke-gray-100 dark:stroke-neutral-700/60"
+                      shapeRendering="crispEdges"
+                    />
+                    <rect
+                      x={20}
+                      y={14}
+                      width={24}
+                      height={24}
+                      rx={4}
+                      fill="currentColor"
+                      className="fill-gray-200 dark:fill-neutral-700 "
+                    />
+                    <rect
+                      x={52}
+                      y={17}
+                      width={60}
+                      height={6}
+                      rx={3}
+                      fill="currentColor"
+                      className="fill-gray-200 dark:fill-neutral-700"
+                    />
+                    <rect
+                      x={52}
+                      y={29}
+                      width={106}
+                      height={6}
+                      rx={3}
+                      fill="currentColor"
+                      className="fill-gray-200 dark:fill-neutral-700"
+                    />
+                  </g>
+                  <defs>
+                    <filter
+                      id="filter19"
+                      x={0}
+                      y={0}
+                      width={178}
+                      height={64}
+                      filterUnits="userSpaceOnUse"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feFlood floodOpacity={0} result="BackgroundImageFix" />
+                      <feColorMatrix
+                        in="SourceAlpha"
+                        type="matrix"
+                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                        result="hardAlpha"
+                      />
+                      <feOffset dy={6} />
+                      <feGaussianBlur stdDeviation={6} />
+                      <feComposite in2="hardAlpha" operator="out" />
+                      <feColorMatrix
+                        type="matrix"
+                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0"
+                      />
+                      <feBlend
+                        mode="normal"
+                        in2="BackgroundImageFix"
+                        result="effect1_dropShadow_1187_14810"
+                      />
+                      <feBlend
+                        mode="normal"
+                        in="SourceGraphic"
+                        in2="effect1_dropShadow_1187_14810"
+                        result="shape"
+                      />
+                    </filter>
+                  </defs>
+                </svg>
+                <div className="max-w-sm mx-auto">
+                  <p className="mt-2 font-medium text-gray-800 dark:text-neutral-200">
+                    No device found
+                  </p>
+                  <p className="mb-5 text-sm text-gray-500 dark:text-neutral-500">
+                    Please select another device.
+                  </p>
                 </div>
               </div>
-              {/* S-N */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">S to N</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-sn-input"}
-                              key={"sn-input"}
-                              alt={"S-N"}
-                              title="Input"
-                              value={item.v_sn_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-sn-output"}
-                              key={"sn-output"}
-                              alt={"S-N"}
-                              title="Output"
-                              value={item.v_sn_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
-                      <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
-                      >
-                        {channel}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              {/* T-N */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">T to N</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-tn-input"}
-                              key={"tn-input"}
-                              alt={"T-N"}
-                              title="Input"
-                              value={item.v_tn_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-tn-output"}
-                              key={"tn-output"}
-                              alt={"T-N"}
-                              title="Output"
-                              value={item.v_tn_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
-                      <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
-                      >
-                        {channel}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              {/* R-S */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">R to S</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rs-input"}
-                              key={"rs-input"}
-                              alt={"R-S"}
-                              title="Input"
-                              value={item.v_rs_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rs-output"}
-                              key={"rs-output"}
-                              alt={"R-S"}
-                              title="Output"
-                              value={item.v_rs_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
-                      <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
-                      >
-                        {channel}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              {/* S-T */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">S to T</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-st-input"}
-                              key={"st-input"}
-                              alt={"S-T"}
-                              title="Input"
-                              value={item.v_st_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-st-output"}
-                              key={"st-output"}
-                              alt={"S-T"}
-                              title="Output"
-                              value={item.v_st_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
-                      <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
-                      >
-                        {channel}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              {/* R-T */}
-              <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Header */}
-                <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-                  <div>
-                    <span
-                      className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                        signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                      } dark:text-neutral-200`}
-                    >
-                      {signal ? "Online" : "Offline"}
-                    </span>
-                  </div>
-
-                  <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-                    <h2 className="text-2xl">R to T</h2>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-                  <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rt-input"}
-                              key={"rt-input"}
-                              alt={"R-T"}
-                              title="Input"
-                              value={item.v_rt_input}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                    <div className="w-full h-full md:w-1/2">
-                      {dataDev.map((item, index) => {
-                        if (item.id === selectDev) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rt-output"}
-                              key={"rt-output"}
-                              alt={"R-T"}
-                              title="Output"
-                              value={item.v_rt_output}
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-                  <div>
-                    <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                      <span className="relative flex w-2 h-2">
-                        <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                        <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
-                      </span>
-                      Updated every 5 seconds
-                    </span>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="hs-pro-dupccn1"
-                      className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-                    >
-                      <span
-                        className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                          channel == "Stable"
-                            ? "dark:text-emerald-400"
-                            : "dark:text-gray-500"
-                        }`}
-                      >
-                        {channel}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </>
+            )
           ) : (
+            // Empty device selection widget
             <div className="flex flex-col items-center justify-center p-5 text-center min-h-96">
               <svg
                 className="w-48 mx-auto mb-4"
@@ -1075,6 +1473,7 @@ export default function Voltage() {
             </div>
           )
         ) : (
+          // Empty location selection widget
           <div className="flex flex-col items-center justify-center p-5 text-center min-h-96">
             <svg
               className="w-48 mx-auto mb-4"
