@@ -61,7 +61,9 @@ export default async function handler(req, res) {
         .json({ message: "Login successfully", datalogin: data });
     }
   } catch (e) {
-    console.error(e);
+    if (process.env.NODE_ENV === "development") {
+      console.error(e);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 }

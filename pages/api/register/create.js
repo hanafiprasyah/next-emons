@@ -58,7 +58,9 @@ export default async function handler(req, res) {
       message: "New user named " + nama + " has been created successfully",
     });
   } catch (e) {
-    console.error(e);
+    if (process.env.NODE_ENV === "development") {
+      console.error(e);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 }

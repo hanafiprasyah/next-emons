@@ -9,7 +9,9 @@ export default async function handler(req, res) {
     res.setHeader("Set-Cookie", "tenant=; Path=/; HttpOnly; Max-Age=0");
     res.status(200).json({ message: "User signed out successfully" });
   } catch (e) {
-    console.error(e);
+    if (process.env.NODE_ENV === "development") {
+      console.error(e);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 }

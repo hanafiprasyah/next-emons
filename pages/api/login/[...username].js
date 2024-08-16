@@ -43,7 +43,9 @@ export default async function handler(req, res) {
       .status(response.status)
       .json({ message: "Salt successfully", datas: data });
   } catch (e) {
-    console.error(e);
+    if (process.env.NODE_ENV === "development") {
+      console.error(e);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 }
