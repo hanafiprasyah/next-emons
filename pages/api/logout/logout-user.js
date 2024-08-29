@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    res.setHeader("Set-Cookie", "tenant=; Path=/; HttpOnly; Max-Age=0");
+    res.setHeader("Set-Cookie", "tenant=; Path=/; HttpOnly; Secure; Max-Age=0");
     res.status(200).json({ message: "User signed out successfully" });
   } catch (e) {
     if (process.env.NODE_ENV === "development") {

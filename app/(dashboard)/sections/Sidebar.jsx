@@ -31,7 +31,7 @@ export default function DashboardSidebar() {
         lg:block lg:translate-x-0 lg:end-auto lg:bottom-0
         dark:bg-neutral-800 dark:border-neutral-700"
     >
-      <div className="relative flex flex-col h-full max-h-full pt-3">
+      <div className="relative flex flex-col h-full max-h-full pt-0">
         {/* <header className="border-b border-gray-200 dark:border-neutral-700"> */}
         {/**
          * Appear at the top of the sidebar, makes device list more functional to give users some information about their device health score
@@ -154,10 +154,10 @@ export default function DashboardSidebar() {
         {/* </header> */}
 
         {/* Sidebar Menu / Content */}
-        <div className="mt-1.5 h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+        <div className="mt-0 h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
           {/* Navigation List */}
           <nav
-            className="flex flex-col flex-wrap w-full pt-3 pb-3 hs-accordion-group"
+            className="flex flex-col flex-wrap w-full pt-6 pb-3 hs-accordion-group"
             data-hs-accordion-always-open
           >
             <ul>
@@ -173,7 +173,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 items-center rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard"
+                      path === "/dashboard/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -216,7 +216,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/voltage"
+                      path === "/dashboard/voltage/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -245,7 +245,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/current"
+                      path === "/dashboard/current/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -274,7 +274,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/ground"
+                      path === "/dashboard/ground/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -307,7 +307,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    href="/dashboard/frequency"
+                    href="/dashboard/frequency/"
                     prefetch={true}
                   >
                     <svg
@@ -336,7 +336,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    href="/dashboard/temperature"
+                    href="/dashboard/temperature/"
                     prefetch={true}
                   >
                     <svg
@@ -361,7 +361,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/energy"
+                      path === "/dashboard/energy/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -394,7 +394,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    href="/dashboard/pf"
+                    href="/dashboard/pf/"
                     prefetch={true}
                   >
                     <svg
@@ -423,7 +423,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    href="/dashboard/thdv"
+                    href="/dashboard/thdv/"
                     prefetch={true}
                   >
                     <svg
@@ -452,7 +452,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    href="/dashboard/thdi"
+                    href="/dashboard/thdi/"
                     prefetch={true}
                   >
                     <svg
@@ -490,7 +490,7 @@ export default function DashboardSidebar() {
                 <li className="px-5 mb-0.5">
                   <Link
                     className={`flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
-                      path === "/dashboard/alarm-logger"
+                      path === "/dashboard/alarm-logger/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -520,7 +520,7 @@ export default function DashboardSidebar() {
                 <li className="px-5 mb-0.5">
                   <Link
                     className={`flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
-                      path === "/dashboard/database-logger"
+                      path === "/dashboard/database-logger/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -550,7 +550,7 @@ export default function DashboardSidebar() {
                 <li className="px-5 mb-0.5">
                   <Link
                     className={`flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
-                      path === "/dashboard/sd-card-logger"
+                      path === "/dashboard/sd-card-logger/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}

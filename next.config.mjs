@@ -2,6 +2,7 @@
 const nextConfig = {
   crossOrigin: "anonymous",
   reactStrictMode: false,
+  trailingSlash: true,
   optimizeFonts: true,
   images: {
     formats: ["image/webp", "image/avif"],

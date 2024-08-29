@@ -23,7 +23,10 @@ export default function AccountDropdown() {
       if (response.ok) {
         // Clear storage if response OK
         setLoading(false);
-        window.localStorage.removeItem("userName");
+        // window.localStorage.removeItem("userName");
+        // window.localStorage.removeItem("tenant");
+        // TODO: Clear all localStorage key
+        window.localStorage.clear();
         router.replace("/login");
       }
     } catch (error) {
