@@ -1,14 +1,15 @@
 "use client";
 
 import React, { Suspense } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
-import SideImage from "../../../public/images/authentication-charts-dark.svg";
+import DynamicForm from "@/components/forms/LoginForm";
+import SideImage from "../../../public/images/side-image.svg";
 import EmonsLogo from "../../../public/images/emons-logo.svg";
 import Loader from "@/loading";
 
-const DynamicForm = dynamic(() => import("@/components/forms/LoginForm"));
+// import dynamic from "next/dynamic";
+// const DynamicForm = dynamic(() => import("@/components/forms/LoginForm"));
 
 export default function Login() {
   return (

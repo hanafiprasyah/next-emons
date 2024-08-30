@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   crossOrigin: "anonymous",
-  reactStrictMode: false,
+  reactStrictMode: true,
   trailingSlash: true,
+  poweredByHeader: false,
   optimizeFonts: true,
   images: {
     formats: ["image/webp", "image/avif"],

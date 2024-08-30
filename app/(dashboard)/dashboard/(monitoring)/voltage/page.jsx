@@ -346,7 +346,7 @@ export default function Voltage() {
     <div id="voltage-template" className="grid grid-cols-1 gap-4">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
-        <div className="min-h-[34px] flex flex-wrap justify-between items-center gap-3">
+        <div className="min-h-[50px] md:min-h-[32px] flex flex-wrap justify-between items-center gap-3">
           <div className="-ms-1">
             {/* Breadcrumb */}
             <ol className="flex items-center whitespace-nowrap">
@@ -431,7 +431,7 @@ export default function Voltage() {
           </div>
         </div>
         {/* Title */}
-        <h4 className="pt-2 pb-2 text-4xl font-semibold text-gray-800 md:pb-4 md:pt-2 dark:text-neutral-200">
+        <h4 className="pt-0 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-2 dark:text-neutral-200">
           Voltage
         </h4>
         {/* End Title */}
@@ -591,7 +591,7 @@ export default function Voltage() {
               viewBox="0 0 24 24"
               strokeWidth="1.5"
               stroke="currentColor"
-              className="shrink-0 size-3.5"
+              className="shrink-0 size-3.5 hidden md:block"
             >
               <path
                 strokeLinecap="round"
@@ -626,7 +626,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">R to N</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage R - N
+              </h2>
             </div>
           </div>
 
@@ -693,7 +695,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -762,7 +764,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">S to N</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage S - N
+              </h2>
             </div>
           </div>
 
@@ -829,7 +833,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -898,7 +902,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">T to N</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage T - N
+              </h2>
             </div>
           </div>
 
@@ -965,7 +971,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -1038,7 +1044,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">R to S</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage R - S
+              </h2>
             </div>
           </div>
 
@@ -1105,7 +1113,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -1174,7 +1182,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">S to T</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage S - T
+              </h2>
             </div>
           </div>
 
@@ -1241,7 +1251,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -1310,7 +1320,9 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-2xl">R to T</h2>
+              <h2 className="text-lg font-semibold lg:text-xl">
+                Voltage R - T
+              </h2>
             </div>
           </div>
 
@@ -1377,7 +1389,7 @@ export default function Voltage() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
