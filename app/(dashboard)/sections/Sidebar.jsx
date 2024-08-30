@@ -21,7 +21,7 @@ export default function DashboardSidebar() {
      */
     <aside
       id="hs-pro-sidebar"
-      className="hs-overlay lg:hs-overlay-backdrop-open:hidden [--auto-close:lg]
+      className="hs-overlay [--auto-close:lg]
         hs-overlay-open:translate-x-0
         -translate-x-full transition-all duration-300 transform
         w-[260px] h-full
@@ -171,9 +171,6 @@ export default function DashboardSidebar() {
                 {/* Dashboard */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 items-center rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/"
@@ -217,9 +214,6 @@ export default function DashboardSidebar() {
                 {/* Voltage */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/voltage/"
@@ -249,9 +243,6 @@ export default function DashboardSidebar() {
                 {/* Current */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/current/"
@@ -281,9 +272,6 @@ export default function DashboardSidebar() {
                 {/* Ground */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/ground/"
@@ -313,9 +301,6 @@ export default function DashboardSidebar() {
                 {/* Frequency */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 cursor-not-allowed py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/frequency"
@@ -346,9 +331,6 @@ export default function DashboardSidebar() {
                 {/* Temperature */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm cursor-not-allowed text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/temperature"
@@ -379,9 +361,6 @@ export default function DashboardSidebar() {
                 {/* Energy */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 cursor-not-allowed text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/energy/"
@@ -412,9 +391,6 @@ export default function DashboardSidebar() {
                 {/* Power Factor */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 cursor-not-allowed text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/pf"
@@ -445,9 +421,6 @@ export default function DashboardSidebar() {
                 {/* THDv */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm cursor-not-allowed text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/thdv"
@@ -478,9 +451,6 @@ export default function DashboardSidebar() {
                 {/* THDi */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex px-3 py-2 text-sm cursor-not-allowed text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/thdi"
@@ -525,9 +495,6 @@ export default function DashboardSidebar() {
                 {/* Alarm Log */}
                 <li className="px-5 mb-0.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
                       path === "/dashboard/alarm-logger/"
                         ? "active-link dark:bg-neutral-700"
@@ -558,9 +525,6 @@ export default function DashboardSidebar() {
                 {/* Database Log */}
                 <li className="px-5 mb-0.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex items-center px-3 py-2 cursor-not-allowed text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
                       path === "/dashboard/database-logger/"
                         ? "active-link dark:bg-neutral-700"
@@ -592,9 +556,6 @@ export default function DashboardSidebar() {
                 {/* SD Card Log */}
                 <li className="px-5 mb-0.5">
                   <Link
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-expanded="false"
                     className={`flex items-center px-3 py-2 text-sm cursor-not-allowed bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
                       path === "/dashboard/sd-card-logger/"
                         ? "active-link dark:bg-neutral-700"
