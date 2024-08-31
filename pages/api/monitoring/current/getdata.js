@@ -1,4 +1,4 @@
-// This method will return all value of Voltage
+// This method will return all value of Current
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `http://45.13.132.175:8802/device/getdatacurrent`,
+      `http://45.13.132.175:8802/device/getlastdatacurrent`,
       {
         method: "POST",
         headers: {

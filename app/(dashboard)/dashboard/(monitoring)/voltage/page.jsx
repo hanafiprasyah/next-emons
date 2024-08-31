@@ -154,7 +154,7 @@ export default function Voltage() {
     return response.json();
   };
 
-  // Function to fetch the /device/getdatavoltage API [REALTIME]
+  // Function to fetch the /device/getlastdatavoltage API [REALTIME]
   const fetchVoltageRealtime = async (url, tenant, locationid) => {
     return fetch(url, {
       method: "POST",
