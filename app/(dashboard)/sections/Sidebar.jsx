@@ -356,19 +356,22 @@ export default function DashboardSidebar() {
                       />
                     </svg>
                     Temperature
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
                 {/* Energy */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    className={`flex px-3 py-2 cursor-not-allowed text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
+                    className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/energy/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
                     href="/dashboard/energy"
-                    onClick={(e) => e.preventDefault()}
+                    // onClick={(e) => e.preventDefault()}
                     prefetch={true}
                   >
                     <svg
@@ -391,7 +394,7 @@ export default function DashboardSidebar() {
                 {/* Power Factor */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    className={`flex px-3 py-2 cursor-not-allowed text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
+                    className={`flex px-3 py-2 text-sm cursor-not-allowed text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/pf"
                         ? "active-link dark:bg-neutral-700"
@@ -416,6 +419,9 @@ export default function DashboardSidebar() {
                       />
                     </svg>
                     Power Factor
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
                 {/* THDv */}
@@ -446,6 +452,9 @@ export default function DashboardSidebar() {
                       />
                     </svg>
                     THDv
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
                 {/* THDi */}
@@ -476,6 +485,9 @@ export default function DashboardSidebar() {
                       />
                     </svg>
                     THDi
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
 
@@ -551,6 +563,9 @@ export default function DashboardSidebar() {
                       </svg>
                     </span>
                     Database Log
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
                 {/* SD Card Log */}
@@ -582,6 +597,9 @@ export default function DashboardSidebar() {
                       </svg>
                     </span>
                     SD Card Log
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
               </>
