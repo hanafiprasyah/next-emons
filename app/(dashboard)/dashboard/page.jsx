@@ -3,8 +3,13 @@
 import React, { useState } from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
-import Maps from "@/components/maps/DeviceMap";
 import Link from "next/link";
+// import Maps from "@/components/maps/DeviceMap";
+
+import dynamic from "next/dynamic";
+const MapDynamic = dynamic(() => import("@/components/maps/DeviceMap"), {
+  ssr: true,
+});
 
 export default function Dashboard() {
   const [hideTotalUser, setHideTotalUser] = useState(true);
@@ -29,7 +34,7 @@ export default function Dashboard() {
             <div className="grid md:divide-x md:grid-cols-8 divide-stone-200 dark:divide-neutral-600">
               <div className="p-5 md:col-span-5 lg:col-span-6">
                 {/* Maps component */}
-                <Maps />
+                <MapDynamic />
                 {/* End Maps component */}
                 <div className="flex items-center justify-center gap-x-2">
                   <div className="inline-flex items-center">

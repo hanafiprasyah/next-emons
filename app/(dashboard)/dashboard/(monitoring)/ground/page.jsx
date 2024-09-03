@@ -306,7 +306,7 @@ export default function Grounding() {
   }
 
   return (
-    <div id="current-template" className="grid grid-cols-1 gap-4">
+    <div id="ground-template" className="grid grid-cols-1 gap-4">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
         <div className="min-h-[50px] md:min-h-[32px] flex flex-wrap justify-between items-center gap-3">
