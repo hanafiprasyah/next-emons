@@ -20,6 +20,10 @@ export default function Voltage() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
+  // Dates
+  const [currentDate, setCurrentDate] = useState("");
+  const [hoursAgo, setHoursAgo] = useState("");
+
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
   const [channel, setChannel] = useState("Connecting");
@@ -128,7 +132,7 @@ export default function Voltage() {
     start_date,
     end_date
   ) => {
-    const response = await fetch("/api/monitoring/voltage/getdata", {
+    const response = await fetch("/api/monitoring/voltage/getlist", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -201,6 +205,7 @@ export default function Voltage() {
     selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
   );
 
+  // TODO: Get default site and location
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
@@ -263,6 +268,23 @@ export default function Voltage() {
                 setSignal(true);
                 setChannel("Stable");
               }, 100);
+
+              console.log(hoursAgo);
+              console.log(currentDate);
+
+              // READY TO FLIGHT -> !
+              // fetchVoltage(
+              //   "alif",
+              //   "102",
+              //   "",
+              //   "",
+              //   "",
+              //   "",
+              //   hoursAgo,
+              //   currentDate
+              // ).then((data) => {
+              //   console.log(data);
+              // });
             } else {
               setSignal(false);
               setChannel("Unreachable");
@@ -274,7 +296,37 @@ export default function Voltage() {
         setChannel("Unreachable");
       }
     });
-  }, [selectLoc, selectDev]);
+  }, [selectLoc, selectDev, currentDate, hoursAgo]);
+
+  // TODO: Get current datetime, this will be mounted at the first time
+  useEffect(() => {
+    const dateIns = new Date();
+
+    const formatedDate = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours()}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    const hoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours() - 1}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    if (formatedDate.startsWith("202")) {
+      setCurrentDate(formatedDate);
+      setHoursAgo(hoursAgo);
+    }
+
+    console.log("Current date: " + formatedDate + "| 1 hours ago: " + hoursAgo);
+  }, []);
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -626,9 +678,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage R - N
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage R-N</h2>
             </div>
           </div>
 
@@ -764,9 +814,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage S - N
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage S-N</h2>
             </div>
           </div>
 
@@ -902,9 +950,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage T - N
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage T-N</h2>
             </div>
           </div>
 
@@ -1044,9 +1090,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage R - S
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage R-S</h2>
             </div>
           </div>
 
@@ -1182,9 +1226,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage S - T
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage S-T</h2>
             </div>
           </div>
 
@@ -1320,9 +1362,7 @@ export default function Voltage() {
             </div>
 
             <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">
-                Voltage R - T
-              </h2>
+              <h2 className="text-lg font-semibold lg:text-xl">Voltage R-T</h2>
             </div>
           </div>
 
