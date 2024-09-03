@@ -584,10 +584,6 @@ export default function Grounding() {
                 {signal ? "Online" : "Offline"}
               </span>
             </div>
-
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">Ground Input</h2>
-            </div>
           </div>
 
           {/* Body */}
