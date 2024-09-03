@@ -38,7 +38,8 @@ const Default = ({ id, key, alt, title, value }) => {
     gaugeInstance.export("PNG", `${alt} output`);
   }
 
-  const load = (ILoadedEventArgs) => {};
+  // const load = (ILoadedEventArgs) => {};
+
   return (
     <>
       {loaded ? (
@@ -235,7 +236,11 @@ const Default = ({ id, key, alt, title, value }) => {
                                 startValue: "0%",
                                 endValue: "100%",
                                 colorStop: [
-                                  { color: "#fff", offset: "0%", opacity: 0.9 },
+                                  {
+                                    color: "#fff",
+                                    offset: "0%",
+                                    opacity: 0.9,
+                                  },
                                   {
                                     color: "#fff",
                                     offset: "80%",
