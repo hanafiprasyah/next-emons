@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
+import Maps from "@/components/maps/DeviceMap";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [hideTotalUser, setHideTotalUser] = useState(true);
@@ -13,6 +15,192 @@ export default function Dashboard() {
   return (
     <div className="grid grid-cols-1 gap-8 pt-2 pb-6">
       <>
+        {/* Maps */}
+        <section id="map-layout">
+          <div className="flex flex-col bg-white border shadow-sm xl:col-span-4 border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-2 border-b border-stone-200 dark:border-neutral-700">
+              <h2 className="inline-block font-semibold text-stone-800 dark:text-neutral-200">
+                Your installed devices
+              </h2>
+            </div>
+            {/* End Header */}
+            {/* Body */}
+            <div className="grid md:divide-x md:grid-cols-8 divide-stone-200 dark:divide-neutral-600">
+              <div className="p-5 md:col-span-5 lg:col-span-6">
+                {/* Maps component */}
+                <Maps />
+                {/* End Maps component */}
+                <div className="flex items-center justify-center gap-x-2">
+                  <div className="inline-flex items-center">
+                    <span className="size-2.5 inline-block bg-green-500 rounded-sm me-2 dark:bg-green-600" />
+                    <span className="text-[13px] text-stone-600 dark:text-neutral-400">
+                      Installed
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {/* End Col */}
+              <div className="p-2 md:col-span-3 lg:col-span-2">
+                {/* Card */}
+                <div className="p-2 bg-white dark:bg-neutral-800 dark:border-neutral-800">
+                  {/* Nav Tab */}
+                  <nav
+                    className="relative flex gap-x-1 after:absolute after:bottom-0 after:inset-x-0 after:border-b after:border-stone-200 dark:after:border-neutral-700"
+                    aria-label="Tabs"
+                    role="tablist"
+                    aria-orientation="horizontal"
+                  >
+                    <button
+                      type="button"
+                      className="hs-tab-active:after:bg-stone-800 pointer-events-none hs-tab-active:text-stone-800 px-2.5 py-1.5 mb-2 relative inline-flex items-center gap-x-2 hover:bg-stone-100 text-stone-500 hover:text-stone-800 text-sm rounded-lg disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-stone-100 after:absolute after:-bottom-2 after:inset-x-0 after:z-10 after:h-0.5 after:pointer-events-none dark:hs-tab-active:text-neutral-200 dark:hs-tab-active:after:bg-neutral-400 dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 active"
+                      id="hs-pro-tabs-dtsch-item-revenue"
+                      aria-selected="true"
+                      data-hs-tab="#hs-pro-tabs-dtsch-revenue"
+                      aria-controls="hs-pro-tabs-dtsch-revenue"
+                      role="tab"
+                    >
+                      Connected
+                    </button>
+                  </nav>
+                  {/* End Nav Tab */}
+                  <div>
+                    {/* Tab Content */}
+                    <div
+                      id="hs-pro-tabs-dtsch-revenue"
+                      role="tabpanel"
+                      aria-labelledby="hs-pro-tabs-dtsch-item-revenue"
+                    >
+                      <div className="py-4">
+                        <h4 className="text-xl font-semibold md:text-2xl text-stone-800 dark:text-white">
+                          6 Devices
+                        </h4>
+                        {/* Progress */}
+                        <div className="relative mt-3">
+                          <div
+                            className="flex w-full h-2 overflow-hidden rounded-sm bg-stone-200 dark:bg-neutral-700"
+                            role="progressbar"
+                            aria-valuenow={99}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          >
+                            <div
+                              className="flex flex-col justify-center overflow-hidden text-xs text-center text-white transition duration-500 bg-green-600 rounded-sm whitespace-nowrap"
+                              style={{ width: "99%" }}
+                            />
+                          </div>
+                          <div className="absolute top-1/2 start-[99%] w-2 h-5 bg-green-600 border-2 border-white rounded-sm transform -translate-y-1/2 dark:border-neutral-800" />
+                        </div>
+                        {/* End Progress */}
+                        {/* Progress Status */}
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-xs text-stone-800 dark:text-white">
+                            0
+                          </span>
+                          <span className="text-xs text-stone-800 dark:text-white">
+                            Unlimited
+                          </span>
+                        </div>
+                        {/* End Progress Status */}
+                        <p className="mt-4 text-sm text-stone-600 dark:text-neutral-400">
+                          Users can add devices without fear of limitations
+                        </p>
+                      </div>
+                    </div>
+                    {/* End Tab Content */}
+                  </div>
+                </div>
+                {/* End Card */}
+                <div>
+                  {/* Link */}
+                  <Link
+                    className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
+                    href={"/dashboard/voltage"}
+                    prefetch={true}
+                  >
+                    <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="shrink-0 size-3.5 text-green-600 dark:text-green-500"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
+                        />
+                      </svg>
+                    </span>
+                    <div className="grow">
+                      <p>Check your voltage</p>
+                    </div>
+                    <svg
+                      className="shrink-0 size-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                  {/* End Link */}
+                  {/* Link */}
+                  <Link
+                    className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
+                    href={"/dashboard/alarm-logger"}
+                    prefetch={true}
+                  >
+                    <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="shrink-0 size-3.5 text-green-600 dark:text-green-500"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+                        />
+                      </svg>
+                    </span>
+                    <div className="grow">
+                      <p>Prefer to view logs?</p>
+                    </div>
+                    <svg
+                      className="shrink-0 size-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                  {/* End Link */}
+                </div>
+              </div>
+              {/* End Col */}
+            </div>
+            {/* End Body */}
+          </div>
+        </section>
         {/* Stats Grid */}
         <section id="stat-card">
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 md:gap-3 xl:gap-5">
@@ -508,9 +696,10 @@ export default function Dashboard() {
             <>
               {/* List Item */}
               <li>
-                <a
+                <Link
                   className="p-2.5 flex cursor-not-allowed items-center gap-x-3 bg-white border border-gray-200 text-sm font-medium text-gray-800 dark:text-neutral-200 rounded-xl hover:text-blue-600 focus:outline-none focus:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:hover:text-blue-500 dark:focus:bg-neutral-700"
                   href=""
+                  onClick={(e) => e.preventDefault()}
                 >
                   <span className="flex items-center justify-center bg-white border border-gray-200 rounded-lg shrink-0 size-7 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
                     <svg
@@ -545,14 +734,15 @@ export default function Dashboard() {
                   >
                     <path d="m9 18 6-6-6-6" />
                   </svg>
-                </a>
+                </Link>
               </li>
               {/* End List Item */}
               {/* List Item */}
               <li>
-                <a
+                <Link
                   className="p-2.5 flex cursor-not-allowed items-center gap-x-3 bg-white border border-gray-200 text-sm font-medium text-gray-800 dark:text-neutral-200 rounded-xl hover:text-blue-600 focus:outline-none focus:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:hover:text-blue-500 dark:focus:bg-neutral-700"
                   href=""
+                  onClick={(e) => e.preventDefault()}
                 >
                   <span className="flex items-center justify-center bg-white border border-gray-200 rounded-lg shrink-0 size-7 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
                     <svg
@@ -583,14 +773,15 @@ export default function Dashboard() {
                   >
                     <path d="m9 18 6-6-6-6" />
                   </svg>
-                </a>
+                </Link>
               </li>
               {/* End List Item */}
               {/* List Item */}
               <li>
-                <a
+                <Link
                   className="p-2.5 cursor-not-allowed flex items-center gap-x-3 bg-white border border-gray-200 text-sm font-medium text-gray-800 dark:text-neutral-200 rounded-xl hover:text-blue-600 focus:outline-none focus:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:hover:text-blue-500 dark:focus:bg-neutral-700"
                   href=""
+                  onClick={(e) => e.preventDefault()}
                 >
                   <span className="flex items-center justify-center bg-white border border-gray-200 rounded-lg shrink-0 size-7 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
                     <svg
@@ -621,7 +812,7 @@ export default function Dashboard() {
                   >
                     <path d="m9 18 6-6-6-6" />
                   </svg>
-                </a>
+                </Link>
               </li>
               {/* End List Item */}
             </>

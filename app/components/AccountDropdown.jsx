@@ -80,8 +80,9 @@ export default function AccountDropdown() {
         {/* Activity */}
         <div className="p-1">
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
+            onClick={(e) => e.preventDefault()}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -100,8 +101,9 @@ export default function AccountDropdown() {
             Devices
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
+            onClick={(e) => e.preventDefault()}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -125,9 +127,9 @@ export default function AccountDropdown() {
             Locations
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed pointer-events-none gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
-            prefetch={true}
+            onClick={(e) => e.preventDefault()}
           >
             <svg
               className="flex-shrink-0 mt-0.5 size-4"
