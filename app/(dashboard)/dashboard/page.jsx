@@ -4,10 +4,9 @@ import React, { useState } from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
 import Link from "next/link";
-// import Maps from "@/components/maps/DeviceMap";
 
 import dynamic from "next/dynamic";
-const MapDynamic = dynamic(() => import("@/components/maps/DeviceMap"), {
+const MapDynamic = dynamic(() => import("@/components/maps/GoogleMap"), {
   ssr: true,
 });
 
@@ -32,9 +31,10 @@ export default function Dashboard() {
             {/* End Header */}
             {/* Body */}
             <div className="grid md:divide-x md:grid-cols-8 divide-stone-200 dark:divide-neutral-600">
+              {/* Map Layout */}
               <div className="p-5 md:col-span-5 lg:col-span-6">
                 {/* Maps component */}
-                <MapDynamic />
+                <MapDynamic isMarkerShown={true} />
                 {/* End Maps component */}
                 <div className="flex items-center justify-center gap-x-2">
                   <div className="inline-flex items-center">
@@ -45,7 +45,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {/* End Col */}
+              {/* End Map Layout */}
+              {/* Sidebar */}
               <div className="p-2 md:col-span-3 lg:col-span-2">
                 {/* Card */}
                 <div className="p-2 bg-white dark:bg-neutral-800 dark:border-neutral-800">
@@ -201,11 +202,13 @@ export default function Dashboard() {
                   {/* End Link */}
                 </div>
               </div>
-              {/* End Col */}
+              {/* End Sidebar */}
             </div>
             {/* End Body */}
           </div>
         </section>
+        {/* End Maps */}
+
         {/* Stats Grid */}
         <section id="stat-card">
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 md:gap-3 xl:gap-5">
@@ -695,6 +698,8 @@ export default function Dashboard() {
             </>
           </div>
         </section>
+        {/* End Stats Grid */}
+
         {/* Todays TODO List */}
         <section id="todo">
           <ul className="space-y-2">
@@ -823,6 +828,7 @@ export default function Dashboard() {
             </>
           </ul>
         </section>
+        {/* End Todays TODO List */}
       </>
       <PrelineScript />
     </div>

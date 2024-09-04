@@ -15,6 +15,7 @@
     "@preline/overlay": "^2.4.1",
     "@preline/scrollspy": "^2.4.1",
     "@preline/select": "^2.4.1",
+    "@react-google-maps/api": "^2.19.3",
     "@syncfusion/ej2-react-base": "^26.1.35",
     "@syncfusion/ej2-react-charts": "^26.1.40",
     "@syncfusion/ej2-react-circulargauge": "^26.1.38",
