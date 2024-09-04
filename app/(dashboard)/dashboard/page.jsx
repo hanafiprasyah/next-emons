@@ -687,7 +687,7 @@ export default function Dashboard() {
 
                   <div className="grid gap-1 sm:flex sm:justify-between sm:items-center sm:gap-3">
                     <h3 className="text-lg font-semibold text-gray-800 md:text-2xl dark:text-neutral-200">
-                      {hideDeviceList ? `****` : 1}
+                      {hideDeviceList ? `****` : 6}
                     </h3>
                   </div>
                 </div>
