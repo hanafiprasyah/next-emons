@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   crossOrigin: "anonymous",
-  reactStrictMode: true,
+  reactStrictMode: false,
   trailingSlash: true,
   poweredByHeader: false,
   optimizeFonts: true,

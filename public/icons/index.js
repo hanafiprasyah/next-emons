@@ -1,0 +1,11 @@
+export { default as Home } from "./Home.svg";
+export { default as Voltage } from "./Voltage.svg";
+export { default as Current } from "./Current.svg";
+export { default as Ground } from "./Grounding.svg";
+export { default as Frequency } from "./Frequency.svg";
+export { default as Temperature } from "./Temperature.svg";
+export { default as Energy } from "./Energy.svg";
+export { default as PowerFactor } from "./PowerFactor.svg";
+export { default as THDv } from "./THDv.svg";
+export { default as THDi } from "./THDi.svg";
+export { default as SdCardLog } from "./CardLogger.svg";

@@ -3,7 +3,20 @@
 import Link from "next/link";
 import React from "react";
 import { usePathname } from "next/navigation";
-// import deviceList from "../../lib/api/device-api";
+import {
+  Home,
+  Voltage,
+  Current,
+  Ground,
+  Frequency,
+  Temperature,
+  Energy,
+  PowerFactor,
+  THDv,
+  THDi,
+  SdCardLog,
+} from "../../../public/icons";
+import Image from "next/image";
 
 export default function DashboardSidebar() {
   /**
@@ -180,21 +193,13 @@ export default function DashboardSidebar() {
                     href="/dashboard"
                     prefetch={true}
                   >
-                    <svg
+                    <Image
+                      src={Home}
                       className="flex-shrink-0 size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                      <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Dashboard
                   </Link>
                 </li>
@@ -223,20 +228,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/voltage"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Voltage}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Voltage
                   </Link>
                 </li>
@@ -252,20 +250,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/current"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Current}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Current
                   </Link>
                 </li>
@@ -281,20 +272,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/ground"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Ground}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 9h16.5m-16.5 6.75h16.5"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Ground
                   </Link>
                 </li>
@@ -311,20 +295,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/frequency/"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Frequency}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Frequency
                   </Link>
                 </li>
@@ -341,20 +318,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/temperature/"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Temperature}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Temperature
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
                       Soon
@@ -374,20 +344,13 @@ export default function DashboardSidebar() {
                     // onClick={(e) => e.preventDefault()}
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={Energy}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Energy
                   </Link>
                 </li>
@@ -404,20 +367,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/pf/"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={PowerFactor}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     Power Factor
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
                       Soon
@@ -437,20 +393,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/thdv/"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={THDv}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     THDv
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
                       Soon
@@ -470,20 +419,13 @@ export default function DashboardSidebar() {
                     href="/dashboard/thdi/"
                     prefetch={true}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
+                    <Image
+                      src={THDi}
                       className="flex-shrink-0 mt-0.5 size-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
-                      />
-                    </svg>
+                      width={24}
+                      height={24}
+                      alt="EMONS"
+                    ></Image>
                     THDi
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
                       Soon
@@ -581,20 +523,13 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
+                      <Image
+                        src={SdCardLog}
                         className="flex-shrink-0 size-3"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"
-                        />
-                      </svg>
+                        width={24}
+                        height={24}
+                        alt="EMONS"
+                      ></Image>
                     </span>
                     SD Card Log
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
