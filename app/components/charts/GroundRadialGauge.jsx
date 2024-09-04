@@ -7,6 +7,8 @@ import {
   AxisDirective,
   PointersDirective,
   PointerDirective,
+  RangesDirective,
+  RangeDirective,
   Inject,
   Annotation,
   Annotations,
@@ -36,7 +38,8 @@ const Default = ({ id, key, alt, title, value }) => {
     gaugeInstance.export("PNG", `Ground output`);
   }
 
-  const load = (ILoadedEventArgs) => {};
+  // const load = (ILoadedEventArgs) => {};
+
   return (
     <>
       {loaded ? (
@@ -51,10 +54,10 @@ const Default = ({ id, key, alt, title, value }) => {
         <>
           {/* Gauge Card */}
           <div
-            className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out border dark:shadow-sm rounded-xl dark:bg-neutral-800 dark:border-transparent ${
+            className={`flex flex-col overflow-hidden my-2 mx-2 md:my-3 md:mx-3 transition-all duration-200 ease-in-out border dark:shadow-sm rounded-xl dark:bg-neutral-800 ${
               title === "Input"
-                ? "hover:dark:border-red-500"
-                : "hover:dark:border-emerald-500"
+                ? "dark:border-rose-500"
+                : "dark:border-emerald-500"
             } hover:dark:shadow-lg focus:dark:shadow-lg`}
           >
             <div className="relative group">
@@ -77,8 +80,8 @@ const Default = ({ id, key, alt, title, value }) => {
                     margin={{
                       left: 100,
                       right: 100,
-                      top: 120,
-                      bottom: 0,
+                      top: 100,
+                      bottom: 100,
                     }}
                     background="transparent"
                     tooltip={{
@@ -97,12 +100,12 @@ const Default = ({ id, key, alt, title, value }) => {
                     <AxesDirective>
                       <AxisDirective
                         minimum={0}
-                        maximum={20}
-                        hideIntersectingLabel={true}
+                        maximum={10}
+                        // hideIntersectingLabel={true}
                         labelStyle={{
                           hiddenLabel: "None",
                           position: "Outside",
-                          format: `{value} A`,
+                          format: `{value} V`,
                           offset: 0,
                           font: {
                             color: "white",
@@ -110,8 +113,8 @@ const Default = ({ id, key, alt, title, value }) => {
                             fontWeight: "Normal",
                           },
                         }}
-                        startAngle={270}
-                        endAngle={90}
+                        startAngle={10}
+                        endAngle={350}
                         direction="ClockWise"
                         radius="100%"
                         majorTicks={{
@@ -131,15 +134,44 @@ const Default = ({ id, key, alt, title, value }) => {
                           offset: 5,
                         }}
                         lineStyle={{
-                          width: 1,
+                          width: 0,
                           color: "",
                         }}
                       >
+                        <RangesDirective>
+                          <RangeDirective
+                            color="#1bd155"
+                            start={0}
+                            end={1.5}
+                            startWidth={2}
+                            endWidth={10}
+                            radius="74%"
+                            // roundedCornerRadius={4}
+                          ></RangeDirective>
+                          <RangeDirective
+                            color="#e8e833"
+                            start={1.52}
+                            end={5}
+                            startWidth={4}
+                            endWidth={10}
+                            radius="74%"
+                            // roundedCornerRadius={4}
+                          ></RangeDirective>
+                          <RangeDirective
+                            color="#e84a35"
+                            start={5.02}
+                            end={10}
+                            radius="74%"
+                            endWidth={10}
+                            startWidth={4}
+                            // roundedCornerRadius={4}
+                          ></RangeDirective>
+                        </RangesDirective>
                         <PointersDirective>
                           <PointerDirective
                             value={value}
                             animation={{ enable: true, duration: 500 }}
-                            radius="80%"
+                            radius="60%"
                             markerHeight={6}
                             markerWidth={4}
                             pointerWidth={4}
@@ -147,11 +179,15 @@ const Default = ({ id, key, alt, title, value }) => {
                               startValue: "0%",
                               endValue: "100%",
                               colorStop: [
-                                { color: "#fff", offset: "0%", opacity: 0.9 },
+                                {
+                                  color: "#fff",
+                                  offset: "0%",
+                                  opacity: 0.5,
+                                },
                                 {
                                   color: "#fff",
                                   offset: "80%",
-                                  opacity: 0.9,
+                                  opacity: 0.5,
                                 },
                               ],
                             }}
@@ -172,12 +208,12 @@ const Default = ({ id, key, alt, title, value }) => {
                                   {
                                     color: "#fff",
                                     offset: "0%",
-                                    opacity: 0.9,
+                                    opacity: 0.5,
                                   },
                                   {
                                     color: "#fff",
                                     offset: "60%",
-                                    opacity: 0.9,
+                                    opacity: 0.5,
                                   },
                                 ],
                               },
@@ -190,7 +226,7 @@ const Default = ({ id, key, alt, title, value }) => {
                             radius="-30%"
                             zIndex="1"
                             textStyle={{ size: "10px" }}
-                            content={`<div><div><span> ${value} A</span></div></div>`}
+                            content={`<div><div><span> ${value} V</span></div></div>`}
                           />
                         </AnnotationsDirective>
                       </AxisDirective>
@@ -201,6 +237,13 @@ const Default = ({ id, key, alt, title, value }) => {
 
                 {/* More Dropdown */}
                 <div className="absolute top-3 end-3 group-hover:opacity-100 lg:opacity-0">
+                  {/* Pulse show when mobile view */}
+                  <div className="inline-flex md:hidden p-0 lg:p-0.5 me-2 border border-gray-200 rounded-full dark:border-neutral-700">
+                    <span className="relative flex w-3 h-3">
+                      <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
+                      <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
+                    </span>
+                  </div>
                   <div className="p-0.5 sm:p-1 inline-flex items-center bg-white border border-gray-200 lg:shadow rounded-lg dark:bg-neutral-800 dark:border-neutral-700">
                     {/* Share Icon */}
                     <div className="inline-block hs-tooltip">

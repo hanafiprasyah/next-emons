@@ -677,7 +677,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage R-N</h2>
             </div>
           </div>
@@ -813,7 +813,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage S-N</h2>
             </div>
           </div>
@@ -949,7 +949,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage T-N</h2>
             </div>
           </div>
@@ -1089,7 +1089,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage R-S</h2>
             </div>
           </div>
@@ -1225,7 +1225,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage S-T</h2>
             </div>
           </div>
@@ -1361,7 +1361,7 @@ export default function Voltage() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">Voltage R-T</h2>
             </div>
           </div>

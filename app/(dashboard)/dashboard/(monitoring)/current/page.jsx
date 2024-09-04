@@ -585,8 +585,10 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">Current R</h2>
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+              <h2 className="text-lg font-semibold lg:text-xl">
+                {`Current (Ampere) R`}
+              </h2>
             </div>
           </div>
 
@@ -719,8 +721,8 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">Current S</h2>
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+              <h2 className="text-lg font-semibold lg:text-xl">{`Current (Ampere) S`}</h2>
             </div>
           </div>
 
@@ -853,8 +855,8 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[90px] md:h-[62px] mx-auto">
-              <h2 className="text-lg font-semibold lg:text-xl">Current T</h2>
+            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+              <h2 className="text-lg font-semibold lg:text-xl">{`Current (Ampere) T`}</h2>
             </div>
           </div>
 

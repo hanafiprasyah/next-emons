@@ -54,10 +54,10 @@ const Default = ({ id, key, alt, title, value }) => {
         <>
           {/* Gauge Card */}
           <div
-            className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out border dark:shadow-sm rounded-xl dark:bg-neutral-800 dark:border-transparent ${
+            className={`flex flex-col overflow-hidden my-2 mx-2 md:my-3 md:mx-3 transition-all duration-200 ease-in-out border dark:shadow-sm rounded-xl dark:bg-neutral-800 ${
               title === "Input"
-                ? "hover:dark:border-red-500"
-                : "hover:dark:border-emerald-500"
+                ? "dark:border-rose-500"
+                : "dark:border-emerald-500"
             } hover:dark:shadow-lg focus:dark:shadow-lg`}
           >
             <div className="relative group">
@@ -117,11 +117,11 @@ const Default = ({ id, key, alt, title, value }) => {
                       />
                       <AxesDirective>
                         <AxisDirective
-                          minimum={180}
-                          maximum={340}
-                          hideIntersectingLabel={true}
+                          minimum={100}
+                          maximum={400}
+                          // hideIntersectingLabel={true}
                           labelStyle={{
-                            hiddenLabel: "Last",
+                            hiddenLabel: "None",
                             position: "Outside",
                             format: `{value} V`,
                             offset: 0,
@@ -131,12 +131,12 @@ const Default = ({ id, key, alt, title, value }) => {
                               fontWeight: "Normal",
                             },
                           }}
-                          startAngle={0}
-                          endAngle={360}
+                          startAngle={10}
+                          endAngle={350}
                           direction="ClockWise"
                           radius="100%"
                           majorTicks={{
-                            interval: 10,
+                            interval: 20,
                             color: "#00379e",
                             height: 10,
                             width: 3,
@@ -144,7 +144,7 @@ const Default = ({ id, key, alt, title, value }) => {
                             offset: 0,
                           }}
                           minorTicks={{
-                            interval: 5,
+                            interval: 10,
                             color: "#fff",
                             height: 4,
                             width: 1,
@@ -158,69 +158,28 @@ const Default = ({ id, key, alt, title, value }) => {
                         >
                           <RangesDirective>
                             <RangeDirective
+                              color="#e8e833"
                               start={0}
-                              end={218}
+                              end={200}
                               startWidth={2}
                               endWidth={10}
                               radius="74%"
-                              linearGradient={{
-                                startValue: "0%",
-                                endValue: "100%",
-                                colorStop: [
-                                  {
-                                    color: "#e8e833",
-                                    offset: "90%",
-                                    opacity: 0.9,
-                                  },
-                                  {
-                                    color: "#1bd155",
-                                    offset: "100%",
-
-                                    opacity: 0.9,
-                                  },
-                                ],
-                              }}
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                             <RangeDirective
-                              start={218.3}
-                              end={224}
+                              color="#1bd155"
+                              start={200}
+                              end={240}
                               radius="74%"
-                              linearGradient={{
-                                startValue: "0%",
-                                endValue: "100%",
-                                colorStop: [
-                                  {
-                                    color: "#1bd155",
-                                    offset: "0%",
-                                    opacity: 0.9,
-                                  },
-                                  {
-                                    color: "#1bd155",
-                                    offset: "100%",
-
-                                    opacity: 0.9,
-                                  },
-                                ],
-                              }}
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                             <RangeDirective
                               color="#e84a35"
-                              start={224.3}
-                              end={320}
+                              start={240.3}
+                              end={400}
                               radius="74%"
                               endWidth={10}
                               startWidth={2}
-                              // roundedCornerRadius={4}
-                            ></RangeDirective>
-                            <RangeDirective
-                              color="#e84a35"
-                              start={320}
-                              end={450}
-                              radius="74%"
-                              endWidth={10}
-                              startWidth={10}
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                           </RangesDirective>
@@ -239,12 +198,12 @@ const Default = ({ id, key, alt, title, value }) => {
                                   {
                                     color: "#fff",
                                     offset: "0%",
-                                    opacity: 0.9,
+                                    opacity: 0.5,
                                   },
                                   {
                                     color: "#fff",
                                     offset: "80%",
-                                    opacity: 0.9,
+                                    opacity: 0.5,
                                   },
                                 ],
                               }}
@@ -265,12 +224,12 @@ const Default = ({ id, key, alt, title, value }) => {
                                     {
                                       color: "#fff",
                                       offset: "0%",
-                                      opacity: 0.9,
+                                      opacity: 0.5,
                                     },
                                     {
                                       color: "#fff",
                                       offset: "60%",
-                                      opacity: 0.9,
+                                      opacity: 0.5,
                                     },
                                   ],
                                 },
@@ -294,6 +253,13 @@ const Default = ({ id, key, alt, title, value }) => {
 
                   {/* More Dropdown */}
                   <div className="absolute top-3 end-3 group-hover:opacity-100 lg:opacity-0">
+                    {/* Pulse show when mobile view */}
+                    <div className="inline-flex md:hidden p-0 lg:p-0.5 me-2 border border-gray-200 rounded-full dark:border-neutral-700">
+                      <span className="relative flex w-3 h-3">
+                        <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
+                        <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
+                      </span>
+                    </div>
                     <div className="p-0.5 sm:p-1 inline-flex items-center bg-white border border-gray-200 lg:shadow rounded-lg dark:bg-neutral-800 dark:border-neutral-700">
                       {/* Share Icon */}
                       <div className="inline-block hs-tooltip">

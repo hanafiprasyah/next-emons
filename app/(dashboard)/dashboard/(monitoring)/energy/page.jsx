@@ -599,7 +599,7 @@ export default function Energy() {
                       <DynamicCardEnergy
                         id={"energy-kwh-input"}
                         key={"kwh-input"}
-                        alt={"ALT"}
+                        alt={"Input"}
                         title="KWH Input"
                         valueR={
                           item.location_id === selectDev[0]
@@ -655,7 +655,7 @@ export default function Energy() {
                       <DynamicCardEnergy
                         id={"energy-kwh-input"}
                         key={"kwh-input"}
-                        alt={"ALT"}
+                        alt={"Output"}
                         title="KWH Output"
                         valueR={
                           item.location_id === selectDev[0]
@@ -765,7 +765,7 @@ export default function Energy() {
                       <DynamicCardEnergy
                         id={"energy-kvarh-input"}
                         key={"kvarh-input"}
-                        alt={"KVARH ALT"}
+                        alt={"Input"}
                         title="KVARH Input"
                         valueR={
                           item.location_id === selectDev[0]
@@ -821,7 +821,7 @@ export default function Energy() {
                       <DynamicCardEnergy
                         id={"energy-kvarh-input"}
                         key={"kvarh-input"}
-                        alt={"KVARH ALT"}
+                        alt={"Output"}
                         title="KVARH Output"
                         valueR={
                           item.location_id === selectDev[0]
