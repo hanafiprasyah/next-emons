@@ -140,9 +140,6 @@ const Default = () => {
         const firstIndexSite = dataSite.site["data"][0];
         if (selectLoc.length === 0) {
           setSelectLoc([firstIndexSite["lat"], firstIndexSite["lot"]]);
-          console.log("First row: " + selectLoc);
-          console.log("First row of selectLoc: " + selectLoc[0]);
-          console.log("Second row of selectLoc: " + selectLoc[1]);
         }
       }
     });

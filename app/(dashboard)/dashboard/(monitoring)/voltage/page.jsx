@@ -269,8 +269,10 @@ export default function Voltage() {
                 setChannel("Stable");
               }, 100);
 
-              console.log(hoursAgo);
-              console.log(currentDate);
+              if (process.env.NODE_ENV === "development") {
+                console.log(hoursAgo);
+                console.log(currentDate);
+              }
 
               // READY TO FLIGHT -> !
               // fetchVoltage(
