@@ -23,33 +23,10 @@ export default function Dashboard() {
         {/* Maps */}
         <section id="map-layout">
           <div className="flex flex-col bg-white border shadow-sm xl:col-span-4 border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-            {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-2 border-b border-stone-200 dark:border-neutral-700">
-              <h2 className="inline-block font-semibold text-stone-800 dark:text-neutral-200">
-                Your installed devices
-              </h2>
-            </div>
-            {/* End Header */}
             {/* Body */}
-            <div className="grid md:divide-x md:grid-cols-8 divide-stone-200 dark:divide-neutral-600">
-              {/* Map Layout */}
-              <div className="p-5 md:col-span-5 lg:col-span-6">
-                {/* Maps component */}
-                {/* <MapDynamic isMarkerShown={true} /> */}
-                <Maps></Maps>
-                {/* End Maps component */}
-                <div className="flex items-center justify-center gap-x-2">
-                  <div className="inline-flex items-center">
-                    <span className="size-2.5 inline-block bg-green-500 rounded-sm me-2 dark:bg-green-600" />
-                    <span className="text-[13px] text-stone-600 dark:text-neutral-400">
-                      Installed
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* End Map Layout */}
-              {/* Sidebar */}
-              <div className="p-2 md:col-span-3 lg:col-span-2">
+            <div className="grid md:grid-cols-8 divide-stone-200 dark:divide-neutral-600">
+              {/* Header of Body */}
+              <div className="p-2 md:col-span-4">
                 {/* Card */}
                 <div className="p-2 bg-white dark:bg-neutral-800 dark:border-neutral-800">
                   {/* Nav Tab */}
@@ -68,7 +45,7 @@ export default function Dashboard() {
                       aria-controls="hs-pro-tabs-dtsch-revenue"
                       role="tab"
                     >
-                      Connected
+                      Devices Installed
                     </button>
                   </nav>
                   {/* End Nav Tab */}
@@ -119,8 +96,13 @@ export default function Dashboard() {
                   </div>
                 </div>
                 {/* End Card */}
-                <div>
-                  {/* Link */}
+              </div>
+              {/* End Header of Body */}
+              {/* Links to navigate */}
+              <div className="hidden p-2 mt-0 md:block md:mt-3 md:col-span-4">
+                {/* Link Content */}
+                <div className="w-full">
+                  {/* to Voltage */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
                     href={"/dashboard/voltage"}
@@ -138,12 +120,12 @@ export default function Dashboard() {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
                         />
                       </svg>
                     </span>
                     <div className="grow">
-                      <p>Check your voltage</p>
+                      <p>Your voltage quality</p>
                     </div>
                     <svg
                       className="shrink-0 size-4"
@@ -160,8 +142,87 @@ export default function Dashboard() {
                       <path d="m9 18 6-6-6-6" />
                     </svg>
                   </Link>
-                  {/* End Link */}
-                  {/* Link */}
+                  {/* to Ground */}
+                  <Link
+                    className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
+                    href={"/dashboard/ground"}
+                    prefetch={true}
+                  >
+                    <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="shrink-0 size-3.5 text-green-600 dark:text-green-500"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                      </svg>
+                    </span>
+                    <div className="grow">
+                      <p>Check your ground quality</p>
+                    </div>
+                    <svg
+                      className="shrink-0 size-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                  {/* to Current */}
+                  <Link
+                    className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
+                    href={"/dashboard/ground"}
+                    prefetch={true}
+                  >
+                    <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="shrink-0 size-3.5 text-green-600 dark:text-green-500"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                      </svg>
+                    </span>
+                    <div className="grow">
+                      <p>About your electricity usage load?</p>
+                    </div>
+                    <svg
+                      className="shrink-0 size-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </Link>
+                  {/* to Alarm Log */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
                     href={"/dashboard/alarm-logger"}
@@ -201,10 +262,26 @@ export default function Dashboard() {
                       <path d="m9 18 6-6-6-6" />
                     </svg>
                   </Link>
-                  {/* End Link */}
+                </div>
+                {/* End Link Content */}
+              </div>
+              {/* End Links to navigate */}
+              {/* Map Layout */}
+              <div className="p-5 md:col-span-8">
+                {/* Maps component */}
+                {/* <MapDynamic isMarkerShown={true} /> */}
+                <Maps></Maps>
+                {/* End Maps component */}
+                <div className="flex items-center justify-center gap-x-2">
+                  <div className="inline-flex items-center">
+                    <span className="size-2.5 inline-block bg-green-500 rounded-sm me-2 dark:bg-green-600" />
+                    <span className="text-[13px] text-stone-600 dark:text-neutral-400">
+                      Installed
+                    </span>
+                  </div>
                 </div>
               </div>
-              {/* End Sidebar */}
+              {/* End Map Layout */}
             </div>
             {/* End Body */}
           </div>
@@ -213,6 +290,23 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <section id="stat-card">
+          <h2 className="flex items-center mb-4 text-lg align-middle shrink-0 ms-2 md:text-2xl text-wrap">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="inline-flex size-5 text-amber-400 me-2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+              />
+            </svg>
+            Status Panel
+          </h2>
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 md:gap-3 xl:gap-5">
             <>
               {/* Total Users */}
@@ -704,6 +798,23 @@ export default function Dashboard() {
 
         {/* Todays TODO List */}
         <section id="todo">
+          <h2 className="flex items-center mb-4 text-lg align-middle shrink-0 ms-2 md:text-2xl text-wrap">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="inline-flex size-5 text-amber-400 me-2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+              />
+            </svg>
+            Your daily-checks routinity!
+          </h2>
           <ul className="space-y-2">
             <>
               {/* List Item */}

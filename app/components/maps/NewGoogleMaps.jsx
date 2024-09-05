@@ -46,6 +46,9 @@ const Default = () => {
         renderingType="RASTER"
         defaultCenter={{ lat: -6.339751116240491, lng: 107.03895701470938 }}
         defaultZoom={30}
+        disableDefaultUI={false}
+        clickableIcons={true}
+        className="w-full mb-4 overflow-hidden rounded-md shadow-lg lg:rounded-lg lg:mb-6 h-96 lg:h-80"
       >
         <>
           <AdvancedMarker
