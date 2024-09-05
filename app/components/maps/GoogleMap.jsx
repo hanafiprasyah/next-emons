@@ -26,12 +26,6 @@ const GoogleMapComponent = (props) => {
     height: "400px",
   };
 
-  // Center the initial location to Indonesia views
-  const center = {
-    lat: -2.2102129331700118,
-    lng: 120.06973976670227,
-  };
-
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
     tenant,
@@ -209,23 +203,8 @@ const GoogleMapComponent = (props) => {
 
   return (
     <LoadScript
-      id="script-map"
+      id="google-maps"
       region="Asia"
-      onError={(error) => {
-        return (
-          <div
-            class="mt-2 bg-red-100 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500"
-            role="alert"
-            tabindex="-1"
-            aria-labelledby="hs-soft-color-danger-label"
-          >
-            <span id="hs-soft-color-danger-label" class="font-bold">
-              Danger
-            </span>{" "}
-            This page does not load Google Maps correctly!
-          </div>
-        );
-      }}
       authReferrerPolicy="origin"
       googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
       loadingElement={
@@ -237,19 +216,39 @@ const GoogleMapComponent = (props) => {
           <span className="sr-only">Loading...</span>
         </div>
       }
+      onError={
+        <div
+          class="mt-2 bg-red-100 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500"
+          role="alert"
+          tabindex="-1"
+          aria-labelledby="hs-soft-color-danger-label"
+        >
+          <span id="hs-soft-color-danger-label" class="font-bold">
+            Danger
+          </span>{" "}
+          This page does not load Google Maps correctly!
+        </div>
+      }
     >
-      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={30}>
+      <GoogleMap
+        center={{ lat: -6.345678637232396, lng: 106.8737572296187 }}
+        clickableIcons={true}
+        mapContainerStyle={containerStyle}
+        zoom={20}
+      >
         {props.isMarkerShown &&
           dataDev.map((location, index) => (
             <Marker
               key={index}
+              clickable={true}
+              draggable={false}
               position={{
                 lat: location.lat,
                 lng: location.lot,
               }}
               label={location.name}
               icon={getMarkerIcon(markerColors[location.id] || "red")}
-              onClick={() => toggleMarkerColor(location.id)} // Toggle color on marker click
+              onClick={() => toggleMarkerColor(location.id)}
             />
           ))}
       </GoogleMap>
