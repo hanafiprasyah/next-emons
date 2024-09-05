@@ -71,12 +71,6 @@ const Default = ({ id, key, alt, title, value }) => {
                     alt={alt}
                     allowImageExport={true}
                     ref={(g) => (gaugeInstance = g)}
-                    // title={title}
-                    // titleStyle={{
-                    //   color: "#fff",
-                    //   fontStyle: "medium",
-                    //   fontFamily: "quicksand",
-                    // }}
                     margin={{
                       left: 100,
                       right: 100,
@@ -101,7 +95,7 @@ const Default = ({ id, key, alt, title, value }) => {
                       <AxisDirective
                         minimum={0}
                         maximum={70}
-                        // hideIntersectingLabel={true}
+                        hideIntersectingLabel={false}
                         labelStyle={{
                           hiddenLabel: "None",
                           position: "Outside",
@@ -109,7 +103,7 @@ const Default = ({ id, key, alt, title, value }) => {
                           offset: 0,
                           font: {
                             color: "white",
-                            size: "10px",
+                            size: "12px",
                             fontWeight: "Normal",
                           },
                         }}
@@ -152,8 +146,8 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#1bd155"
                             start={44.95}
                             end={55}
-                            startWidth={15}
-                            endWidth={15}
+                            startWidth={10}
+                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>

@@ -1,6 +1,6 @@
 'use client'
 
-// import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 import { IStaticMethods } from "preline/preline";
@@ -11,19 +11,19 @@ declare global {
 }
 
 export default function PrelineScript() {
-    // const path = usePathname();
+    const path = usePathname();
 
     useEffect(() => {
         const loadPreline = async () => {
             await import("preline/preline");
-            window.HSStaticMethods.autoInit();
+            path?.endsWith('/') ? window.HSStaticMethods.autoInit() : window.HSStaticMethods.autoInit();
             if (process.env.NODE_ENV === 'development') {
                 console.log('--- Preline initialized ---')
             }
         };
 
         loadPreline();
-    }, []);
+    }, [path]);
 
     return null;
 }

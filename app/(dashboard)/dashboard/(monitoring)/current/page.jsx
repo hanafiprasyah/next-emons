@@ -309,92 +309,8 @@ export default function Current() {
     <div id="current-template" className="grid grid-cols-1 gap-4">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
-        <div className="min-h-[50px] md:min-h-[32px] flex flex-wrap justify-between items-center gap-3">
-          <div className="-ms-1">
-            {/* Breadcrumb */}
-            <ol className="flex items-center whitespace-nowrap">
-              <>
-                <li className="flex items-center">
-                  <Link
-                    className="py-0.5 px-1.5 flex items-center gap-x-1 text-sm rounded-md gray=='true'){text-gray-600 hover:bg-gray-100 focus:bg-gray-100}text-stone-600 hover:bg-stone-100 focus:bg-stone-100 focus:outline-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                    href="/dashboard"
-                    prefetch={true}
-                  >
-                    <span className="flex items-center justify-center -mx-1 shrink-0 size-5">
-                      <svg
-                        className="shrink-0 size-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={24}
-                        height={24}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                      </svg>
-                      <span className="sr-only">Home</span>
-                    </span>
-                  </Link>
-                  <svg
-                    className="overflow-visible shrink-0 size-4 text-stone-400 dark:text-neutral-600"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 13L10 3"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </li>
-                <li className="flex items-center">
-                  <Link
-                    className="py-0.5 px-1.5 flex items-center gap-x-1 text-sm rounded-md gray=='true'){text-gray-600 hover:bg-gray-100 focus:bg-gray-100}text-stone-600 hover:bg-stone-100 focus:bg-stone-100 focus:outline-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                    href="/dashboard/current"
-                    prefetch={false}
-                  >
-                    Current
-                  </Link>
-                  <svg
-                    className="overflow-visible shrink-0 size-4 text-stone-400 dark:text-neutral-600"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 13L10 3"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </li>
-                <li className="flex items-center">
-                  <a
-                    className="py-0.5 px-1.5 pointer-events-none flex items-center gap-x-1 text-sm rounded-md gray=='true'){text-gray-600 hover:bg-gray-100 focus:bg-gray-100}text-stone-600 hover:bg-stone-100 focus:bg-stone-100 focus:outline-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-                    href=""
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    Overview
-                  </a>
-                </li>
-              </>
-            </ol>
-            {/* End Breadcrumb */}
-          </div>
-        </div>
         {/* Title */}
-        <h4 className="pt-0 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-2 dark:text-neutral-200">
+        <h4 className="pt-2 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-0 dark:text-neutral-200">
           Current
         </h4>
         {/* End Title */}
@@ -585,7 +501,7 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+            <div className="shrink-0 pb-2 md:pb-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">
                 {`Current (Ampere) R`}
               </h2>
@@ -612,7 +528,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -653,7 +569,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -721,7 +637,7 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+            <div className="shrink-0 pb-2 md:pb-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">{`Current (Ampere) S`}</h2>
             </div>
           </div>
@@ -746,7 +662,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -787,7 +703,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -855,7 +771,7 @@ export default function Current() {
               </span>
             </div>
 
-            <div className="shrink-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
+            <div className="shrink-0 pb-2 md:pb-0 relative text-center size-11 w-full md:w-[220px] md:h-[50px] mx-auto">
               <h2 className="text-lg font-semibold lg:text-xl">{`Current (Ampere) T`}</h2>
             </div>
           </div>
@@ -880,7 +796,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"
@@ -921,7 +837,7 @@ export default function Current() {
                   }
                   return (
                     <div key={index}>
-                      <span className="items-center hidden px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                      <span className="items-center hidden px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full md:inline-flex gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                         <svg
                           className="shrink-0 size-3"
                           xmlns="http://www.w3.org/2000/svg"

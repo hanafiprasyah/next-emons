@@ -89,12 +89,6 @@ const Default = ({ id, key, alt, title, value }) => {
                       alt={alt}
                       allowImageExport={true}
                       ref={(g) => (gaugeInstance = g)}
-                      // title={title}
-                      // titleStyle={{
-                      //   color: "#fff",
-                      //   fontStyle: "medium",
-                      //   fontFamily: "quicksand",
-                      // }}
                       margin={{
                         left: 100,
                         right: 100,
@@ -119,7 +113,7 @@ const Default = ({ id, key, alt, title, value }) => {
                         <AxisDirective
                           minimum={100}
                           maximum={400}
-                          // hideIntersectingLabel={true}
+                          hideIntersectingLabel={false}
                           labelStyle={{
                             hiddenLabel: "None",
                             position: "Outside",
@@ -127,12 +121,12 @@ const Default = ({ id, key, alt, title, value }) => {
                             offset: 0,
                             font: {
                               color: "white",
-                              size: "10px",
+                              size: "12px",
                               fontWeight: "Normal",
                             },
                           }}
-                          startAngle={10}
-                          endAngle={350}
+                          startAngle={20}
+                          endAngle={340}
                           direction="ClockWise"
                           radius="100%"
                           majorTicks={{
@@ -158,10 +152,10 @@ const Default = ({ id, key, alt, title, value }) => {
                         >
                           <RangesDirective>
                             <RangeDirective
-                              color="#e8e833"
+                              color="#e84a35"
                               start={0}
                               end={200}
-                              startWidth={2}
+                              startWidth={4}
                               endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
@@ -170,16 +164,18 @@ const Default = ({ id, key, alt, title, value }) => {
                               color="#1bd155"
                               start={200}
                               end={240}
+                              startWidth={10}
+                              endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                             <RangeDirective
                               color="#e84a35"
-                              start={240.3}
+                              start={241.5}
                               end={400}
                               radius="74%"
                               endWidth={10}
-                              startWidth={2}
+                              startWidth={10}
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                           </RangesDirective>
@@ -239,7 +235,7 @@ const Default = ({ id, key, alt, title, value }) => {
                           <AnnotationsDirective>
                             <AnnotationDirective
                               angle={0}
-                              radius="-30%"
+                              radius="32%"
                               zIndex="1"
                               textStyle={{ size: "10px" }}
                               content={`<div><div><span> ${value} V</span></div></div>`}

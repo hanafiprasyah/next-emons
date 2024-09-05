@@ -1,29 +1,152 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  InfoWindow,
-  useMap,
-  useAdvancedMarkerRef,
-  Pin,
-} from "@vis.gl/react-google-maps";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import MarkerWithInfo from "./Marker";
 
 const Default = () => {
-  const [markerRef, marker] = useAdvancedMarkerRef();
-  const [infoWindowShown, setInfoWindowShown] = useState(false);
+  // local Value
+  const [localTenant, setLocalTenant] = useState("");
 
-  // clicking the marker will toggle the infowindow
-  const handleMarkerClick = useCallback(
-    () => setInfoWindowShown((isShown) => !isShown),
-    []
-  );
+  // Used to set the /tool/dataside API
+  const [dataLoc, setDataLoc] = useState([]);
+  const [selectLoc, setSelectLoc] = useState([]);
+  // const [selectLoc, setSelectLoc] = useState([10, 'Siloam Cibubur']);
 
-  // if the maps api closes the infowindow, we have to synchronize our state
-  const handleClose = useCallback(() => setInfoWindowShown(false), []);
+  // Used to set the /tool/dataLocation API
+  const [dataDev, setDataDev] = useState([]);
+  const [selectDev, setSelectDev] = useState([]);
+  // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Function to fetch the /tool/dataside API
+  const fetchSite = async (
+    tenant,
+    locationid,
+    lane,
+    status,
+    value,
+    side,
+    start_trancation_date,
+    end_trancation_date
+  ) => {
+    const response = await fetch("/api/tools/site/getsite", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        locationid: locationid ?? 0,
+        lane: lane ?? "",
+        status: status ?? "",
+        value: value ?? "",
+        side: side ?? "",
+        start_trancation_date: start_trancation_date ?? "",
+        end_trancation_date: end_trancation_date ?? "",
+        tenant: tenant ?? "",
+      }),
+    });
+
+    return response.json();
+  };
+
+  // Function to fetch the /tool/dataLocation API
+  const fetchDevice = async (
+    tenant,
+    locationid,
+    lane,
+    status,
+    value,
+    side,
+    start_trancation_date,
+    end_trancation_date
+  ) => {
+    const response = await fetch("/api/tools/location/getlocation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        locationid: locationid ?? 0,
+        lane: lane ?? "",
+        status: status ?? "",
+        value: value ?? "",
+        side: side ?? "0",
+        start_trancation_date: start_trancation_date ?? "",
+        end_trancation_date: end_trancation_date ?? "",
+        tenant: tenant ?? "",
+      }),
+    });
+
+    return response.json();
+  };
+
+  useEffect(() => {
+    // Get local tenant item
+    const currentUser = localStorage.getItem("tenant");
+    if (localStorage.length != 0) {
+      setLocalTenant(`${currentUser.toString()}`);
+    }
+
+    // TODO: fetch all site data
+    fetchDevice(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      "0",
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    ).then((dataLocation) => {
+      if (process.env.NODE_ENV === "development") {
+        console.log(dataLocation.loc["data"]);
+      }
+
+      if (dataLocation.message == "OK") {
+        setDataDev(dataLocation.loc["data"]);
+      }
+    });
+
+    // TODO: fetch the first row of site data
+    fetchSite(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      "",
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    ).then((dataSite) => {
+      if (process.env.NODE_ENV === "development") {
+        console.log(dataSite.site["data"]);
+      }
+
+      if (dataSite.message == "OK") {
+        setDataLoc(dataSite.site["data"]);
+
+        const firstIndexSite = dataSite.site["data"][0];
+        if (selectLoc.length === 0) {
+          setSelectLoc([firstIndexSite["lat"], firstIndexSite["lot"]]);
+          console.log("First row: " + selectLoc);
+          console.log("First row of selectLoc: " + selectLoc[0]);
+          console.log("Second row of selectLoc: " + selectLoc[1]);
+        }
+      }
+    });
+  }, [selectLoc]);
 
   return (
     <APIProvider
@@ -41,38 +164,44 @@ const Default = () => {
         </div>
       )}
     >
-      <Map
-        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
-        renderingType="RASTER"
-        defaultCenter={{ lat: -6.339751116240491, lng: 107.03895701470938 }}
-        defaultZoom={30}
-        disableDefaultUI={false}
-        clickableIcons={true}
-        className="w-full mb-4 overflow-hidden rounded-md shadow-lg lg:rounded-lg lg:mb-6 h-96 lg:h-80"
-      >
-        <>
-          <AdvancedMarker
-            ref={markerRef}
-            position={{ lat: -6.339751116240491, lng: 107.03895701470938 }}
-            onClick={handleMarkerClick}
-            draggable={false}
-          >
-            <Pin
-              background={"#FBBC04"}
-              glyphColor={"#000"}
-              borderColor={"#000"}
-            />
-          </AdvancedMarker>
-          {infoWindowShown && (
-            <InfoWindow anchor={marker} onClose={handleClose}>
-              <h2 className="font-bold text-rose-500 text-md">Title</h2>
-              <p className="text-sm font-normal text-gray-800">
-                Some arbitrary html to be rendered into the InfoWindow.
-              </p>
-            </InfoWindow>
-          )}
-        </>
-      </Map>
+      {selectLoc.length === 0 ? (
+        <div
+          className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+          role="status"
+          aria-label="loading"
+        >
+          <span className="sr-only">Loading...</span>
+        </div>
+      ) : (
+        <Map
+          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
+          renderingType="RASTER"
+          defaultCenter={{
+            lat: selectLoc[0],
+            lng: selectLoc[1],
+          }}
+          defaultZoom={20}
+          disableDefaultUI={true}
+          clickableIcons={true}
+          zoomControl={true}
+          fullscreenControl={true}
+          className="w-full mb-4 overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg lg:mb-6 h-80 lg:h-96"
+        >
+          <>
+            {dataDev.map((location) =>
+              location.parent != 0 ? (
+                <MarkerWithInfo
+                  key={location.code}
+                  lat={location.lat}
+                  lot={location.lot}
+                  name={location.name}
+                  content={location.initial}
+                />
+              ) : null
+            )}
+          </>
+        </Map>
+      )}
     </APIProvider>
   );
 };

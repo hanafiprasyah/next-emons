@@ -71,12 +71,6 @@ const Default = ({ id, key, alt, title, value }) => {
                     alt={alt}
                     allowImageExport={true}
                     ref={(g) => (gaugeInstance = g)}
-                    // title={title}
-                    // titleStyle={{
-                    //   color: "#fff",
-                    //   fontStyle: "medium",
-                    //   fontFamily: "quicksand",
-                    // }}
                     margin={{
                       left: 100,
                       right: 100,
@@ -101,7 +95,7 @@ const Default = ({ id, key, alt, title, value }) => {
                       <AxisDirective
                         minimum={0}
                         maximum={10}
-                        // hideIntersectingLabel={true}
+                        hideIntersectingLabel={false}
                         labelStyle={{
                           hiddenLabel: "None",
                           position: "Outside",
@@ -109,7 +103,7 @@ const Default = ({ id, key, alt, title, value }) => {
                           offset: 0,
                           font: {
                             color: "white",
-                            size: "10px",
+                            size: "12px",
                             fontWeight: "Normal",
                           },
                         }}
@@ -143,16 +137,16 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#1bd155"
                             start={0}
                             end={1.5}
-                            startWidth={2}
+                            startWidth={10}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
                           <RangeDirective
-                            color="#e8e833"
+                            color="#e84a35"
                             start={1.52}
                             end={5}
-                            startWidth={4}
+                            startWidth={3}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
@@ -163,7 +157,7 @@ const Default = ({ id, key, alt, title, value }) => {
                             end={10}
                             radius="74%"
                             endWidth={10}
-                            startWidth={4}
+                            startWidth={10}
                             // roundedCornerRadius={4}
                           ></RangeDirective>
                         </RangesDirective>

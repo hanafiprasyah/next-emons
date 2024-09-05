@@ -6,11 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import Maps from "@/components/maps/NewGoogleMaps";
 
-// import dynamic from "next/dynamic";
-// const MapDynamic = dynamic(() => import("@/components/maps/NewGoogleMaps"), {
-//   ssr: true,
-// });
-
 export default function Dashboard() {
   const [hideTotalUser, setHideTotalUser] = useState(true);
   const [hideActiveUser, setHideActiveUser] = useState(false);
@@ -105,7 +100,7 @@ export default function Dashboard() {
                   {/* to Voltage */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
-                    href={"/dashboard/voltage"}
+                    href={"/dashboard/voltage/"}
                     prefetch={true}
                   >
                     <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
@@ -145,7 +140,7 @@ export default function Dashboard() {
                   {/* to Ground */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
-                    href={"/dashboard/ground"}
+                    href={"/dashboard/ground/"}
                     prefetch={true}
                   >
                     <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
@@ -185,7 +180,7 @@ export default function Dashboard() {
                   {/* to Current */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
-                    href={"/dashboard/ground"}
+                    href={"/dashboard/current/"}
                     prefetch={true}
                   >
                     <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
@@ -225,7 +220,7 @@ export default function Dashboard() {
                   {/* to Alarm Log */}
                   <Link
                     className="flex items-center p-2 text-sm font-medium rounded-lg gap-x-2 text-stone-800 hover:bg-stone-100 focus:outline-none focus:bg-stone-100 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700 dark:hover:text-green-500 dark:focus:bg-neutral-700"
-                    href={"/dashboard/alarm-logger"}
+                    href={"/dashboard/alarm-logger/"}
                     prefetch={true}
                   >
                     <span className="flex items-center justify-center bg-white border rounded-lg shrink-0 size-7 border-stone-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300">
@@ -269,7 +264,6 @@ export default function Dashboard() {
               {/* Map Layout */}
               <div className="p-5 md:col-span-8">
                 {/* Maps component */}
-                {/* <MapDynamic isMarkerShown={true} /> */}
                 <Maps></Maps>
                 {/* End Maps component */}
                 <div className="flex items-center justify-center gap-x-2">

@@ -3,6 +3,7 @@ import "./globals.css";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
 import { Suspense } from "react";
 import Loader from "@/loading";
+import PrelineScript from "@/components/PrelineScript";
 
 const quicksandFont = Quicksand({ subsets: ["latin"] });
 
@@ -88,6 +89,8 @@ export default function RootLayout({ children }) {
           <ScrollToTopButton />
         </div>
       </body>
+
+      <PrelineScript />
     </html>
   );
 }

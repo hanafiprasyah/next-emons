@@ -71,12 +71,6 @@ const Default = ({ id, key, alt, title, value }) => {
                     alt={alt}
                     allowImageExport={true}
                     ref={(g) => (gaugeInstance = g)}
-                    // title={title}
-                    // titleStyle={{
-                    //   color: "#fff",
-                    //   fontStyle: "medium",
-                    //   fontFamily: "quicksand",
-                    // }}
                     margin={{
                       left: 100,
                       right: 100,
@@ -101,7 +95,7 @@ const Default = ({ id, key, alt, title, value }) => {
                       <AxisDirective
                         minimum={0}
                         maximum={100}
-                        // hideIntersectingLabel={true}
+                        hideIntersectingLabel={false}
                         labelStyle={{
                           hiddenLabel: "None",
                           position: "Outside",
@@ -109,7 +103,7 @@ const Default = ({ id, key, alt, title, value }) => {
                           offset: 0,
                           font: {
                             color: "white",
-                            size: "10px",
+                            size: "12px",
                             fontWeight: "Normal",
                           },
                         }}
@@ -223,7 +217,7 @@ const Default = ({ id, key, alt, title, value }) => {
                         <AnnotationsDirective>
                           <AnnotationDirective
                             angle={0}
-                            radius="-30%"
+                            radius="-50%"
                             zIndex="1"
                             textStyle={{ size: "10px" }}
                             content={`<div><div><span> ${value} A</span></div></div>`}
