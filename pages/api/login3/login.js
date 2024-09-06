@@ -13,7 +13,6 @@ export default async function handler(req, res) {
 
   const { tenant, userName, password, salt } = JSON.parse(req.body);
   const oneDay = 24 * 60 * 60 * 1000;
-  // const auth = req.cookies.authorization;
   const secretKey = process.env.CRYPT_SECRET;
   const encryptedCookieString = encryptCookies(tenant, secretKey);
 

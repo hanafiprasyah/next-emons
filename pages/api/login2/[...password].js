@@ -1,4 +1,4 @@
-// This method will return an encrypted password
+"use server";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {

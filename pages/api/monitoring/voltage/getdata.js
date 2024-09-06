@@ -1,4 +1,4 @@
-// This method will return all value of Voltage
+"use server";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

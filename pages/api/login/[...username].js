@@ -1,4 +1,4 @@
-// This method will return a Salt and encrypted username
+"use server";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
