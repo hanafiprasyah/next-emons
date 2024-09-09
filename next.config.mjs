@@ -13,16 +13,6 @@ const nextConfig = {
         hostname: "*.emons.id",
         port: "",
       },
-      {
-        protocol: "https",
-        hostname: "*.unsplash.com",
-        port: "",
-      },
-      {
-        protocol: "https",
-        hostname: "*.freepik.com",
-        port: "",
-      },
     ],
   },
   async headers() {

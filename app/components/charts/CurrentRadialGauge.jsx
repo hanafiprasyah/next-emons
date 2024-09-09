@@ -133,24 +133,27 @@ const Default = ({ id, key, alt, title, value }) => {
                         }}
                       >
                         <RangesDirective>
+                          {/* Green */}
                           <RangeDirective
                             color="#1bd155"
                             start={0}
-                            end={10}
+                            end={15}
                             startWidth={2}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Yellow */}
                           <RangeDirective
                             color="#e8e833"
-                            start={10}
+                            start={15}
                             end={50}
                             startWidth={2}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Red */}
                           <RangeDirective
                             color="#e84a35"
                             start={50}

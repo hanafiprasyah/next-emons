@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { APIProvider, Map } from "@vis.gl/react-google-maps";
 import MarkerWithInfo from "./Marker";
+import useSWR from "swr";
 
 const Default = () => {
   // local Value
@@ -17,6 +18,51 @@ const Default = () => {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Used to set pin color based on SWR Connection
+  const [deviceStatus, setDeviceStatus] = useState(false);
+
+  // Function to fetch the /device/getlastdatavoltage API [REALTIME]
+  const fetchVoltageRealtime = async (url, tenant, locationid) => {
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenant,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        tenant: tenant,
+        locationid: locationid,
+        lane: "",
+        status: "",
+        value: "",
+        side: "",
+        start_date: "",
+        end_date: "",
+      }),
+    }).then((res) => {
+      res.ok ? setDeviceStatus(true) : setDeviceStatus(false);
+      if (process.env.NODE_ENV === "development") {
+        console.log(res.statusText);
+      }
+    });
+  };
+
+  // SWR
+  const { data, error } = useSWR(
+    "/api/monitoring/voltage/getdata",
+    fetchVoltageRealtime,
+    {
+      refreshInterval: 1000,
+    },
+    localTenant ?? "",
+    selectLoc[2]
+  );
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
@@ -139,7 +185,11 @@ const Default = () => {
 
         const firstIndexSite = dataSite.site["data"][0];
         if (selectLoc.length === 0) {
-          setSelectLoc([firstIndexSite["lat"], firstIndexSite["lot"]]);
+          setSelectLoc([
+            firstIndexSite["lat"],
+            firstIndexSite["lot"],
+            firstIndexSite["code"],
+          ]);
         }
       }
     });
@@ -182,7 +232,7 @@ const Default = () => {
           clickableIcons={true}
           zoomControl={true}
           fullscreenControl={true}
-          className="w-full mb-4 overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg lg:mb-6 h-80 lg:h-96"
+          className="w-full h-[calc(100vh-164px)] overflow-auto rounded-md shadow-md md:shadow-lg lg:rounded-lg"
         >
           <>
             {dataDev.map((location) =>
@@ -193,6 +243,7 @@ const Default = () => {
                   lot={location.lot}
                   name={location.name}
                   content={location.initial}
+                  signal={deviceStatus}
                 />
               ) : null
             )}

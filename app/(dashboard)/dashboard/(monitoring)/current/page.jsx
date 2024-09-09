@@ -306,13 +306,13 @@ export default function Current() {
   }
 
   return (
-    <div id="current-template" className="grid grid-cols-1 gap-4">
+    <div id="current-template" className="grid grid-cols-1 gap-0 mt-2">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
         {/* Title */}
-        <h4 className="pt-2 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-0 dark:text-neutral-200">
+        {/* <h4 className="pt-2 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-0 dark:text-neutral-200">
           Current
-        </h4>
+        </h4> */}
         {/* End Title */}
         <div className="-ms-[5px] flex justify-between items-center gap-1 sm:gap-2">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
@@ -488,7 +488,7 @@ export default function Current() {
       {/* Current gauge list */}
       <>
         {/* Current R */}
-        <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -624,7 +624,7 @@ export default function Current() {
           </div>
         </div>
         {/* Current S */}
-        <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="flex flex-col mb-4 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -758,7 +758,7 @@ export default function Current() {
           </div>
         </div>
         {/* Current T */}
-        <div className="flex flex-col bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="flex flex-col mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>

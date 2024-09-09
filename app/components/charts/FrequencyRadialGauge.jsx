@@ -94,7 +94,7 @@ const Default = ({ id, key, alt, title, value }) => {
                     <AxesDirective>
                       <AxisDirective
                         minimum={0}
-                        maximum={70}
+                        maximum={100}
                         hideIntersectingLabel={false}
                         labelStyle={{
                           hiddenLabel: "None",
@@ -133,15 +133,27 @@ const Default = ({ id, key, alt, title, value }) => {
                         }}
                       >
                         <RangesDirective>
+                          {/* Red */}
                           <RangeDirective
                             color="#e84a35"
                             start={0}
-                            end={45}
+                            end={30}
                             startWidth={4}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Yellow */}
+                          <RangeDirective
+                            color="#e8e833"
+                            start={30}
+                            end={45}
+                            startWidth={10}
+                            endWidth={10}
+                            radius="74%"
+                            // roundedCornerRadius={4}
+                          ></RangeDirective>
+                          {/* Green */}
                           <RangeDirective
                             color="#1bd155"
                             start={44.95}
@@ -151,10 +163,21 @@ const Default = ({ id, key, alt, title, value }) => {
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Yellow */}
+                          <RangeDirective
+                            color="#e8e833"
+                            start={55}
+                            end={70}
+                            startWidth={10}
+                            endWidth={10}
+                            radius="74%"
+                            // roundedCornerRadius={4}
+                          ></RangeDirective>
+                          {/* Red */}
                           <RangeDirective
                             color="#e84a35"
-                            start={55.2}
-                            end={70}
+                            start={70}
+                            end={100}
                             radius="74%"
                             endWidth={4}
                             startWidth={10}
@@ -217,7 +240,7 @@ const Default = ({ id, key, alt, title, value }) => {
                         <AnnotationsDirective>
                           <AnnotationDirective
                             angle={0}
-                            radius="-30%"
+                            radius="-50%"
                             zIndex="1"
                             textStyle={{ size: "10px" }}
                             content={`<div><div><span> ${value} Hz</span></div></div>`}

@@ -151,15 +151,27 @@ const Default = ({ id, key, alt, title, value }) => {
                           }}
                         >
                           <RangesDirective>
+                            {/* Red */}
                             <RangeDirective
                               color="#e84a35"
                               start={0}
-                              end={200}
+                              end={180}
                               startWidth={4}
                               endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
+                            {/* Yellow */}
+                            <RangeDirective
+                              color="#e8e833"
+                              start={180}
+                              end={200}
+                              startWidth={10}
+                              endWidth={10}
+                              radius="74%"
+                              // roundedCornerRadius={4}
+                            ></RangeDirective>
+                            {/* Green */}
                             <RangeDirective
                               color="#1bd155"
                               start={200}
@@ -169,9 +181,20 @@ const Default = ({ id, key, alt, title, value }) => {
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
+                            {/* Yellow */}
+                            <RangeDirective
+                              color="#e8e833"
+                              start={240}
+                              end={260}
+                              startWidth={10}
+                              endWidth={10}
+                              radius="74%"
+                              // roundedCornerRadius={4}
+                            ></RangeDirective>
+                            {/* Red */}
                             <RangeDirective
                               color="#e84a35"
-                              start={241.5}
+                              start={260.5}
                               end={400}
                               radius="74%"
                               endWidth={10}

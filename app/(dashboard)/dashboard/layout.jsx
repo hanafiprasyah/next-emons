@@ -19,8 +19,8 @@ export default function DashboardLayout({ children }) {
             <Sidebar />
           </Suspense>
         </section>
-        <section id="content" className="lg:ps-[260px] pt-[59px] ">
-          <div className="p-2 space-y-5 sm:p-5 sm:py-0 md:pt-5 md:pb-5">
+        <section id="content" className="pt-[60px]">
+          <div className="p-2 md:pt-2 md:pb-2">
             <Suspense fallback={<Loader />}>{children}</Suspense>
           </div>
         </section>

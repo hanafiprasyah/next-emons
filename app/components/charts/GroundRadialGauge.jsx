@@ -107,12 +107,12 @@ const Default = ({ id, key, alt, title, value }) => {
                             fontWeight: "Normal",
                           },
                         }}
-                        startAngle={10}
-                        endAngle={350}
+                        startAngle={20}
+                        endAngle={340}
                         direction="ClockWise"
                         radius="100%"
                         majorTicks={{
-                          interval: 2,
+                          interval: 1,
                           color: "#00379e",
                           height: 10,
                           width: 3,
@@ -120,7 +120,7 @@ const Default = ({ id, key, alt, title, value }) => {
                           offset: 0,
                         }}
                         minorTicks={{
-                          interval: 1,
+                          interval: 0.5,
                           color: "#fff",
                           height: 4,
                           width: 1,
@@ -133,31 +133,34 @@ const Default = ({ id, key, alt, title, value }) => {
                         }}
                       >
                         <RangesDirective>
+                          {/* Green */}
                           <RangeDirective
                             color="#1bd155"
                             start={0}
-                            end={1.5}
+                            end={0.5}
                             startWidth={10}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Yellow */}
                           <RangeDirective
-                            color="#e84a35"
-                            start={1.52}
+                            color="#e8e833"
+                            start={0.52}
                             end={5}
                             startWidth={3}
                             endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
+                          {/* Red */}
                           <RangeDirective
                             color="#e84a35"
                             start={5.02}
                             end={10}
                             radius="74%"
                             endWidth={10}
-                            startWidth={10}
+                            startWidth={3}
                             // roundedCornerRadius={4}
                           ></RangeDirective>
                         </RangesDirective>
@@ -217,7 +220,7 @@ const Default = ({ id, key, alt, title, value }) => {
                         <AnnotationsDirective>
                           <AnnotationDirective
                             angle={0}
-                            radius="-30%"
+                            radius={value >= 3 || value <= 7 ? "-30%" : "30%"}
                             zIndex="1"
                             textStyle={{ size: "10px" }}
                             content={`<div><div><span> ${value} V</span></div></div>`}

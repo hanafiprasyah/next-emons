@@ -1,20 +1,55 @@
 "use client";
 
-import Image from "next/image";
 import React from "react";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import MonitoringPicture from "../../../public/images/monitoring-system.jpg";
 import AccountDropdown from "@/components/AccountDropdown";
 // import NotificationDropdown from "@/components/NotificationDropdown";
 
 export default function DashboardHeader() {
+  const getTitle = (pathname) => {
+    switch (pathname) {
+      case "/dashboard/":
+        return "Dashboard";
+      case "/dashboard/voltage/":
+        return "Voltage";
+      case "/dashboard/current/":
+        return "Current (Ampere)";
+      case "/dashboard/ground/":
+        return "Ground";
+      case "/dashboard/frequency/":
+        return "Frequency";
+      case "/dashboard/temperature/":
+        return "Temperature";
+      case "/dashboard/energy/":
+        return "Energy";
+      case "/dashboard/pf/":
+        return "Power Factor";
+      case "/dashboard/thdv/":
+        return "THDv";
+      case "/dashboard/thdi/":
+        return "THDi";
+      case "/dashboard/alarm-logger/":
+        return "Alarm Logger";
+      case "/dashboard/database-logger/":
+        return "Database Logger";
+      case "/dashboard/sd-card-logger/":
+        return "SD Card Logger";
+    }
+  };
+
+  const path = usePathname();
+  const title = getTitle(path);
+
   return (
-    <header className="lg:ms-[260px] fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
+    <header className="fixed inset-x-0 top-0 z-50 flex flex-wrap justify-start bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
       <div
-        className="flex justify-between xl:grid xl:grid-cols-3 basis-full items-center w-full py-2.5 px-2 sm:px-5"
+        className="flex justify-between basis-full items-center w-full py-2.5 px-2 sm:px-5"
         aria-label="Global"
       >
-        <div className="flex items-center xl:col-span-1 md:gap-x-3">
-          <div className="lg:hidden">
+        <div className="flex items-center col-span-1 gap-x-3">
+          <div className="lg:block">
             {/**
              * - Sidebar Toggle
              * Only appears when user access
@@ -45,8 +80,9 @@ export default function DashboardHeader() {
           </div>
         </div>
 
-        <div className="flex items-center justify-end xl:col-span-2 gap-x-2">
+        <div className="flex items-center justify-between w-full ps-4 xl:col-span-2 gap-x-2">
           <div className="flex items-center">
+            <span>{title}</span>
             {/**
              * Notification deployed for the next update (v2),
              * so now, it will be hidden for a several times
