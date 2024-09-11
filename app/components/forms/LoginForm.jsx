@@ -13,6 +13,11 @@ function substringUsername(input) {
   };
 }
 
+// TODO: To check username if contains uppercase or not
+function containsUppercase(input) {
+  return /[A-Z]/.test(input);
+}
+
 function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +37,7 @@ function LoginForm() {
     }
     // then check if user input their team name or not
     else if (!username.includes("/")) {
-      setError("You have to set your team name first!");
+      setError("Authentication failed! Please check your form again.");
     }
     // then check if user input on username field completely or not
     else if (
@@ -41,6 +46,10 @@ function LoginForm() {
       regex.test(username)
     ) {
       setError("Fill in the form correctly!");
+    }
+    // then check if tenant field contains uppercase letter
+    else if (containsUppercase(substringUsername(username).tenant)) {
+      setError("Do not use uppercase on your team name!");
     }
     // if all clear, continue the process
     else {
