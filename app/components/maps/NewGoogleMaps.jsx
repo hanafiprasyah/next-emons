@@ -172,6 +172,7 @@ const Default = () => {
                     lot={location.lot}
                     markerLabel={location.name}
                     title={location.name}
+                    parentName={location.parent}
                   />
                 ) : null
               )

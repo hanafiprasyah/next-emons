@@ -191,6 +191,7 @@ const Marker = ({
   title,
   markerLabel,
   signal = false,
+  parentName = "",
 }) => {
   // marker state
   const [markerRef, marker] = useAdvancedMarkerRef();
@@ -201,6 +202,14 @@ const Marker = ({
 
   // show/hide marker based on voltage value
   const [showMarker, setShowMarker] = useState(false);
+
+  // Custom Pin with SVG
+  const parser = new DOMParser();
+  const pinCustom = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6"> <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" /></svg>`;
+  const pinSvg = parser.parseFromString(
+    pinCustom,
+    "image/svg+xml"
+  ).documentElement;
 
   /**
    * Disconnected: #e84a35 * (DEFAULT)
@@ -370,6 +379,7 @@ const Marker = ({
       {showMarker ? (
         <>
           <AdvancedMarker
+            key={locationid}
             ref={markerRef}
             position={{ lat: lat, lng: lot }}
             onClick={infoClickable ? handleMarkerClick : null}
@@ -380,50 +390,315 @@ const Marker = ({
               background={colorPin}
               glyphColor={"#000"}
               borderColor={"#000"}
+              glyph={pinSvg}
             />
           </AdvancedMarker>
           {infoWindowShown && (
-            <InfoWindow anchor={marker} onClose={handleClose}>
-              <h2 className="mb-2 text-sm font-bold text-sky-700 md:text-lg lg:text-xl 2xl:text-3xl">
-                {markerLabel}
-              </h2>
+            <InfoWindow key={lat} anchor={marker} onClose={handleClose}>
               <>
-                <p className="text-sm font-normal text-gray-800 md:text-lg lg:text-xl 2xl:text-3xl">
-                  <span className="inline-flex items-center px-3 py-1 my-0 text-xs font-medium text-blue-800 bg-blue-100 rounded-full 2xl:px-6 gap-x-3 md:text-sm lg:text-lg xl:text-xl 2xl:text-3xl dark:bg-blue-800/0 dark:text-blue-500">
-                    <span
-                      className={`size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 inline-block rounded-full ${voltageColor}`}
-                    ></span>
-                    Voltage:{" "}
-                    <strong className="text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl">
-                      {/* {voltageData} */}
-                      {voltage.voltage["data"][0].v_rn_output}
-                    </strong>
-                  </span>
-                </p>
-                <p className="text-sm font-normal text-gray-800 md:text-lg lg:text-xl 2xl:text-3xl">
-                  <span className="inline-flex items-center px-3 py-1 my-0 text-xs font-medium text-blue-800 bg-blue-100 rounded-full 2xl:px-6 gap-x-3 md:text-sm lg:text-lg xl:text-xl 2xl:text-3xl dark:bg-blue-800/0 dark:text-blue-500">
-                    <span
-                      className={`size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 inline-block rounded-full ${currentColor}`}
-                    ></span>
-                    Current:{" "}
-                    <strong className="text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl">
-                      {/* {currentData} */}
-                      {current.current["data"][0].i_r_Output}
-                    </strong>
-                  </span>
-                </p>
-                <p className="text-sm font-normal text-gray-800 md:text-lg lg:text-xl 2xl:text-3xl">
-                  <span className="inline-flex items-center px-3 py-1 my-0 text-xs font-medium text-blue-800 bg-blue-100 rounded-full 2xl:px-6 gap-x-3 md:text-sm lg:text-lg xl:text-xl 2xl:text-3xl dark:bg-blue-800/0 dark:text-blue-500">
-                    <span
-                      className={`size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 inline-block rounded-full ${groundColor}`}
-                    ></span>
-                    Ground:{" "}
-                    <strong className="text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl">
-                      {/* {groundData} */}
-                      {ground.ground["data"][0].voltage_output}
-                    </strong>
-                  </span>
-                </p>
+                {/* Card */}
+                <div className="flex flex-col pb-2 truncate bg-transparent border-none pe-4 xl:pe-2 ps-2 rounded-xl">
+                  {/* Header */}
+                  <div className="relative flex p-4 gap-x-3">
+                    {/* Logo */}
+                    <div className="shrink-0">
+                      <div className="border border-sky-200 shrink-0 rounded-xl dark:border-sky-400">
+                        <div className="flex items-center justify-center size-12">
+                          {signal ? (
+                            <svg
+                              className="text-sky-500 shrink-0 size-8 dark:text-sky-700"
+                              width={32}
+                              height={32}
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="text-sky-500 shrink-0 size-8 dark:text-red-500"
+                              width={32}
+                              height={32}
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* End Logo */}
+                    {/* Title */}
+                    <div className="mt-1 truncate grow">
+                      <div className="pe-5">
+                        <span className="block text-sm text-sky-800 2xl:text-2xl lg:text-lg xl:text-xl">
+                          {markerLabel}
+                        </span>
+                      </div>
+                      <div className="block shrink-0">
+                        <h4
+                          className={`text-xs font-medium truncate ${
+                            signal ? "text-sky-800" : "text-neutral-500"
+                          }`}
+                        >
+                          {/* {parentName} */}-
+                        </h4>
+                      </div>
+                    </div>
+                    {/* End Title */}
+                  </div>
+                  {/* End Header */}
+                  {/* List */}
+                  <div className="grid items-center justify-center grid-cols-3 py-3 text-center align-middle border-gray-200 divide-x divide-gray-200 border-y dark:border-sky-700 dark:divide-sky-700">
+                    {/* Item */}
+                    <div className="px-4">
+                      <span className="relative flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                        <span
+                          className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${voltageColor}`}
+                        />
+                        <span
+                          className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${voltageColor}`}
+                        />
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
+                        {voltage.voltage["data"][0].v_rn_output}
+                        <svg
+                          className="text-black shrink-0 size-3"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3.75 13.5L14.25 2.25L12 10.5H20.25L9.75 21.75L12 13.5H3.75Z"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      </span>
+
+                      <p className="text-xs xl:text-xl text-neutral-800">
+                        Voltage
+                      </p>
+                    </div>
+                    {/* End Item */}
+                    {/* Item */}
+                    <div className="px-4">
+                      <span className="relative flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                        <span
+                          className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${currentColor}`}
+                        />
+                        <span
+                          className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${currentColor}`}
+                        />
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
+                        {current.current["data"][0].i_r_Output}
+                        <svg
+                          className="shrink-0 size-3"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="9.01235"
+                            stroke="black"
+                            strokeWidth="1.5"
+                          />
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="9.01235"
+                            stroke="black"
+                            stroke-opacity="0.2"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M0 12L3.44368 12"
+                            stroke="black"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M20.5563 12H24"
+                            stroke="black"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M5.16534 12.3873C11.1481 3.0961 13.2923 20.1278 18.8346 12.3873"
+                            stroke="black"
+                            strokeWidth="1.5"
+                          />
+                        </svg>
+                      </span>
+                      <p className="text-xs xl:text-xl text-neutral-800">
+                        Current/Ampere
+                      </p>
+                    </div>
+                    {/* End Item */}
+                    {/* Item */}
+                    <div className="px-4">
+                      <span className="relative flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                        <span
+                          className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${groundColor}`}
+                        />
+                        <span
+                          className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${groundColor}`}
+                        />
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
+                        {ground.ground["data"][0].voltage_output}
+                        <svg
+                          className="shrink-0 size-3"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M2.49376 15.5327H21.5062"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                          <path
+                            d="M12 1.39389L12 13.1749"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                          <path
+                            d="M3.495 17.8905H20.505"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                          <path
+                            d="M4.495 20.2483H19.505"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                          <path
+                            d="M5.495 22.6061H18.505"
+                            stroke="black"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                          />
+                        </svg>
+                      </span>
+                      <p className="text-xs xl:text-xl text-neutral-800">
+                        Ground
+                      </p>
+                    </div>
+                    {/* End Item */}
+                  </div>
+                  {/* End List */}
+                  {/* Grid */}
+                  <div className="flex flex-col p-4 gap-y-4">
+                    {/* Item */}
+                    <div className="flex items-center gap-x-2">
+                      <p className="text-sm text-gray-500 min-w-20 dark:text-neutral-800">
+                        Last updated
+                      </p>
+                      <div className="grow">
+                        <p
+                          className={`text-sm font-medium ${
+                            signal ? "text-sky-700" : "text-neutral-500"
+                          }`}
+                        >
+                          {signal ? "Just now" : "Offline"}
+                        </p>
+                      </div>
+                    </div>
+                    {/* End Item */}
+                    {/* Item */}
+                    <div className="flex items-center gap-x-2">
+                      <p className="text-sm text-gray-500 min-w-20 dark:text-neutral-800">
+                        Device Status
+                      </p>
+                      <div className="grow">
+                        <span className="py-px px-2 inline-flex items-center gap-x-1.5 bg-gray-100 text-xs xl:text-sm text-gray-800 rounded-md dark:bg-neutral-700 dark:text-neutral-200">
+                          <span
+                            className={`inline-block w-1 h-3 ${
+                              signal ? "bg-emerald-600" : "bg-red-600"
+                            } rounded-full`}
+                          />
+                          {signal ? "Connected" : "Unreachable"}
+                        </span>
+                      </div>
+                    </div>
+                    {/* End Item */}
+                  </div>
+                  {/* End Grid */}
+                  {/* Footer */}
+                  <div className="flex items-center px-4 py-3 mt-auto border-t border-gray-200 dark:border-sky-700">
+                    {/* Tenant */}
+                    <span className="flex justify-center items-center gap-x-1 text-sm sm:text-[13px] text-gray-500 dark:text-sky-800">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="shrink-0 size-3"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                        />
+                      </svg>
+                      {tenantRef}
+                    </span>
+                    {/* End Tenant */}
+                    {/* Progress */}
+                    <div className="flex items-center w-1/2 ms-auto gap-x-1 whitespace-nowrap">
+                      <div
+                        className="flex w-full h-1 overflow-hidden bg-gray-200 rounded-full dark:bg-neutral-700"
+                        role="progressbar"
+                        aria-valuenow={signal ? 100 : 0}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className="flex flex-col justify-center rounded-full overflow-hidden bg-green-500 text-sm sm:text-[13px] text-white text-center whitespace-nowrap transition duration-500"
+                          style={{ width: signal ? "100%" : "0%" }}
+                        />
+                      </div>
+                      <div className="w-10 text-end -mt-0.5">
+                        <span className="text-sm sm:text-[13px] text-gray-500 dark:text-neutral-500">
+                          {signal ? "100%" : "0%"}
+                        </span>
+                      </div>
+                    </div>
+                    {/* End Progress */}
+                  </div>
+                  {/* End Footer */}
+                </div>
+                {/* End Card */}
               </>
             </InfoWindow>
           )}
