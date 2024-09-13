@@ -488,9 +488,9 @@ const Marker = ({
                           <path
                             d="M3.75 13.5L14.25 2.25L12 10.5H20.25L9.75 21.75L12 13.5H3.75Z"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                         </svg>
                       </span>
@@ -532,7 +532,7 @@ const Marker = ({
                             cy="12"
                             r="9.01235"
                             stroke="black"
-                            stroke-opacity="0.2"
+                            strokeOpacity="0.2"
                             strokeWidth="1.5"
                           />
                           <path
@@ -580,32 +580,32 @@ const Marker = ({
                           <path
                             d="M2.49376 15.5327H21.5062"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M12 1.39389L12 13.1749"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M3.495 17.8905H20.505"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M4.495 20.2483H19.505"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M5.495 22.6061H18.505"
                             stroke="black"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
                           />
                         </svg>
                       </span>
