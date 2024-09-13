@@ -138,8 +138,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#1bd155"
                             start={0}
                             end={15}
-                            startWidth={2}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -148,8 +146,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#e8e833"
                             start={15}
                             end={50}
-                            startWidth={2}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -159,8 +155,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             start={50}
                             end={100}
                             radius="74%"
-                            endWidth={10}
-                            startWidth={2}
                             // roundedCornerRadius={4}
                           ></RangeDirective>
                         </RangesDirective>

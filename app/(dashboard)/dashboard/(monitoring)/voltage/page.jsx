@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
 import Loader from "@/loading";
@@ -23,6 +23,7 @@ export default function Voltage() {
   // Dates
   const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
+  const [differentTime, setDifferentTime] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -200,6 +201,9 @@ export default function Voltage() {
     fetchVoltageRealtime,
     {
       refreshInterval: 1000,
+      refreshWhenHidden: true,
+      refreshWhenOffline: false,
+      revalidateOnReconnect: true,
     },
     localTenant ?? "",
     selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
@@ -263,16 +267,27 @@ export default function Voltage() {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
 
+              /**
+               * SCHEMA:
+               * Set signal true
+               * CONDITION:
+               * If send_date from REST API depend on locationid
+               * less than 15 minutes take time by current/now format
+               * Value send_date is using ISO 8206 format
+               * then parse to LocaleString to get the value formatted
+               * then compare between the both of value
+               */
+
               // delay signal and channel status by 100ms after connection ready
               setTimeout(() => {
                 setSignal(true);
                 setChannel("Stable");
               }, 100);
 
-              if (process.env.NODE_ENV === "development") {
-                console.log(hoursAgo);
-                console.log(currentDate);
-              }
+              // if (process.env.NODE_ENV === "development") {
+              //   console.log(hoursAgo);
+              //   console.log(currentDate);
+              // }
 
               // READY TO FLIGHT -> !
               // fetchVoltage(
@@ -298,41 +313,49 @@ export default function Voltage() {
         setChannel("Unreachable");
       }
     });
-  }, [selectLoc, selectDev, currentDate, hoursAgo]);
+  }, [selectLoc, selectDev]);
 
   // TODO: Get current datetime, this will be mounted at the first time
-  useEffect(() => {
-    const dateIns = new Date();
+  // useEffect(() => {
+  //   const dateIns = new Date();
 
-    const formatedDate = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours()}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+  //   const isoDate = "2024-09-13T11:30:54";
+  //   const isoConvDate = new Date(isoDate);
 
-    const hoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours() - 1}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+  //   const formatedDate = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+  //     .toString()
+  //     .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+  //     minimumIntegerDigits: 2,
+  //   })} ${dateIns.getHours()}:${dateIns
+  //     .getMinutes()
+  //     .toString()
+  //     .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
 
-    if (formatedDate.startsWith("202")) {
-      setCurrentDate(formatedDate);
-      setHoursAgo(hoursAgo);
-    }
+  //   const hoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+  //     .toString()
+  //     .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+  //     minimumIntegerDigits: 2,
+  //   })} ${dateIns.getHours() - 1}:${dateIns
+  //     .getMinutes()
+  //     .toString()
+  //     .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        "Current date: " + formatedDate + "| 1 hours ago: " + hoursAgo
-      );
-    }
-  }, []);
+  //   const diffTime = dateIns - isoConvDate;
+  //   const minutes = Math.floor((diffTime % 3600000) / 60000);
+
+  //   if (formatedDate.startsWith("202")) {
+  //     setCurrentDate(formatedDate);
+  //     setHoursAgo(hoursAgo);
+  //     setDifferentTime(diffTime);
+  //   }
+
+  //   if (process.env.NODE_ENV === "development") {
+  //     console.log(
+  //       "Current date: " + formatedDate + "| 1 hours ago: " + hoursAgo
+  //     );
+  //     console.log("Different time: " + minutes);
+  //   }
+  // }, []);
 
   // If SWR Realtime connection error then show this widget below
   if (error) {

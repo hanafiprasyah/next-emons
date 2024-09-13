@@ -138,8 +138,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#e84a35"
                             start={0}
                             end={30}
-                            startWidth={4}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -148,8 +146,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#e8e833"
                             start={30}
                             end={45}
-                            startWidth={10}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -158,8 +154,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#1bd155"
                             start={44.95}
                             end={55}
-                            startWidth={10}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -168,8 +162,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             color="#e8e833"
                             start={55}
                             end={70}
-                            startWidth={10}
-                            endWidth={10}
                             radius="74%"
                             // roundedCornerRadius={4}
                           ></RangeDirective>
@@ -179,8 +171,6 @@ const Default = ({ id, key, alt, title, value }) => {
                             start={70}
                             end={100}
                             radius="74%"
-                            endWidth={4}
-                            startWidth={10}
                             // roundedCornerRadius={4}
                           ></RangeDirective>
                         </RangesDirective>

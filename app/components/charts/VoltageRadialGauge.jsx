@@ -38,8 +38,6 @@ const Default = ({ id, key, alt, title, value }) => {
     gaugeInstance.export("PNG", `${alt} output`);
   }
 
-  // const load = (ILoadedEventArgs) => {};
-
   return (
     <>
       {loaded ? (
@@ -156,8 +154,6 @@ const Default = ({ id, key, alt, title, value }) => {
                               color="#e84a35"
                               start={0}
                               end={180}
-                              startWidth={4}
-                              endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
@@ -166,8 +162,6 @@ const Default = ({ id, key, alt, title, value }) => {
                               color="#e8e833"
                               start={180}
                               end={200}
-                              startWidth={10}
-                              endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
@@ -176,8 +170,6 @@ const Default = ({ id, key, alt, title, value }) => {
                               color="#1bd155"
                               start={200}
                               end={240}
-                              startWidth={10}
-                              endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
@@ -186,8 +178,6 @@ const Default = ({ id, key, alt, title, value }) => {
                               color="#e8e833"
                               start={240}
                               end={260}
-                              startWidth={10}
-                              endWidth={10}
                               radius="74%"
                               // roundedCornerRadius={4}
                             ></RangeDirective>
@@ -197,8 +187,6 @@ const Default = ({ id, key, alt, title, value }) => {
                               start={260.5}
                               end={400}
                               radius="74%"
-                              endWidth={10}
-                              startWidth={10}
                               // roundedCornerRadius={4}
                             ></RangeDirective>
                           </RangesDirective>

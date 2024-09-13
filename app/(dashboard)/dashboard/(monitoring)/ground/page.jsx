@@ -159,6 +159,9 @@ export default function Grounding() {
     fetchGroundRealtime,
     {
       refreshInterval: 1000,
+      refreshWhenHidden: true,
+      refreshWhenOffline: false,
+      revalidateOnReconnect: true,
     },
     localTenant ?? "",
     selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()

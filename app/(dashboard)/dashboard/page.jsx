@@ -43,7 +43,7 @@ export default function Dashboard() {
                     >
                       Devices Installed
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-teal-800 bg-teal-100 rounded-full gap-x-1 dark:bg-teal-500/10 dark:text-teal-500">
-                        6
+                        1
                       </span>
                     </button>
                   </nav>
