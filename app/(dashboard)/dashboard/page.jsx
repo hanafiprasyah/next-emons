@@ -41,9 +41,9 @@ export default function Dashboard() {
                       aria-controls="hs-pro-tabs-dtsch-revenue"
                       role="tab"
                     >
-                      Devices Installed
+                      Device(s) Map
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-teal-800 bg-teal-100 rounded-full gap-x-1 dark:bg-teal-500/10 dark:text-teal-500">
-                        1
+                        2
                       </span>
                     </button>
                   </nav>

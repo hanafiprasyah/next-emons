@@ -153,7 +153,7 @@ const Default = () => {
             lat: selectDev[0],
             lng: selectDev[1],
           }}
-          defaultZoom={20}
+          defaultZoom={10}
           disableDefaultUI={true}
           clickableIcons={true}
           zoomControl={true}

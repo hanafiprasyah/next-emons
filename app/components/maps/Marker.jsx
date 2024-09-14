@@ -246,10 +246,9 @@ const Marker = ({
   const { current, isCurrentError } = useCurrent(tenantRef, locationid);
 
   // clicking the marker will toggle the infowindow
-  const handleMarkerClick = useCallback(
-    () => setInfoWindowShown((isShown) => !isShown),
-    []
-  );
+  const handleMarkerClick = useCallback(() => {
+    setInfoWindowShown((isShown) => !isShown);
+  }, []);
 
   // if the maps api closes the infowindow, we have to synchronize our state
   const handleClose = useCallback(() => setInfoWindowShown(false), []);
@@ -403,7 +402,12 @@ const Marker = ({
             />
           </AdvancedMarker>
           {infoWindowShown && (
-            <InfoWindow key={lat} anchor={marker} onClose={handleClose}>
+            <InfoWindow
+              key={lat}
+              anchor={marker}
+              ariaLabel={title}
+              onClose={handleClose}
+            >
               <>
                 {/* Card */}
                 <div className="flex flex-col pb-2 overflow-auto truncate bg-transparent border-none pe-4 xl:pe-2 ps-2 rounded-xl">

@@ -68,11 +68,11 @@ export default function AccountDropdown() {
             />
 
             <div className="grow">
-              <span className="text-sm font-semibold text-gray-800 text-wrap dark:text-neutral-300">
-                {username ?? "Loading.."}
+              <span className="text-xs text-gray-500 dark:text-neutral-500">
+                Welcome back,
               </span>
-              <p className="text-xs text-gray-500 dark:text-neutral-500">
-                Customer Name
+              <p className="text-sm font-semibold text-gray-800 text-wrap dark:text-neutral-300">
+                {username ?? "Loading.."}
               </p>
             </div>
           </div>
