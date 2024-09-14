@@ -154,16 +154,21 @@ export default function Energy() {
 
   // SWR
   const { data, error } = useSWR(
-    "/api/monitoring/energy/getdata",
-    fetchEnergyRealtime,
+    localTenant !== "" && localTenant !== undefined
+      ? [
+          "/api/monitoring/energy/getdata",
+          localTenant,
+          selectDev.length === 0 ? "0" : selectDev[0],
+        ]
+      : null,
+    ([url, localTenant, locationid]) =>
+      fetchEnergyRealtime(url, localTenant, locationid),
     {
       refreshInterval: 1000,
       refreshWhenHidden: true,
       refreshWhenOffline: false,
       revalidateOnReconnect: true,
-    },
-    localTenant ?? "",
-    selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
+    }
   );
 
   useEffect(() => {

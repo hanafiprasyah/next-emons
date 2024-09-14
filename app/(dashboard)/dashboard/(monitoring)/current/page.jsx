@@ -155,16 +155,21 @@ export default function Current() {
 
   // SWR
   const { data, error } = useSWR(
-    "/api/monitoring/current/getdata",
-    fetchCurrentRealtime,
+    localTenant !== "" && localTenant !== undefined
+      ? [
+          "/api/monitoring/current/getdata",
+          localTenant,
+          selectDev.length === 0 ? "0" : selectDev[0],
+        ]
+      : null,
+    ([url, localTenant, locationid]) =>
+      fetchCurrentRealtime(url, localTenant, locationid),
     {
       refreshInterval: 1000,
       refreshWhenHidden: true,
       refreshWhenOffline: false,
       revalidateOnReconnect: true,
-    },
-    localTenant ?? "",
-    selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
+    }
   );
 
   useEffect(() => {

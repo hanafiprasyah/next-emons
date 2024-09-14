@@ -155,16 +155,21 @@ export default function Grounding() {
 
   // SWR
   const { data, error } = useSWR(
-    "/api/monitoring/ground/getdata",
-    fetchGroundRealtime,
+    localTenant !== "" && localTenant !== undefined
+      ? [
+          "/api/monitoring/ground/getdata",
+          localTenant,
+          selectDev.length === 0 ? "0" : selectDev[0],
+        ]
+      : null,
+    ([url, localTenant, locationid]) =>
+      fetchGroundRealtime(url, localTenant, locationid),
     {
       refreshInterval: 1000,
       refreshWhenHidden: true,
       refreshWhenOffline: false,
       revalidateOnReconnect: true,
-    },
-    localTenant ?? "",
-    selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
+    }
   );
 
   useEffect(() => {

@@ -197,16 +197,21 @@ export default function Voltage() {
 
   // SWR
   const { data, error } = useSWR(
-    "/api/monitoring/voltage/getdata",
-    fetchVoltageRealtime,
+    localTenant !== "" && localTenant !== undefined
+      ? [
+          "/api/monitoring/voltage/getdata",
+          localTenant,
+          selectDev.length === 0 ? "0" : selectDev[0],
+        ]
+      : null,
+    ([url, localTenant, locationid]) =>
+      fetchVoltageRealtime(url, localTenant, locationid),
     {
       refreshInterval: 1000,
       refreshWhenHidden: true,
       refreshWhenOffline: false,
       revalidateOnReconnect: true,
-    },
-    localTenant ?? "",
-    selectDev.length === 0 ? "0" : JSON.stringify(selectDev[0]).toString()
+    }
   );
 
   // TODO: Get default site and location
