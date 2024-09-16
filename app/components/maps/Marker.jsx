@@ -419,7 +419,7 @@ const Marker = ({
       const siteData = data.siteloc["data"][0].site;
       if (siteData) {
         setParentName(siteData.name);
-        console.log(siteData.name);
+        // console.log(siteData.name);
       }
     });
   }, [locationid, tenantRef]);
