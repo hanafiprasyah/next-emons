@@ -20,11 +20,11 @@ export default async function handler(req, res) {
   } = req.body;
 
   try {
-    const response = await fetch(`http://45.13.132.175:8802/tool/dataside`, {
+    const response = await fetch(`${process.env.BASE_URL}:8802/tool/dataside`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Accept, Origin, X-Requested-With",

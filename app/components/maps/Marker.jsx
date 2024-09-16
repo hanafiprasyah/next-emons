@@ -16,7 +16,7 @@ function useVoltage(tenantRef, locationid) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Accept, Origin, X-Requested-With",
@@ -77,7 +77,7 @@ function useGround(tenantRef, locationid) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Accept, Origin, X-Requested-With",
@@ -138,7 +138,7 @@ function useCurrent(tenantRef, locationid) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Accept, Origin, X-Requested-With",
@@ -200,7 +200,6 @@ const Marker = ({
   title,
   markerLabel,
   signal = false,
-  parentName = "",
 }) => {
   // marker state
   const [markerRef, marker] = useAdvancedMarkerRef();
@@ -208,6 +207,9 @@ const Marker = ({
   // popup info state
   const [infoWindowShown, setInfoWindowShown] = useState(false);
   const [infoClickable, setInfoClickable] = useState(true);
+
+  // set parent name from API
+  const [parentName, setParentName] = useState("");
 
   // show/hide marker based on voltage value
   const [showMarker, setShowMarker] = useState(false);
@@ -245,6 +247,34 @@ const Marker = ({
 
   const { current, isCurrentError } = useCurrent(tenantRef, locationid);
 
+  // Function to fetch the /tool/dataside API
+  const fetchSite = async (tenantRef, locationid) => {
+    const response = await fetch("/api/tools/getsiteloc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Accept, Origin, X-Requested-With",
+        tenant: tenantRef,
+        token: process.env.AUTH_TOKEN,
+      },
+      body: JSON.stringify({
+        locationid: locationid,
+        lane: "",
+        status: "",
+        value: "",
+        side: "",
+        start_trancation_date: "",
+        end_trancation_date: "",
+        tenant: tenantRef,
+      }),
+    });
+
+    return response.json();
+  };
+
   // clicking the marker will toggle the infowindow
   const handleMarkerClick = useCallback(() => {
     setInfoWindowShown((isShown) => !isShown);
@@ -267,12 +297,14 @@ const Marker = ({
         ) {
           setShowMarker(true);
           setInfoClickable(true);
-          if (process.env.NODE_ENV === "development") {
-            // console.log(dataVoltage);
-            // console.log(dataGround);
-            // console.log(dataCurrent);
-            console.log("SRW Connection -> OK");
-          }
+
+          // if (process.env.NODE_ENV === "development") {
+          //   console.log(dataVoltage);
+          //   console.log(dataGround);
+          //   console.log(dataCurrent);
+          //   console.log("SRW Connection -> OK");
+          // }
+
           /**
            * if
            * voltageData >= 200 &&
@@ -350,37 +382,47 @@ const Marker = ({
         ) {
           setShowMarker(false);
           setInfoClickable(false);
-          if (process.env.NODE_ENV === "development") {
-            // console.log(dataVoltage);
-            // console.log(dataGround);
-            // console.log(dataCurrent);
-            console.log("SRW Connection -> Please wait..");
-          }
+          // if (process.env.NODE_ENV === "development") {
+          //   console.log(dataVoltage);
+          //   console.log(dataGround);
+          //   console.log(dataCurrent);
+          //   console.log("SRW Connection -> Please wait..");
+          // }
         } else {
           setShowMarker(false);
           setInfoClickable(false);
-          if (process.env.NODE_ENV === "development") {
-            // console.log(dataVoltage);
-            // console.log(dataGround);
-            // console.log(dataCurrent);
-            console.log("SRW Connection -> error");
-          }
+          // if (process.env.NODE_ENV === "development") {
+          //   console.log(dataVoltage);
+          //   console.log(dataGround);
+          //   console.log(dataCurrent);
+          //   console.log("SRW Connection -> error");
+          // }
         }
       } else {
         setShowMarker(false);
         setInfoClickable(false);
-        if (process.env.NODE_ENV === "development") {
-          console.log("Data -> error(Connection is not stable / unreachable)");
-        }
+        // if (process.env.NODE_ENV === "development") {
+        //   console.log("Data -> error(Connection is not stable / unreachable)");
+        // }
       }
     } else {
       setShowMarker(false);
       setInfoClickable(false);
-      if (process.env.NODE_ENV === "development") {
-        console.log("Data -> error(Data Undefined)");
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("Data -> error(Data Undefined)");
+      // }
     }
   }, [voltage, ground, current, signal]);
+
+  useEffect(() => {
+    fetchSite(tenantRef, locationid).then((data) => {
+      const siteData = data.siteloc["data"][0].site;
+      if (siteData) {
+        setParentName(siteData.name);
+        console.log(siteData.name);
+      }
+    });
+  }, [locationid, tenantRef]);
 
   return (
     <>
@@ -469,7 +511,9 @@ const Marker = ({
                             signal ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
-                          {/* {parentName} */}-
+                          {parentName != null || parentName != undefined
+                            ? parentName
+                            : "-"}
                         </h4>
                       </div>
                     </div>
@@ -660,13 +704,13 @@ const Marker = ({
                         Device Status
                       </p>
                       <div className="grow">
-                        <span className="py-px px-2 inline-flex items-center gap-x-1.5 bg-gray-100 text-xs md:text-sm text-gray-800 rounded-md dark:bg-neutral-700 dark:text-neutral-200">
+                        <span className="py-px px-2 inline-flex items-center gap-x-1 md:gap-x-1.5 bg-gray-100 text-xs lg:text-sm text-gray-800 rounded-md dark:bg-neutral-700 dark:text-neutral-200">
                           <span
                             className={`inline-block w-1 h-3 ${
                               signal ? "bg-emerald-600" : "bg-red-600"
                             } rounded-full`}
                           />
-                          {signal ? "Connected" : "Unreachable"}
+                          {signal ? "Online" : "Unreachable"}
                         </span>
                       </div>
                     </div>
@@ -691,8 +735,7 @@ const Marker = ({
                           d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
                         />
                       </svg>
-                      <small>Linked to </small>
-                      {tenantRef}
+                      <small>Linked to {tenantRef}</small>
                     </span>
                     {/* End Tenant */}
                     {/* Progress */}

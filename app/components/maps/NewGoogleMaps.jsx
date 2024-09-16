@@ -28,7 +28,7 @@ const Default = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://45.13.132.175/",
+        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
         "Access-Control-Allow-Methods": "POST",
         "Access-Control-Allow-Headers":
           "Content-Type, Accept, Origin, X-Requested-With",
@@ -150,15 +150,15 @@ const Default = () => {
           mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
           renderingType="RASTER"
           defaultCenter={{
-            lat: selectDev[0],
-            lng: selectDev[1],
+            lat: parseFloat(selectDev[0]),
+            lng: parseFloat(selectDev[1]),
           }}
           defaultZoom={10}
           disableDefaultUI={true}
           clickableIcons={true}
           zoomControl={true}
           fullscreenControl={true}
-          className="w-full h-[calc(100vh-164px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
+          className="w-full h-[calc(100vh-168px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
         >
           {localTenant.length != 0
             ? dataDev.map((location) =>
@@ -168,11 +168,10 @@ const Default = () => {
                     locationid={location.code}
                     tenantRef={localTenant}
                     signal={deviceStatus}
-                    lat={location.lat}
-                    lot={location.lot}
+                    lat={parseFloat(location.lat)}
+                    lot={parseFloat(location.lot)}
                     markerLabel={location.name}
                     title={location.name}
-                    parentName={location.parent}
                   />
                 ) : null
               )

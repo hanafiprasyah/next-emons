@@ -21,12 +21,12 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `http://45.13.132.175:8802/device/getdatavoltage`,
+      `${process.env.BASE_URL}:8802/device/getdatavoltage`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "http://45.13.132.175/",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
           "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
