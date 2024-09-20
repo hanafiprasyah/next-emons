@@ -275,8 +275,9 @@ function LoginForm() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               name="username"
-              className="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-neutral-600"
+              className="py-2.5 lowercase px-3 block w-full border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-neutral-600"
               placeholder="Your active username"
+              autoComplete="off"
             />
           </div>
 
@@ -300,7 +301,7 @@ function LoginForm() {
                 name="password"
                 className="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-neutral-600"
                 placeholder="Your strength password"
-                autoComplete="on"
+                autoComplete="off"
               />
               <button
                 type="button"

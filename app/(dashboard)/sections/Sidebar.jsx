@@ -463,11 +463,12 @@ export default function DashboardSidebar() {
          * Here the sidebar close button
          * It will appears when user open this website on Mobile Viewport
          */}
-        <div className="absolute z-10 top-3 -end-3">
-          {/* Sidebar Close */}
+        {/* Sidebar Close */}
+        {/* <div className="absolute z-10 top-3 -end-3">
+          
           <button
             type="button"
-            className="inline-flex items-center justify-center w-6 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-md h-7 gap-x-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
+            className="inline-flex items-center justify-center w-6 text-sm font-medium text-gray-500 transition-all duration-300 ease-in-out bg-white border border-gray-200 rounded-md h-7 gap-x-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
             data-hs-overlay="#hs-pro-sidebar"
             aria-controls="hs-pro-sidebar"
             aria-label="Toggle navigation"
@@ -490,7 +491,7 @@ export default function DashboardSidebar() {
               <line x1="21" x2="11" y1="18" y2="18" />
             </svg>
           </button>
-        </div>
+        </div> */}
       </div>
     </aside>
   );

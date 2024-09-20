@@ -66,7 +66,7 @@ const Default = () => {
    * We will map this data based on their Index
    * then we will get the tenancy (more than 2 devices) with their own datas
    */
-  const { data, error } = useSWR(
+  const { data, isLoading, error } = useSWR(
     localTenant !== "" && localTenant !== undefined
       ? [
           "/api/tools/location/getlocation",
@@ -104,6 +104,18 @@ const Default = () => {
   }, [data, error]);
 
   if (!data) {
+    return (
+      <div
+        className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+        role="status"
+        aria-label="loading"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div
         className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"

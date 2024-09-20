@@ -286,6 +286,14 @@ const Marker = ({
   useEffect(() => {
     if (voltage && ground && current) {
       if (signal) {
+        fetchSite(tenantRef, locationid).then((data) => {
+          const siteData = data.siteloc["data"][0].site;
+          if (siteData) {
+            setParentName(siteData.name);
+            // console.log(siteData.name);
+          }
+        });
+
         const dataVoltage = voltage.voltage["data"][0];
         const dataGround = ground.ground["data"][0];
         const dataCurrent = current.current["data"][0];
@@ -412,17 +420,7 @@ const Marker = ({
       //   console.log("Data -> error(Data Undefined)");
       // }
     }
-  }, [voltage, ground, current, signal]);
-
-  useEffect(() => {
-    fetchSite(tenantRef, locationid).then((data) => {
-      const siteData = data.siteloc["data"][0].site;
-      if (siteData) {
-        setParentName(siteData.name);
-        // console.log(siteData.name);
-      }
-    });
-  }, [locationid, tenantRef]);
+  }, [voltage, ground, current, signal, locationid, tenantRef]);
 
   return (
     <>
@@ -432,9 +430,11 @@ const Marker = ({
             key={locationid}
             ref={markerRef}
             position={{ lat: lat, lng: lot }}
-            onClick={infoClickable ? handleMarkerClick : null}
+            onClick={handleMarkerClick}
+            clickable={infoClickable}
             title={title}
             draggable={false}
+            collisionBehavior="OPTIONAL_AND_HIDES_LOWER_PRIORITY"
           >
             <Pin
               background={colorPin}
@@ -511,9 +511,11 @@ const Marker = ({
                             signal ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
-                          {parentName != null || parentName != undefined
+                          {parentName != null ||
+                          parentName != undefined ||
+                          parentName != ""
                             ? parentName
-                            : "-"}
+                            : "Loading data.."}
                         </h4>
                       </div>
                     </div>
@@ -748,7 +750,9 @@ const Marker = ({
                         aria-valuemax={100}
                       >
                         <div
-                          className="flex flex-col justify-center rounded-full overflow-hidden bg-green-500 text-sm sm:text-[13px] text-white text-center whitespace-nowrap transition duration-500"
+                          className={`flex flex-col justify-center rounded-full overflow-hidden ${
+                            signal ? "bg-green-500" : "bg-red-500"
+                          } text-sm sm:text-[13px] text-white text-center whitespace-nowrap transition duration-500`}
                           style={{ width: signal ? "100%" : "0%" }}
                         />
                       </div>
