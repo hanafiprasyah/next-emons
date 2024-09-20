@@ -254,6 +254,7 @@ export default function Current() {
         {/* Content */}
         <div className="max-w-md mx-auto space-y-3">
           <Image
+            priority={true}
             width={500}
             height={500}
             className="max-w-xs mx-auto dark:hidden"
@@ -261,6 +262,7 @@ export default function Current() {
             alt="EMONS"
           />
           <Image
+            priority={true}
             width={500}
             height={500}
             className="hidden max-w-xs mx-auto dark:block"

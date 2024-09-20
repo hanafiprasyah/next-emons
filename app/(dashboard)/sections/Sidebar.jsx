@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import React from "react";
-import { usePathname } from "next/navigation";
 import {
   Home,
   Voltage,
@@ -17,6 +15,8 @@ import {
   SdCardLog,
 } from "../../../public/icons";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function DashboardSidebar() {
   /**
@@ -75,6 +75,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Home}
                       className="flex-shrink-0 size-4"
                       width={24}
@@ -113,6 +114,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Voltage}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -138,6 +140,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Current}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -163,6 +166,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Ground}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -189,6 +193,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Frequency}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -215,6 +220,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Temperature}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -244,6 +250,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={Energy}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -270,6 +277,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={PowerFactor}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -299,6 +307,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={THDv}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -328,6 +337,7 @@ export default function DashboardSidebar() {
                     prefetch={true}
                   >
                     <Image
+                      priority={true}
                       src={THDi}
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
@@ -441,6 +451,7 @@ export default function DashboardSidebar() {
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <Image
+                        priority={true}
                         src={SdCardLog}
                         className="flex-shrink-0 size-3"
                         width={24}

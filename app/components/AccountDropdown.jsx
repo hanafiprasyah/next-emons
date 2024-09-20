@@ -60,8 +60,9 @@ export default function AccountDropdown() {
         <div className="p-1 border-b border-gray-200 pointer-events-none dark:border-neutral-800">
           <div className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
             <Image
-              width={500}
-              height={500}
+              priority={true}
+              width={36}
+              height={36}
               className="flex-shrink-0 rounded-full size-8"
               src={MonitoringPicture}
               alt="EMONS"

@@ -55,7 +55,7 @@ export default function GlobalError({ error, reset }) {
           <footer className="py-5 mt-auto text-center">
             <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
               <p className="text-sm text-gray-500 dark:text-neutral-500">
-                © Wibawa Solusi Elektrik | All Rights Reserved. 2024.
+                © EMONS | All Rights Reserved. 2024.
               </p>
             </div>
           </footer>

@@ -57,7 +57,7 @@ export default function DashboardHeader() {
              */}
             <button
               type="button"
-              className="w-7 h-[38px] inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
+              className="w-7 h-[38px] inline-flex transition duration-200 ease-in-out justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
               data-hs-overlay="#hs-pro-sidebar"
               aria-controls="hs-pro-sidebar"
               aria-label="Toggle navigation"
@@ -135,7 +135,7 @@ export default function DashboardHeader() {
 
           <div className="h-[38px] ">
             {/* Account Dropdown */}
-            <div className="hs-dropdown inline-flex   [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
+            <div className="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
               <button
                 id="hs-pro-dnad"
                 type="button"
@@ -144,6 +144,7 @@ export default function DashboardHeader() {
                 {/* This image is shown as Circlet Avatar and clickable */}
                 {/* Set the user image from API */}
                 <Image
+                  priority={true}
                   width={500}
                   height={500}
                   className="flex-shrink-0 size-[38px] rounded-full"

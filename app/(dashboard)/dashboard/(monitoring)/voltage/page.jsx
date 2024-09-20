@@ -369,6 +369,7 @@ export default function Voltage() {
         {/* Content */}
         <div className="max-w-md mx-auto space-y-3">
           <Image
+            priority={true}
             width={500}
             height={500}
             className="max-w-xs mx-auto dark:hidden"
@@ -376,6 +377,7 @@ export default function Voltage() {
             alt="EMONS"
           />
           <Image
+            priority={true}
             width={500}
             height={500}
             className="hidden max-w-xs mx-auto dark:block"
