@@ -65,7 +65,7 @@ export default function AccountDropdown() {
               height={36}
               className="flex-shrink-0 rounded-full size-8"
               src={MonitoringPicture}
-              alt="EMONS"
+              alt="EMONS | Electricity Monitoring System"
             />
 
             <div className="grow">

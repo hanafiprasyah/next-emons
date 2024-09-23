@@ -10,9 +10,10 @@ export default function GlobalError({ error, reset }) {
           <header className="z-50 flex justify-center w-full py-4 mb-auto">
             <nav className="px-4 sm:px-6 lg:px-8" aria-label="Global">
               <Link
-                className="flex-none text-xl font-semibold sm:text-3xl dark:text-white"
-                href="/"
-                aria-label="Brand"
+                className="flex-none text-xl font-semibold cursor-default select-none sm:text-3xl dark:text-white"
+                href=""
+                onClick={(e) => e.preventDefault()}
+                aria-label="EMONS"
               >
                 EMONS
               </Link>
@@ -22,10 +23,11 @@ export default function GlobalError({ error, reset }) {
           <main id="content">
             <div className="px-4 py-10 text-center sm:px-6 lg:px-8">
               <h1 className="block font-bold text-gray-800 text-7xl sm:text-9xl dark:text-white">
-                400
+                Oops, something went wrong.
               </h1>
               <p className="mt-3 text-gray-600 dark:text-neutral-400">
-                Oops, something went wrong.
+                Please check your connection and restart this page by clicking
+                this button bellow.
               </p>
               <div className="flex flex-col items-center justify-center gap-2 mt-5 sm:flex-row sm:gap-3">
                 <Link

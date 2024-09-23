@@ -332,7 +332,7 @@ export default function Voltage() {
             height={500}
             className="max-w-xs mx-auto dark:hidden"
             src={ErrorImage}
-            alt="EMONS"
+            alt="EMONS | Electricity Monitoring System"
           />
           <Image
             priority={true}
@@ -340,7 +340,7 @@ export default function Voltage() {
             height={500}
             className="hidden max-w-xs mx-auto dark:block"
             src={ErrorImage}
-            alt="EMONS"
+            alt="EMONS | Electricity Monitoring System"
           />
           {/* Header Text */}
           <span className="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-gradient-to-tl from-red-100 to-rose-200 text-red-800 dark:from-red-900 dark:to-rose-950 dark:text-white">

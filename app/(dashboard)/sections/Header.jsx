@@ -149,7 +149,7 @@ export default function DashboardHeader() {
                   height={500}
                   className="flex-shrink-0 size-[38px] rounded-full"
                   src={MonitoringPicture}
-                  alt="EMONS"
+                  alt="EMONS | Electricity Monitoring System"
                 />
               </button>
 

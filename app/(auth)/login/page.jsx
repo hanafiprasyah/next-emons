@@ -23,7 +23,7 @@ export default function Login() {
                 priority={true}
                 className="h-auto w-36"
                 src={EmonsLogo}
-                alt="EMONS"
+                alt="EMONS | Electricity Monitoring System"
                 quality={75}
                 width={36}
                 height={36}
@@ -41,7 +41,7 @@ export default function Login() {
                 priority={true}
                 className="block w-auto antialiased"
                 src={SideImage}
-                alt="EMONS"
+                alt="EMONS | Electricity Monitoring System"
                 quality={50}
                 width={36}
                 height={36}

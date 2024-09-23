@@ -1,9 +1,9 @@
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import ScrollToTopButton from "@/components/ScrollToTopButton";
-import { Suspense } from "react";
-import Loader from "@/loading";
+import React, { Suspense } from "react";
 import PrelineScript from "@/components/PrelineScript";
+import Loader from "@/loading";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 
 const quicksandFont = Quicksand({ subsets: ["latin"] });
 
@@ -17,15 +17,15 @@ export const viewport = {
 
 export const metadata = {
   generator: "Next.js",
-  title: "Electricity Monitoring System",
-  description: "Electricity Monitoring System (EMONS) official website",
+  title: "EMONS | Electricity Monitoring System",
+  description: "Help you monitoring your electricity in real time!",
   referrer: "origin-when-cross-origin",
   keywords: [
     "Wibawa Solusi Elektrik",
     "Electricity Monitoring System",
     "Electrical Monitoring",
     "EMONS",
-    "emons website",
+    "EMONS website",
     "Alat pemantau sistem kelistrikan",
     "Pantau Sistem Listrik",
     "Apa itu EMONS",
@@ -40,6 +40,8 @@ export const metadata = {
     "WISE",
     "Purify System",
     "Memurnikan listrik",
+    "Monitoring grounding",
+    "apa itu grounding",
     "Grounding listrik",
     "Grounding system",
     "Perbaikan grounding",
