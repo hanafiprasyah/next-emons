@@ -179,16 +179,25 @@ export default function Voltage() {
         status: "",
         value: "",
         side: "",
-        start_date: "",
+        start_date: "2023-01-01 01:59:00",
         end_date: "",
       }),
     })
       .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
       .then((datas) => {
         if (datas) {
-          selectDev.indexOf(0).length != 0
-            ? setDataVolt(datas.voltage["data"])
-            : setDataVolt([]);
+          if (selectDev[0] !== null || selectDev[0] !== undefined) {
+            setDataVolt(datas.monitoring["data"]["datavoltages"]);
+
+            if (dataVolt === null || dataVolt === undefined) {
+              setSignal(false);
+              setChannel("Unreachable");
+            } else {
+              setChannel("Stable");
+            }
+          } else {
+            setDataVolt([]);
+          }
         } else {
           setChannel("Unreachable");
         }
@@ -197,20 +206,21 @@ export default function Voltage() {
 
   // SWR
   const { data, error } = useSWR(
-    localTenant !== "" && localTenant !== undefined
-      ? [
-          "/api/monitoring/voltage/getdata",
-          localTenant,
-          selectDev.length === 0 ? "0" : selectDev[0],
-        ]
+    localTenant !== "" && localTenant !== undefined && localTenant !== null
+      ? ["/api/monitoring/getmonitoring", localTenant, selectDev[0]]
       : null,
     ([url, localTenant, locationid]) =>
       fetchVoltageRealtime(url, localTenant, locationid),
     {
       refreshInterval: 1000,
-      refreshWhenHidden: true,
-      refreshWhenOffline: false,
+      dedupingInterval: 500,
+      revalidateIfStale: true,
+      revalidateOnFocus: true,
+      revalidateOnMount: true,
       revalidateOnReconnect: true,
+      errorRetryInterval: 1000,
+      errorRetryCount: 10,
+      shouldRetryOnError: true,
     }
   );
 
@@ -286,7 +296,7 @@ export default function Voltage() {
               // delay signal and channel status by 100ms after connection ready
               setTimeout(() => {
                 setSignal(true);
-                setChannel("Stable");
+                setChannel("Validate data..");
               }, 100);
 
               // if (process.env.NODE_ENV === "development") {
@@ -402,9 +412,7 @@ export default function Voltage() {
             {/* Select Location */}
             <div className="relative inline-block">
               <div
-                className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  !signal ? "pointer-events-none" : null
-                }`}
+                className={`relative inline-flex hs-dropdown hs-dropdown-example`}
               >
                 <button
                   id="hs-dropdown-example"
@@ -414,11 +422,7 @@ export default function Voltage() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {signal
-                    ? selectLoc.length != 0
-                      ? selectLoc[1]
-                      : "Select location"
-                    : "Loading location"}
+                  {selectLoc.length != 0 ? selectLoc[1] : "Select location"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -474,9 +478,7 @@ export default function Voltage() {
             {/* Select Device */}
             <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
               <div
-                className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  !signal || !showDev ? "pointer-events-none" : null
-                }`}
+                className={`relative inline-flex hs-dropdown hs-dropdown-example`}
               >
                 <button
                   id="hs-dropdown-example"
@@ -486,11 +488,7 @@ export default function Voltage() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {signal
-                    ? selectDev.length != 0
-                      ? selectDev[1]
-                      : "Select device"
-                    : "Loading device"}
+                  {selectDev.length != 0 ? selectDev[1] : "Select device"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -596,7 +594,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -633,13 +631,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -676,7 +674,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
@@ -736,7 +734,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -773,13 +771,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -816,7 +814,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
@@ -876,7 +874,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -913,13 +911,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -956,7 +954,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
@@ -1020,7 +1018,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1057,13 +1055,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1100,7 +1098,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
@@ -1160,7 +1158,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1197,13 +1195,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1240,7 +1238,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
@@ -1300,7 +1298,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1337,13 +1335,13 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length !== undefined || dataVolt.length !== null ? (
+                {dataVolt != null ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1380,7 +1378,7 @@ export default function Voltage() {
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" x2="12" y1="2" y2="12"></line>
                       </svg>
-                      No device installed
+                      Device is not connected
                     </span>
                   </div>
                 )}
