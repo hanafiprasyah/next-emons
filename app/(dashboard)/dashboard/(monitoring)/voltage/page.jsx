@@ -675,7 +675,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-n" key={`r-n input`}>
+                  <div id="r-n input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -718,7 +718,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-n" key={"r-n output"}>
+                  <div id="r-n output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -825,7 +825,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="s-n" key={"s-n input"}>
+                  <div id="s-n input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -868,7 +868,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="s-n" key={"s-n output"}>
+                  <div id="s-n output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -975,7 +975,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="t-n" key={"t-n input"}>
+                  <div id="t-n input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1018,7 +1018,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="t-n" key={"t-n output"}>
+                  <div id="t-n output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1129,7 +1129,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-s" key={"r-s input"}>
+                  <div id="r-s input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1172,7 +1172,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-s" key={"r-s output"}>
+                  <div id="r-s output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1279,7 +1279,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="s-t" key={"s-t input"}>
+                  <div id="s-t input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1322,7 +1322,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="s-t" key={"s-t output"}>
+                  <div id="s-t output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1429,7 +1429,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-t" key={"r-t input"}>
+                  <div id="r-t input">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -1472,7 +1472,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-t" key={"r-t output"}>
+                  <div id="r-t output">
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
