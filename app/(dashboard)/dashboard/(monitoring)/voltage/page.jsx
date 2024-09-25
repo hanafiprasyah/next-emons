@@ -23,7 +23,7 @@ export default function Voltage() {
   // Dates
   const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
-  const [differentTime, setDifferentTime] = useState("");
+  // const [differentTime, setDifferentTime] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -160,7 +160,7 @@ export default function Voltage() {
   };
 
   // Function to fetch the /device/getlastdatavoltage API [REALTIME]
-  const fetchVoltageRealtime = async (url, tenant, locationid) => {
+  const fetchVoltageRealtime = async (url, tenant, locationid, start_date) => {
     return fetch(url, {
       method: "POST",
       headers: {
@@ -179,7 +179,7 @@ export default function Voltage() {
         status: "",
         value: "",
         side: "",
-        start_date: "2023-01-01 01:59:00",
+        start_date: start_date,
         end_date: "",
       }),
     })
@@ -193,6 +193,7 @@ export default function Voltage() {
               setSignal(false);
               setChannel("Unreachable");
             } else {
+              setSignal(true);
               setChannel("Stable");
             }
           } else {
@@ -207,10 +208,15 @@ export default function Voltage() {
   // SWR
   const { data, error } = useSWR(
     localTenant !== "" && localTenant !== undefined && localTenant !== null
-      ? ["/api/monitoring/getmonitoring", localTenant, selectDev[0]]
+      ? [
+          "/api/monitoring/getmonitoring",
+          localTenant,
+          selectDev[0],
+          hoursAgo ?? "2023-01-01 00:00:00",
+        ]
       : null,
-    ([url, localTenant, locationid]) =>
-      fetchVoltageRealtime(url, localTenant, locationid),
+    ([url, localTenant, locationid, start_date]) =>
+      fetchVoltageRealtime(url, localTenant, locationid, start_date),
     {
       refreshInterval: 1000,
       dedupingInterval: 500,
@@ -223,6 +229,55 @@ export default function Voltage() {
       shouldRetryOnError: true,
     }
   );
+
+  // TODO: Get current datetime, this will be mounted at the first time
+  useEffect(() => {
+    const dateIns = new Date();
+
+    // const isoDate = "2024-09-13T11:30:54";
+    // const isoConvDate = new Date(isoDate);
+
+    // Get current date time
+    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
+      dateIns.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours()}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // Get -1 hour of current date time
+    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours() - 1}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // const diffTime = dateIns - isoConvDate;
+    // const minutes = Math.floor((diffTime % 3600000) / 60000);
+
+    if (getFormatedCurrentDate.startsWith("202")) {
+      setCurrentDate(getFormatedCurrentDate);
+      setHoursAgo(getHoursAgo);
+      // setDifferentTime(diffTime);
+    }
+
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log(
+    //     "Current date: " +
+    //       getFormatedCurrentDate +
+    //       "| 1 hours ago: " +
+    //       getHoursAgo
+    //   );
+    //   console.log("Different time: " + minutes);
+    // }
+  }, []);
 
   // TODO: Get default site and location
   useEffect(() => {
@@ -304,7 +359,7 @@ export default function Voltage() {
               //   console.log(currentDate);
               // }
 
-              // READY TO FLIGHT -> !
+              // READY TO FLIGHT for Spline Chart -> !
               // fetchVoltage(
               //   "alif",
               //   "102",
@@ -412,7 +467,9 @@ export default function Voltage() {
             {/* Select Location */}
             <div className="relative inline-block">
               <div
-                className={`relative inline-flex hs-dropdown hs-dropdown-example`}
+                className={`relative inline-flex hs-dropdown hs-dropdown-example ${
+                  selectLoc.length === null ? "pointer-events-none" : null
+                }`}
               >
                 <button
                   id="hs-dropdown-example"
@@ -478,7 +535,11 @@ export default function Voltage() {
             {/* Select Device */}
             <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
               <div
-                className={`relative inline-flex hs-dropdown hs-dropdown-example`}
+                className={`relative inline-flex hs-dropdown hs-dropdown-example ${
+                  selectDev.length === null || !showDev
+                    ? "pointer-events-none"
+                    : null
+                }`}
               >
                 <button
                   id="hs-dropdown-example"
@@ -600,7 +661,7 @@ export default function Voltage() {
                       return (
                         <RadialDynamicGauge
                           id={"voltage-rn-input"}
-                          key={"rn-input"}
+                          key={`rn-input${index}`}
                           alt={"R-N"}
                           title="Input"
                           value={
@@ -614,7 +675,7 @@ export default function Voltage() {
                     return null;
                   })
                 ) : (
-                  <div id="r-n" key={"r-n input"}>
+                  <div id="r-n" key={`r-n input`}>
                     <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
                       <svg
                         className="shrink-0 size-3"
@@ -687,10 +748,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>
@@ -827,10 +898,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>
@@ -967,10 +1048,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>
@@ -1111,10 +1202,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>
@@ -1251,10 +1352,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>
@@ -1391,10 +1502,20 @@ export default function Voltage() {
             <div>
               <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
                 <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 bg-sky-400"></span>
-                  <span className="relative inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                      signal ? "bg-sky-400" : "bg-red-400"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-2 h-2 rounded-full ${
+                      signal ? "bg-sky-500" : "bg-red-500"
+                    }`}
+                  ></span>
                 </span>
-                Updated every seconds
+                {signal
+                  ? "Updated every seconds"
+                  : "Cannot update data right now"}
               </span>
             </div>
             <div>

@@ -5,17 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PrelineScript from "@/components/PrelineScript";
 
+// TODO: To check username if contains uppercase or not
+function containsUppercase(input) {
+  return /[A-Z]/.test(input);
+}
+
 // TODO: Substring the string "after and before" char(/) to separate the value of tenant and username
 function substringUsername(input) {
   return {
     username: input.split("/").slice(1).join("/"),
-    tenant: input.substring(0, input.indexOf("/")),
+    tenant: containsUppercase(input.substring(0, input.indexOf("/")))
+      ? input.substring(0, input.indexOf("/")).toLowerCase()
+      : input.substring(0, input.indexOf("/")),
   };
-}
-
-// TODO: To check username if contains uppercase or not
-function containsUppercase(input) {
-  return /[A-Z]/.test(input);
 }
 
 function LoginForm() {
@@ -46,10 +48,6 @@ function LoginForm() {
       regex.test(username)
     ) {
       setError("Fill in the form correctly!");
-    }
-    // then check if tenant field contains uppercase letter
-    else if (containsUppercase(substringUsername(username).tenant)) {
-      setError("Do not use uppercase on your team name!");
     }
     // if all clear, continue the process
     else {
