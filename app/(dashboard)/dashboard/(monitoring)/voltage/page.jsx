@@ -397,7 +397,7 @@ export default function Voltage() {
             height={500}
             className="max-w-xs mx-auto dark:hidden"
             src={ErrorImage}
-            alt="EMONS | Electricity Monitoring System"
+            alt="EMONS | Electrical Monitoring System"
           />
           <Image
             priority={true}
@@ -405,7 +405,7 @@ export default function Voltage() {
             height={500}
             className="hidden max-w-xs mx-auto dark:block"
             src={ErrorImage}
-            alt="EMONS | Electricity Monitoring System"
+            alt="EMONS | Electrical Monitoring System"
           />
           {/* Header Text */}
           <span className="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-gradient-to-tl from-red-100 to-rose-200 text-red-800 dark:from-red-900 dark:to-rose-950 dark:text-white">
@@ -703,8 +703,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`rn-output${index}`}
                           id={"voltage-rn-output"}
-                          key={"rn-output"}
                           alt={"R-N"}
                           title="Output"
                           value={
@@ -810,8 +810,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`sn-input${index}`}
                           id={"voltage-sn-input"}
-                          key={"sn-input"}
                           alt={"S-N"}
                           title="Input"
                           value={
@@ -853,8 +853,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`sn-output${index}`}
                           id={"voltage-sn-output"}
-                          key={"sn-output"}
                           alt={"S-N"}
                           title="Output"
                           value={
@@ -960,8 +960,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`tn-input${index}`}
                           id={"voltage-tn-input"}
-                          key={"tn-input"}
                           alt={"T-N"}
                           title="Input"
                           value={
@@ -1003,8 +1003,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`tn-output${index}`}
                           id={"voltage-tn-output"}
-                          key={"tn-output"}
                           alt={"T-N"}
                           title="Output"
                           value={
@@ -1114,8 +1114,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`rs-input${index}`}
                           id={"voltage-rs-input"}
-                          key={"rs-input"}
                           alt={"R-S"}
                           title="Input"
                           value={
@@ -1157,8 +1157,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`rs-output${index}`}
                           id={"voltage-rs-output"}
-                          key={"rs-output"}
                           alt={"R-S"}
                           title="Output"
                           value={
@@ -1264,8 +1264,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`st-input${index}`}
                           id={"voltage-st-input"}
-                          key={"st-input"}
                           alt={"S-T"}
                           title="Input"
                           value={
@@ -1307,8 +1307,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`st-output${index}`}
                           id={"voltage-st-output"}
-                          key={"st-output"}
                           alt={"S-T"}
                           title="Output"
                           value={
@@ -1414,8 +1414,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`rt-input${index}`}
                           id={"voltage-rt-input"}
-                          key={"rt-input"}
                           alt={"R-T"}
                           title="Input"
                           value={
@@ -1457,8 +1457,8 @@ export default function Voltage() {
                     if (item.location_id === selectDev[0]) {
                       return (
                         <RadialDynamicGauge
+                          key={`rt-output${index}`}
                           id={"voltage-rt-output"}
-                          key={"rt-output"}
                           alt={"R-T"}
                           title="Output"
                           value={

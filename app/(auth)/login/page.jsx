@@ -23,7 +23,7 @@ export default function Login() {
                 priority={true}
                 className="h-auto w-36"
                 src={EmonsLogo}
-                alt="EMONS | Electricity Monitoring System"
+                alt="EMONS | Electrical Monitoring System"
                 quality={75}
                 width={36}
                 height={36}
@@ -33,7 +33,7 @@ export default function Login() {
 
           <div>
             <span className="text-2xl font-medium text-gray-800">
-              The simplest way to monitor your electricity system
+              The simplest way to monitor your electrical system
             </span>
 
             <Suspense fallback={<Loader />}>
@@ -41,7 +41,7 @@ export default function Login() {
                 priority={true}
                 className="block w-auto antialiased"
                 src={SideImage}
-                alt="EMONS | Electricity Monitoring System"
+                alt="EMONS | Electrical Monitoring System"
                 quality={50}
                 width={36}
                 height={36}

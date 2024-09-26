@@ -17,12 +17,12 @@ export const viewport = {
 
 export const metadata = {
   generator: "Next.js",
-  title: "EMONS | Electricity Monitoring System",
-  description: "Help you monitoring your electricity in real time!",
+  title: "EMONS | Electrical Monitoring System",
+  description: "Help you monitoring your electrical in real time!",
   referrer: "origin-when-cross-origin",
   keywords: [
     "Wibawa Solusi Elektrik",
-    "Electricity Monitoring System",
+    "Electrical Monitoring System",
     "Electrical Monitoring",
     "EMONS",
     "EMONS website",
@@ -61,7 +61,7 @@ export const metadata = {
       url: "https://wise.co.id",
     },
     {
-      name: "Electricity Monitoring System",
+      name: "Electrical Monitoring System",
       url: "https://emons.id/",
     },
   ],

@@ -80,7 +80,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Dashboard
                   </Link>
@@ -119,7 +119,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Voltage
                   </Link>
@@ -145,7 +145,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Current
                   </Link>
@@ -171,7 +171,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Ground
                   </Link>
@@ -198,7 +198,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Frequency
                   </Link>
@@ -225,7 +225,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Temperature
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
@@ -255,7 +255,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Energy
                   </Link>
@@ -282,7 +282,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Power Factor
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
@@ -312,7 +312,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     THDv
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
@@ -342,7 +342,7 @@ export default function DashboardSidebar() {
                       className="flex-shrink-0 mt-0.5 size-4"
                       width={24}
                       height={24}
-                      alt="EMONS | Electricity Monitoring System"
+                      alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     THDi
                     <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
@@ -456,7 +456,7 @@ export default function DashboardSidebar() {
                         className="flex-shrink-0 size-3"
                         width={24}
                         height={24}
-                        alt="EMONS | Electricity Monitoring System"
+                        alt="EMONS | Electrical Monitoring System"
                       ></Image>
                     </span>
                     SD Card Log

@@ -60,13 +60,13 @@ function Hero() {
 
         <div className="max-w-xl mx-auto mt-5 text-center">
           <h1 className="block text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl dark:text-neutral-200">
-            Electricity Monitoring System
+            Electrical Monitoring System
           </h1>
         </div>
 
         <div className="max-w-3xl mx-auto mt-5 text-center">
           <p className="text-lg text-gray-600 dark:text-neutral-400">
-            Electricity Monitoring System or we can call it{" "}
+            Electrical Monitoring System or we can call it{" "}
             <strong>EMONS</strong>, helps you monitor the latest electrical
             system conditions with <i>real-time</i> method
           </p>

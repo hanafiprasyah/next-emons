@@ -16,7 +16,7 @@ function DangerNotification() {
           height={500}
           className="flex-shrink-0 size-[38px] rounded-full"
           src="https://images.unsplash.com/photo-1659482634023-2c4fda99ac0c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=3&w=320&h=320&q=80"
-          alt="EMONS | Electricity Monitoring System"
+          alt="EMONS | Electrical Monitoring System"
         />
         <span className="absolute bg-blue-600 rounded-full top-4 -start-3 size-2 dark:bg-blue-500"></span>
       </div>
