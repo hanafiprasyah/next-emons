@@ -3,13 +3,10 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import DynamicForm from "@/components/forms/LoginForm";
+import LoginForm from "@/components/forms/LoginForm";
 import SideImage from "../../../public/images/side-image.svg";
 import EmonsLogo from "../../../public/images/emons-logo.svg";
 import Loader from "@/loading";
-
-// import dynamic from "next/dynamic";
-// const DynamicForm = dynamic(() => import("@/components/forms/LoginForm"));
 
 export default function Login() {
   return (
@@ -68,7 +65,7 @@ export default function Login() {
             </div>
 
             <Suspense fallback={<Loader />}>
-              <DynamicForm />
+              <LoginForm />
             </Suspense>
           </div>
         </div>

@@ -58,12 +58,12 @@ function LoginForm() {
       const pureUsername = substringUsername(username).username;
       const pureTenant = substringUsername(username).tenant;
 
-      if (process.env.NODE_ENV === "development") {
-        console.log("=====");
-        console.log("Pure username after substring: " + pureUsername);
-        console.log("Pure tenant after substring: " + pureTenant);
-        console.log("=====");
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("=====");
+      //   console.log("Pure username after substring: " + pureUsername);
+      //   console.log("Pure tenant after substring: " + pureTenant);
+      //   console.log("=====");
+      // }
 
       // TODO: Salt and username encryption
       const saltPost = async () => {
@@ -107,15 +107,15 @@ function LoginForm() {
       // TODO: Processing
       saltPost()
         .then((data) => {
-          if (process.env.NODE_ENV === "development") {
-            console.log("===== Salt started =====");
-            console.log(
-              "Salt: " +
-                data.datas["salt"] +
-                " and username ecript: " +
-                data.datas["ecript"]
-            );
-          }
+          // if (process.env.NODE_ENV === "development") {
+          //   console.log("===== Salt started =====");
+          //   console.log(
+          //     "Salt: " +
+          //       data.datas["salt"] +
+          //       " and username ecript: " +
+          //       data.datas["ecript"]
+          //   );
+          // }
 
           if (data.datas["salt"] === null || data.datas["ecript"] === null) {
             setLoading(false);
@@ -128,16 +128,16 @@ function LoginForm() {
           };
         })
         .then((dataSaltPost) => {
-          if (process.env.NODE_ENV === "development") {
-            console.log("Ok then we will encrypt the password like below:");
-          }
+          // if (process.env.NODE_ENV === "development") {
+          //   console.log("Ok then we will encrypt the password like below:");
+          // }
 
           passEnc()
             .then((data2) => {
-              if (process.env.NODE_ENV === "development") {
-                console.log("===== Password encrypt started =====");
-                console.log("Encrypted password: " + data2.passdata["ecript"]);
-              }
+              // if (process.env.NODE_ENV === "development") {
+              //   console.log("===== Password encrypt started =====");
+              //   console.log("Encrypted password: " + data2.passdata["ecript"]);
+              // }
 
               if (data2.passdata["ecript"] === null) {
                 setLoading(false);
@@ -149,16 +149,16 @@ function LoginForm() {
               };
             })
             .then((dataPassEnc) => {
-              if (process.env.NODE_ENV === "development") {
-                console.log(
-                  "===== Great! Then at the final stage we get this things already: ====="
-                );
-                console.log("1. Encrypted Username: " + dataSaltPost.username);
-                console.log("2. Encrypted Password: " + dataPassEnc.password);
-                console.log("3. Salt: " + dataSaltPost.salt);
-                console.log("4. Tenant: " + pureTenant);
-                console.log("================================");
-              }
+              // if (process.env.NODE_ENV === "development") {
+              //   console.log(
+              //     "===== Great! Then at the final stage we get this things already: ====="
+              //   );
+              //   console.log("1. Encrypted Username: " + dataSaltPost.username);
+              //   console.log("2. Encrypted Password: " + dataPassEnc.password);
+              //   console.log("3. Salt: " + dataSaltPost.salt);
+              //   console.log("4. Tenant: " + pureTenant);
+              //   console.log("================================");
+              // }
 
               loggedIn(
                 `${pureTenant}`,
@@ -166,15 +166,15 @@ function LoginForm() {
                 `${dataPassEnc.password}`,
                 `${dataSaltPost.salt}`
               ).then((dataLoggedIn) => {
-                if (process.env.NODE_ENV === "development") {
-                  console.log(
-                    "===== Logged In running on server side and this is the data:"
-                  );
-                  console.log("Status: " + dataLoggedIn.message);
-                  console.log(
-                    "Data/Object: " + dataLoggedIn.datalogin["decript"]
-                  );
-                }
+                // if (process.env.NODE_ENV === "development") {
+                //   console.log(
+                //     "===== Logged In running on server side and this is the data:"
+                //   );
+                //   console.log("Status: " + dataLoggedIn.message);
+                //   console.log(
+                //     "Data/Object: " + dataLoggedIn.datalogin["decript"]
+                //   );
+                // }
 
                 if (dataLoggedIn.datalogin["decript"] === null) {
                   setLoading(false);
@@ -205,9 +205,9 @@ function LoginForm() {
     const storedLocalValue = localStorage.getItem("userName");
 
     if (storedLocalValue) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Local key: " + storedLocalValue);
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("Local key: " + storedLocalValue);
+      // }
 
       isLoggedIn ? router.replace("/dashboard") : null;
     }

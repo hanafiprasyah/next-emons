@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${process.env.BASE_URL}:8802/device/getlastdatafrequency`,
+      `${process.env.BASE_URL}:${process.env.GENERAL_PORT}/device/getlastdatafrequency`,
       {
         method: "POST",
         headers: {

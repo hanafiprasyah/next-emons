@@ -298,9 +298,9 @@ export default function Voltage() {
       "2023-01-01 00:00:00",
       "2024-12-30 23:59:00"
     ).then((dataSite) => {
-      if (process.env.NODE_ENV === "development") {
-        console.log(dataSite.site["data"]);
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log(dataSite.site["data"]);
+      // }
 
       if (dataSite.message == "OK") {
         setDataLoc(dataSite.site["data"]);
@@ -325,9 +325,9 @@ export default function Voltage() {
             "2023-01-01 00:00:00",
             "2024-12-30 23:59:00"
           ).then((dataLocation) => {
-            if (process.env.NODE_ENV === "development") {
-              console.log(dataLocation.loc["data"]);
-            }
+            // if (process.env.NODE_ENV === "development") {
+            //   console.log(dataLocation.loc["data"]);
+            // }
 
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);

@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${process.env.BASE_URL}:8801/Usermanagement/encript?strdata=${password}`,
+      `${process.env.BASE_URL}:${process.env.USER_PORT}/Usermanagement/encript?strdata=${password}`,
       {
         method: "GET",
         headers: {

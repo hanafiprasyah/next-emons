@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${process.env.BASE_URL}:8802/tool/dataLocation`,
+      `${process.env.BASE_URL}:${process.env.GENERAL_PORT}/tool/dataLocation`,
       {
         method: "POST",
         headers: {

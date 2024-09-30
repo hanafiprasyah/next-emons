@@ -31,9 +31,9 @@ export default function AccountDropdown() {
       }
     } catch (error) {
       setLoading(false);
-      if (process.env.NODE_ENV === "development") {
-        console.log("Error when trying to sign out the user:" + error);
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("Error when trying to sign out the user:" + error);
+      // }
       throw new Error(`${error}`);
     }
   };

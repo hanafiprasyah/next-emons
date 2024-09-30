@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${process.env.BASE_URL}:8802/device/getdatavoltage`,
+      `${process.env.BASE_URL}:${process.env.GENERAL_PORT}/device/getdatavoltage`,
       {
         method: "POST",
         headers: {

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${process.env.BASE_URL}:8801/Usermanagement/adduser`,
+      `${process.env.BASE_URL}:${process.env.USER_PORT}/Usermanagement/adduser`,
       {
         method: "POST",
         headers: {

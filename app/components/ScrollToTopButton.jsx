@@ -14,9 +14,9 @@ export default function ScrollToTopButton() {
   };
 
   const scrollToTop = () => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("send user to the top of viewport");
-    }
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log("send user to the top of viewport");
+    // }
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -28,9 +28,9 @@ export default function ScrollToTopButton() {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      if (process.env.NODE_ENV === "development") {
-        console.log("clean up scroll listener");
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("clean up scroll listener");
+      // }
     };
   }, []);
 

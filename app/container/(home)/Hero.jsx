@@ -13,9 +13,9 @@ function Hero() {
     const storedLocalValue = await localStorage.getItem("userName");
 
     if (storedLocalValue) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Local key: " + storedLocalValue);
-      }
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log("Local key: " + storedLocalValue);
+      // }
 
       setLoggedIn(true);
       router.replace("/dashboard");
