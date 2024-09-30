@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 export default function DeviceDropdown() {
@@ -8,7 +9,7 @@ export default function DeviceDropdown() {
     >
       <div className="p-1 space-y-0.5">
         {/* Item 1 */}
-        <a
+        <Link
           className="block w-full px-3 py-2 bg-gray-100 rounded-lg text-start disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-800 dark:focus:bg-neutral-800"
           href="#"
         >
@@ -69,10 +70,10 @@ export default function DeviceDropdown() {
               </svg>
             </div>
           </div>
-        </a>
+        </Link>
 
         {/* Item 2 */}
-        <a
+        <Link
           className="block w-full px-3 py-2 rounded-lg text-start hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
           href="#"
         >
@@ -133,7 +134,7 @@ export default function DeviceDropdown() {
               </svg>
             </div>
           </div>
-        </a>
+        </Link>
       </div>
 
       <div className="p-1 border-t border-gray-200 dark:border-neutral-800">

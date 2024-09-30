@@ -4,6 +4,7 @@
  * Usually used to provide updates about our new features to all users
  */
 
+import Link from "next/link";
 import React from "react";
 
 function InfoNotification() {
@@ -23,7 +24,7 @@ function InfoNotification() {
           We’re updating our Privacy Policy as of 10th January 2023.content
         </span>
         <p>
-          <a
+          <Link
             className="inline-flex items-center text-sm font-medium text-blue-600 gap-x-1 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
             href="#"
           >
@@ -42,7 +43,7 @@ function InfoNotification() {
             >
               <path d="m9 18 6-6-6-6" />
             </svg>
-          </a>
+          </Link>
         </p>
       </div>
 

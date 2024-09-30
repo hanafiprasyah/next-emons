@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function AccountSetting() {
   const [username, setUsername] = useState("");
@@ -431,12 +432,12 @@ export default function AccountSetting() {
                     >
                       Change
                     </button>
-                    <a
+                    <Link
                       className="text-sm font-medium text-blue-600 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
                       href="#"
                     >
                       I forgot my password
-                    </a>
+                    </Link>
                   </div>
                   {/* End Button Group */}
                 </div>
@@ -1125,12 +1126,12 @@ export default function AccountSetting() {
                 <p className="mt-3 text-sm text-gray-500 dark:text-neutral-500">
                   This will immediately delete all of your data. This action is
                   not reversible, so please continue with caution.{" "}
-                  <a
+                  <Link
                     className="text-sm font-medium text-blue-600 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
                     href="#"
                   >
                     Learn more
-                  </a>
+                  </Link>
                 </p>
               </div>
               {/* End Col */}

@@ -436,7 +436,7 @@ export default function Energy() {
                         index
                     )
                     .map((item, index) => (
-                      <a
+                      <Link
                         key={index}
                         className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                         href=""
@@ -453,7 +453,7 @@ export default function Energy() {
                         <span className="inline-flex text-xs text-gray-400">
                           {selectLoc[0] === item.code ? "Selected" : ""}
                         </span>
-                      </a>
+                      </Link>
                     ))}
                 </div>
               </div>
@@ -500,7 +500,7 @@ export default function Energy() {
                   aria-labelledby="hs-dropdown-example"
                 >
                   {dataDev.map((item, index) => (
-                    <a
+                    <Link
                       key={index}
                       className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                       href=""
@@ -515,7 +515,7 @@ export default function Energy() {
                       <span className="inline-flex text-xs text-gray-400">
                         {selectDev[0] === item.code ? "Selected" : ""}
                       </span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
