@@ -27,7 +27,7 @@ export default function Current() {
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
-  const [channel, setChannel] = useState("Connecting");
+  const [channel, setChannel] = useState("Connecting..");
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -148,27 +148,33 @@ export default function Current() {
     })
       .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
       .then((datas) => {
-        if (datas) {
-          if (selectDev[0] !== null || selectDev[0 !== undefined]) {
-            // We will check the difference about last send_date from API and current date
-            const currentDate = new Date();
-            const sendDate =
-              datas.monitoring["data"]["datacurrents"][0].send_date;
-            const isoConvSendDate = new Date(sendDate);
-            const diffTime = currentDate - isoConvSendDate;
-            const minutes = Math.floor(diffTime / 60000);
-            if (minutes >= 15) {
-              setDataCurrent([]);
-            } else {
-              setDataCurrent(datas.monitoring["data"]["datacurrents"]);
-            }
-
-            if (dataCurrent.length === 0 || dataCurrent === undefined) {
+        if (datas.message == "OK") {
+          if (selectDev.length != 0) {
+            if (datas.monitoring["data"]["datacurrents"].length === 0) {
               setSignal(false);
               setChannel("Unreachable");
             } else {
-              setSignal(true);
-              setChannel("Stable");
+              // We will check the difference about last send_date from API and current date
+              const currentDate = new Date();
+              const sendDate =
+                datas.monitoring["data"]["datacurrents"][0].send_date;
+              const isoConvSendDate = new Date(sendDate);
+              const diffTime = currentDate - isoConvSendDate;
+              const minutes = Math.floor(diffTime / 60000);
+
+              if (minutes >= 15) {
+                setDataCurrent([]);
+              } else {
+                setDataCurrent(datas.monitoring["data"]["datacurrents"]);
+              }
+
+              if (dataCurrent.length === 0 || dataCurrent === undefined) {
+                setSignal(false);
+                setChannel("Unreachable");
+              } else {
+                setSignal(true);
+                setChannel("Stable");
+              }
             }
           } else {
             setSignal(false);
@@ -541,7 +547,7 @@ export default function Current() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -584,7 +590,7 @@ export default function Current() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -691,7 +697,7 @@ export default function Current() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -734,7 +740,7 @@ export default function Current() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -841,7 +847,7 @@ export default function Current() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -884,7 +890,7 @@ export default function Current() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataCurrent.length != 0 ? (
+                {signal ? (
                   dataCurrent.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (

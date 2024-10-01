@@ -185,29 +185,34 @@ export default function Voltage() {
     })
       .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
       .then((datas) => {
-        if (datas) {
-          if (selectDev[0] !== null || selectDev[0] !== undefined) {
-            // We will check the difference about last send_date from API and current date
-            const currentDate = new Date();
-            const sendDate =
-              datas.monitoring["data"]["datavoltages"][0].send_date;
-
-            const isoConvSendDate = new Date(sendDate);
-            const diffTime = currentDate - isoConvSendDate;
-            const minutes = Math.floor(diffTime / 60000);
-
-            if (minutes >= 15) {
-              setDataVolt([]);
-            } else {
-              setDataVolt(datas.monitoring["data"]["datavoltages"]);
-            }
-
-            if (dataVolt.length === 0 || dataVolt === undefined) {
+        if (datas.message == "OK") {
+          if (selectDev.length != 0) {
+            if (datas.monitoring["data"]["datavoltages"].length === 0) {
               setSignal(false);
               setChannel("Unreachable");
             } else {
-              setSignal(true);
-              setChannel("Stable");
+              // We will check the difference about last send_date from API and current date
+              const currentDate = new Date();
+              const sendDate =
+                datas.monitoring["data"]["datavoltages"][0].send_date;
+
+              const isoConvSendDate = new Date(sendDate);
+              const diffTime = currentDate - isoConvSendDate;
+              const minutes = Math.floor(diffTime / 60000);
+
+              if (minutes >= 15) {
+                setDataVolt([]);
+              } else {
+                setDataVolt(datas.monitoring["data"]["datavoltages"]);
+              }
+
+              if (dataVolt.length === 0 || dataVolt === undefined) {
+                setSignal(false);
+                setChannel("Unreachable");
+              } else {
+                setSignal(true);
+                setChannel("Stable");
+              }
             }
           } else {
             setSignal(false);
@@ -582,7 +587,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -625,7 +630,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -732,7 +737,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -775,7 +780,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -882,7 +887,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -925,7 +930,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1036,7 +1041,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1079,7 +1084,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1186,7 +1191,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1229,7 +1234,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1336,7 +1341,7 @@ export default function Voltage() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -1379,7 +1384,7 @@ export default function Voltage() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataVolt.length != 0 ? (
+                {signal ? (
                   dataVolt.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
