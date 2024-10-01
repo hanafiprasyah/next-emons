@@ -23,11 +23,11 @@ export default function Frequency() {
   // Dates
   const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
-  // const [differentTime, setDifferentTime] = useState("");
+  const [differentTime, setDifferentTime] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
-  const [channel, setChannel] = useState("Connecting");
+  const [channel, setChannel] = useState("Connecting..");
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -153,22 +153,42 @@ export default function Frequency() {
     })
       .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
       .then((datas) => {
-        if (datas) {
-          if (selectDev[0] !== null || selectDev[0 !== undefined]) {
-            setDataFreq(datas.monitoring["data"]["datafrequencys"]);
-            if (dataFreq === null || dataFreq === undefined) {
+        if (datas.message == "OK") {
+          if (selectDev.length != 0) {
+            if (datas.monitoring["data"]["datafrequencys"].length === 0) {
               setSignal(false);
               setChannel("Unreachable");
             } else {
-              setSignal(true);
-              setChannel("Stable");
+              // We will check the difference about last send_date from API and current date
+              const currentDate = new Date();
+              const sendDate =
+                datas.monitoring["data"]["datafrequencys"][0].send_date;
+              const isoConvSendDate = new Date(sendDate);
+              const diffTime = currentDate - isoConvSendDate;
+              const minutes = Math.floor(diffTime / 60000);
+              if (minutes >= 15) {
+                setDataFreq([]);
+              } else {
+                setDataFreq(datas.monitoring["data"]["datafrequencys"]);
+              }
+              if (dataFreq.length === 0 || dataFreq === undefined) {
+                setSignal(false);
+                setChannel("Unreachable");
+              } else {
+                setSignal(true);
+                setChannel("Stable");
+              }
             }
           } else {
-            setDataFreq([]);
+            setSignal(false);
+            setChannel("Unreachable");
           }
         } else {
-          setChannel("Unreachable");
+          setDataFreq([]);
         }
+      })
+      .catch((err) => {
+        throw new Error(err);
       });
   };
 
@@ -185,60 +205,20 @@ export default function Frequency() {
     ([url, localTenant, locationid, start_date]) =>
       fetchFrequencyRealtime(url, localTenant, locationid, start_date),
     {
-      refreshInterval: 1000,
+      isPaused: () => (selectDev.length === 0 ? true : false),
+      refreshInterval: 500,
       dedupingInterval: 500,
       revalidateIfStale: true,
       revalidateOnFocus: true,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
+      refreshWhenHidden: false,
+      refreshWhenOffline: false,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
     }
   );
-
-  // TODO: Get current datetime, this will be mounted at the first time
-  useEffect(() => {
-    const dateIns = new Date();
-    // const isoDate = "2024-09-13T11:30:54";
-    // const isoConvDate = new Date(isoDate);
-    // Get current date time
-    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
-      dateIns.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours()}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
-    // Get -1 hour of current date time
-    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours() - 1}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
-    // const diffTime = dateIns - isoConvDate;
-    // const minutes = Math.floor((diffTime % 3600000) / 60000);
-    if (getFormatedCurrentDate.startsWith("202")) {
-      setCurrentDate(getFormatedCurrentDate);
-      setHoursAgo(getHoursAgo);
-      // setDifferentTime(diffTime);
-    }
-    // if (process.env.NODE_ENV === "development") {
-    //   console.log(
-    //     "Current date: " +
-    //       getFormatedCurrentDate +
-    //       "| 1 hours ago: " +
-    //       getHoursAgo
-    //   );
-    //   console.log("Different time: " + minutes);
-    // }
-  }, []);
 
   useEffect(() => {
     // Get local tenant item
@@ -279,9 +259,7 @@ export default function Frequency() {
             "",
             "",
             "",
-            selectLoc.length === 0
-              ? "0"
-              : JSON.stringify(selectLoc[0]).toString(),
+            selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
             "2023-01-01 00:00:00",
             "2024-12-30 23:59:00"
           ).then((dataLocation) => {
@@ -296,12 +274,6 @@ export default function Frequency() {
               if (selectDev.length === 0) {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
-
-              // delay signal and channel status by 100ms after connection ready
-              setTimeout(() => {
-                setSignal(true);
-                setChannel("Validate data..");
-              }, 100);
             } else {
               setSignal(false);
               setChannel("Unreachable");
@@ -371,7 +343,7 @@ export default function Frequency() {
           </span>
           {/* Paragraph */}
           <h1 className="text-xl font-semibold tracking-tight text-gray-800 dark:text-neutral-200">
-            Server is under maintenance
+            An unexpected error occurred on our server.
           </h1>
           <p className="text-sm text-gray-500 dark:text-neutral-500">
             We cannot provide you with the latest data at this time, please wait
@@ -387,11 +359,6 @@ export default function Frequency() {
     <div id="frequency-template" className="grid grid-cols-1 gap-0 mt-2">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
-        {/* Title */}
-        {/* <h4 className="pt-2 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-0 dark:text-neutral-200">
-          Frequency
-        </h4> */}
-        {/* End Title */}
         <div className="-ms-[5px] flex justify-between items-center gap-1 sm:gap-2">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* Select Location */}
@@ -577,7 +544,7 @@ export default function Frequency() {
         <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
           <div className="flex flex-wrap items-center justify-center md:justify-evenly">
             <div className="w-full h-full md:w-1/2">
-              {dataFreq != null ? (
+              {signal ? (
                 dataFreq.map((item, index) => {
                   if (item.location_id === selectDev[0]) {
                     return (
@@ -620,7 +587,7 @@ export default function Frequency() {
               )}
             </div>
             <div className="w-full h-full md:w-1/2">
-              {dataFreq != null ? (
+              {signal ? (
                 dataFreq.map((item, index) => {
                   if (item.location_id === selectDev[0]) {
                     return (
