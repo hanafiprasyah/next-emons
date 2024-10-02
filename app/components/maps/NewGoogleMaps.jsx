@@ -161,11 +161,12 @@ const Default = () => {
         <Map
           mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
           renderingType="RASTER"
+          // -0.6470361141413117, 115.40106170003429 => Center of Indonesia's Map
           defaultCenter={{
             lat: parseFloat(selectDev[0]),
             lng: parseFloat(selectDev[1]),
           }}
-          defaultZoom={10}
+          defaultZoom={4.9}
           disableDefaultUI={true}
           clickableIcons={true}
           zoomControl={true}
