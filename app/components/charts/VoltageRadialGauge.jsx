@@ -32,10 +32,10 @@ const Default = ({ id, key, alt, title, value }) => {
   }, [loaded]);
 
   function rnExportInputHandler() {
-    gaugeInstance.export("PNG", `${alt} input`);
+    gaugeInstance.export("PNG", `Voltage ${alt} input`);
   }
   function rnExportOutputHandler() {
-    gaugeInstance.export("PNG", `${alt} output`);
+    gaugeInstance.export("PNG", `Voltage ${alt} output`);
   }
 
   return (
