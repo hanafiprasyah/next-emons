@@ -22,11 +22,11 @@ export default function Energy() {
   // Dates
   const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
-  // const [differentTime, setDifferentTime] = useState("");
+  const [differentTime, setDifferentTime] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
-  const [channel, setChannel] = useState("Connecting");
+  const [channel, setChannel] = useState("Connecting..");
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -147,26 +147,44 @@ export default function Energy() {
     })
       .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
       .then((datas) => {
-        if (datas) {
-          selectDev.indexOf(0).length != 0
-            ? setDataEnergy(datas.energy["data"])
-            : setDataEnergy([]);
-
-          if (selectDev[0] !== null || selectDev[0 !== undefined]) {
-            setDataEnergy(datas.monitoring["data"]["dataenergys"]);
-            if (dataEnergy === null || dataEnergy === undefined) {
+        if (datas.message == "OK") {
+          if (selectDev.length != 0) {
+            if (datas.monitoring["data"]["dataenergys"].length === 0) {
               setSignal(false);
               setChannel("Unreachable");
             } else {
-              setSignal(true);
-              setChannel("Stable");
+              // We will check the difference about last send_date from API and current date
+              const currentDate = new Date();
+              const sendDate =
+                datas.monitoring["data"]["dataenergys"][0].send_date;
+              const isoConvSendDate = new Date(sendDate);
+              const diffTime = currentDate - isoConvSendDate;
+              const minutes = Math.floor(diffTime / 60000);
+
+              if (minutes >= 15) {
+                setDataEnergy([]);
+              } else {
+                setDataEnergy(datas.monitoring["data"]["dataenergys"]);
+              }
+
+              if (dataEnergy.length === 0 || dataEnergy === undefined) {
+                setSignal(false);
+                setChannel("Unreachable");
+              } else {
+                setSignal(true);
+                setChannel("Stable");
+              }
             }
           } else {
-            setDataEnergy([]);
+            setSignal(false);
+            setChannel("Unreachable");
           }
         } else {
-          setChannel("Unreachable");
+          setDataEnergy([]);
         }
+      })
+      .catch((err) => {
+        throw new Error(err);
       });
   };
 
@@ -183,60 +201,20 @@ export default function Energy() {
     ([url, localTenant, locationid, start_date]) =>
       fetchEnergyRealtime(url, localTenant, locationid, start_date),
     {
-      refreshInterval: 1000,
+      isPaused: () => (selectDev.length === 0 ? true : false),
+      refreshInterval: 500,
       dedupingInterval: 500,
       revalidateIfStale: true,
       revalidateOnFocus: true,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
+      refreshWhenHidden: false,
+      refreshWhenOffline: false,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
     }
   );
-
-  // TODO: Get current datetime, this will be mounted at the first time
-  useEffect(() => {
-    const dateIns = new Date();
-    // const isoDate = "2024-09-13T11:30:54";
-    // const isoConvDate = new Date(isoDate);
-    // Get current date time
-    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
-      dateIns.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours()}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
-    // Get -1 hour of current date time
-    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-    })} ${dateIns.getHours() - 1}:${dateIns
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
-    // const diffTime = dateIns - isoConvDate;
-    // const minutes = Math.floor((diffTime % 3600000) / 60000);
-    if (getFormatedCurrentDate.startsWith("202")) {
-      setCurrentDate(getFormatedCurrentDate);
-      setHoursAgo(getHoursAgo);
-      // setDifferentTime(diffTime);
-    }
-    // if (process.env.NODE_ENV === "development") {
-    //   console.log(
-    //     "Current date: " +
-    //       getFormatedCurrentDate +
-    //       "| 1 hours ago: " +
-    //       getHoursAgo
-    //   );
-    //   console.log("Different time: " + minutes);
-    // }
-  }, []);
 
   useEffect(() => {
     // Get local tenant item
@@ -277,9 +255,7 @@ export default function Energy() {
             "",
             "",
             "",
-            selectLoc.length === 0
-              ? "0"
-              : JSON.stringify(selectLoc[0]).toString(),
+            selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
             "2023-01-01 00:00:00",
             "2024-12-30 23:59:00"
           ).then((dataLocation) => {
@@ -294,12 +270,6 @@ export default function Energy() {
               if (selectDev.length === 0) {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
-
-              // delay signal and channel status by 100ms after connection ready
-              setTimeout(() => {
-                setSignal(true);
-                setChannel("Validate data..");
-              }, 100);
             } else {
               setSignal(false);
               setChannel("Unreachable");
@@ -385,11 +355,6 @@ export default function Energy() {
     <div id="energy-template" className="grid grid-cols-1 gap-0 mt-2">
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
-        {/* Title */}
-        {/* <h4 className="pt-2 pb-4 text-3xl font-semibold text-gray-800 lg:text-4xl md:pb-4 md:pt-0 dark:text-neutral-200">
-          Energy
-        </h4> */}
-        {/* End Title */}
         <div className="-ms-[5px] flex justify-between items-center gap-1 sm:gap-2">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* Select Location */}
@@ -580,7 +545,7 @@ export default function Energy() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataEnergy != null ? (
+                {signal ? (
                   dataEnergy.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -638,7 +603,7 @@ export default function Energy() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataEnergy != null ? (
+                {signal ? (
                   dataEnergy.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -760,7 +725,7 @@ export default function Energy() {
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
               <div className="w-full h-full md:w-1/2">
-                {dataEnergy != null ? (
+                {signal ? (
                   dataEnergy.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
@@ -818,7 +783,7 @@ export default function Energy() {
                 )}
               </div>
               <div className="w-full h-full md:w-1/2">
-                {dataEnergy != null ? (
+                {signal ? (
                   dataEnergy.map((item, index) => {
                     if (item.location_id === selectDev[0]) {
                       return (
