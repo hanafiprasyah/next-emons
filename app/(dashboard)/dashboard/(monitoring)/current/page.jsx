@@ -17,6 +17,9 @@ const RadialDynamicGauge = dynamic(
 );
 
 export default function Current() {
+  /**
+   * STATE COLLECTION
+   */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
@@ -39,7 +42,7 @@ export default function Current() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the /device/getlastdatacurrent API
+  // Used to set the data on state
   const [dataCurrent, setDataCurrent] = useState([]);
 
   /**
@@ -47,6 +50,9 @@ export default function Current() {
    * if location === [] (null), then disable the device dropdown
    */
   const [showDev, isShowDev] = useState(true);
+  /**
+   * END OF STATE COLLECTION
+   */
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
@@ -122,7 +128,7 @@ export default function Current() {
     return response.json();
   };
 
-  // Function to fetch the /device/getlastdatacurrent API [REALTIME]
+  // Function to fetch the API [REALTIME]
   const fetchCurrentRealtime = async (url, tenant, locationid, start_date) => {
     return fetch(url, {
       method: "POST",

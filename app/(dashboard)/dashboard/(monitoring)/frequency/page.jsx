@@ -17,6 +17,9 @@ const RadialDynamicGauge = dynamic(
 );
 
 export default function Frequency() {
+  /**
+   * STATE COLLECTION
+   */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
@@ -39,7 +42,7 @@ export default function Frequency() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the /device/getlastdatafrequency API
+  // Used to set the data on state
   const [dataFreq, setDataFreq] = useState([]);
 
   /**
@@ -47,6 +50,9 @@ export default function Frequency() {
    * if location === [] (null), then disable the device dropdown
    */
   const [showDev, isShowDev] = useState(true);
+  /**
+   * END OF STATE COLLECTION
+   */
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
@@ -122,7 +128,7 @@ export default function Frequency() {
     return response.json();
   };
 
-  // Function to fetch the /device/getlastdatafrequency API [REALTIME]
+  // Function to fetch the API [REALTIME]
   const fetchFrequencyRealtime = async (
     url,
     tenant,

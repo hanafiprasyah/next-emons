@@ -17,6 +17,9 @@ const RadialDynamicGauge = dynamic(
 );
 
 export default function Voltage() {
+  /**
+   * STATE COLLECTION
+   */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
@@ -39,7 +42,7 @@ export default function Voltage() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the /device/getdatavoltage API
+  // Used to set the data on site
   const [dataVolt, setDataVolt] = useState([]);
 
   /**
@@ -47,6 +50,9 @@ export default function Voltage() {
    * if location === [] (null), then disable the device dropdown
    */
   const [showDev, isShowDev] = useState(true);
+  /**
+   * END OF STATE COLLECTION
+   */
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
@@ -122,44 +128,7 @@ export default function Voltage() {
     return response.json();
   };
 
-  // Function to fetch the /device/getdatavoltage API [NOT REALTIME]
-  const fetchVoltage = async (
-    tenant,
-    locationid,
-    lane,
-    status,
-    value,
-    side,
-    start_date,
-    end_date
-  ) => {
-    const response = await fetch("/api/monitoring/voltage/getlist", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? "",
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "",
-        start_trancation_date: start_date ?? "",
-        end_trancation_date: end_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
-
-    return response.json();
-  };
-
-  // Function to fetch the /device/getlastdatavoltage API [REALTIME]
+  // Function to fetch the API [REALTIME]
   const fetchVoltageRealtime = async (url, tenant, locationid, start_date) => {
     return fetch(url, {
       method: "POST",

@@ -16,6 +16,9 @@ const DynamicCardEnergy = dynamic(
 );
 
 export default function Energy() {
+  /**
+   * STATE COLLECTION
+   */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
@@ -38,7 +41,7 @@ export default function Energy() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the /device/getlastdataenergy API
+  // Used to set the data on state
   const [dataEnergy, setDataEnergy] = useState([]);
 
   /**
@@ -46,6 +49,9 @@ export default function Energy() {
    * if location === [] (null), then disable the device dropdown
    */
   const [showDev, isShowDev] = useState(true);
+  /**
+   * END OF STATE COLLECTION
+   */
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
@@ -121,7 +127,7 @@ export default function Energy() {
     return response.json();
   };
 
-  // Function to fetch the /device/getlastdataenergy API [REALTIME]
+  // Function to fetch the API [REALTIME]
   const fetchEnergyRealtime = async (url, tenant, locationid, start_date) => {
     return fetch(url, {
       method: "POST",

@@ -62,6 +62,7 @@ export default function DashboardSidebar() {
                 {/* Dashboard */}
                 <li className="px-5 mb-1.5">
                   <Link
+                    // onClick={(e) => e.preventDefault()}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -107,6 +108,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
+                    // onClick={(e) => e.preventDefault()}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -133,6 +135,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
+                    // onClick={(e) => e.preventDefault()}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -263,7 +266,7 @@ export default function DashboardSidebar() {
                 {/* Power Factor */}
                 <li className="px-5 mb-1.5">
                   <Link
-                    className={`flex px-3 py-2 text-sm cursor-not-allowed text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
+                    className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
                       path === "/dashboard/pf"
                         ? "active-link dark:bg-neutral-700"
@@ -272,7 +275,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    onClick={(e) => e.preventDefault()}
+                    // onClick={(e) => e.preventDefault()}
                     href="/dashboard/pf/"
                     prefetch={true}
                   >
@@ -285,9 +288,6 @@ export default function DashboardSidebar() {
                       alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Power Factor
-                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
-                      Soon
-                    </span>
                   </Link>
                 </li>
                 {/* THDv */}

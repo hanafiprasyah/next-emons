@@ -17,6 +17,9 @@ const RadialDynamicGauge = dynamic(
 );
 
 export default function Grounding() {
+  /**
+   * STATE COLLECTION
+   */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
@@ -39,7 +42,7 @@ export default function Grounding() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the /device/getlastdataground API
+  // Used to set the data on site
   const [dataGround, setDataGround] = useState([]);
 
   /**
@@ -47,6 +50,9 @@ export default function Grounding() {
    * if location === [] (null), then disable the device dropdown
    */
   const [showDev, isShowDev] = useState(true);
+  /**
+   * END OF STATE COLLECTION
+   */
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
