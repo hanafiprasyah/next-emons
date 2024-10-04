@@ -60,31 +60,134 @@ export default function DashboardSidebar() {
                   </span>
                 </li>
                 {/* Dashboard */}
-                <li className="px-5 mb-1.5">
-                  <Link
-                    // onClick={(e) => e.preventDefault()}
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
-                    aria-label="Toggle navigation"
-                    className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 items-center rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
-                    ${
-                      path === "/dashboard/"
-                        ? "active-link dark:bg-neutral-700"
+                <li
+                  className={`px-5 mb-1.5 hs-accordion ${
+                    path === "/dashboard/" || path === "/dashboard/outline/"
+                      ? "active"
+                      : ""
+                  }`}
+                  id="dashboard-accordion"
+                >
+                  <button
+                    type="button"
+                    className={`${
+                      path === "/dashboard/" || path === "/dashboard/outline/"
+                        ? "dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
-                    }`}
-                    href="/dashboard"
-                    prefetch={true}
+                    } flex w-full px-3 py-2 text-sm text-gray-800 rounded-lg hs-accordion-toggle hs-accordion-active:bg-gray-100 text-start gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:hs-accordion-active:bg-neutral-700 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700`}
+                    aria-expanded={
+                      path === "/dashboard/" || path === "/dashboard/outline/"
+                        ? "true"
+                        : "false"
+                    }
+                    aria-controls="dashboard-accordion-sub"
                   >
                     <Image
                       priority={true}
                       src={Home}
-                      className="flex-shrink-0 size-4"
+                      className="flex-shrink-0 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
                     ></Image>
                     Dashboard
-                  </Link>
+                    <svg
+                      className="hs-accordion-active:-rotate-180 shrink-0 mt-1 size-3.5 ms-auto transition"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div
+                    id="dashboard-accordion-sub"
+                    className={`hs-accordion-content w-full overflow-hidden transition-[height] duration-300 ${
+                      path === "/dashboard/" || path === "/dashboard/outline/"
+                        ? ""
+                        : "hidden"
+                    }`}
+                    role="region"
+                    aria-labelledby="dashboard-accordion"
+                  >
+                    <ul
+                      className="hs-accordion-group ps-7 mt-1.5 space-y-1.5 relative before:absolute before:top-0 before:start-[18px] before:w-0.5 before:h-full before:bg-gray-100 dark:before:bg-neutral-700"
+                      data-hs-accordion-always-open={
+                        path === "/dashboard/" || path === "/dashboard/outline/"
+                          ? "true"
+                          : "false"
+                      }
+                    >
+                      <>
+                        <Link
+                          // onClick={(e) => e.preventDefault()}
+                          data-hs-overlay="#hs-pro-sidebar"
+                          aria-controls="hs-pro-sidebar"
+                          aria-label="Toggle navigation"
+                          className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 items-center rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
+                    ${
+                      path === "/dashboard/"
+                        ? "active-link dark:bg-neutral-700"
+                        : "dark:bg-neutral-800"
+                    }`}
+                          href="/dashboard/"
+                          prefetch={true}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-3 xl:size-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"
+                            />
+                          </svg>
+                          Map Info
+                        </Link>
+                        <Link
+                          // onClick={(e) => e.preventDefault()}
+                          data-hs-overlay="#hs-pro-sidebar"
+                          aria-controls="hs-pro-sidebar"
+                          aria-label="Toggle navigation"
+                          className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 items-center rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
+                    ${
+                      path === "/dashboard/outline/"
+                        ? "active-link dark:bg-neutral-700"
+                        : "dark:bg-neutral-800"
+                    }`}
+                          href="/dashboard/outline/"
+                          prefetch={true}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-3 xl:size-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
+                            />
+                          </svg>
+                          Outline
+                        </Link>
+                      </>
+                    </ul>
+                  </div>
                 </li>
 
                 {/* Divider */}
@@ -118,7 +221,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Voltage}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -145,7 +248,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Current}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -171,7 +274,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Ground}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -198,7 +301,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Frequency}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -225,7 +328,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Temperature}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -255,7 +358,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={Energy}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -282,7 +385,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={PowerFactor}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -309,7 +412,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={THDv}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"
@@ -336,7 +439,7 @@ export default function DashboardSidebar() {
                     <Image
                       priority={true}
                       src={THDi}
-                      className="flex-shrink-0 mt-0.5 size-4"
+                      className="flex-shrink-0 mt-0.5 size-4 xl:size-5"
                       width={24}
                       height={24}
                       alt="EMONS | Electrical Monitoring System"

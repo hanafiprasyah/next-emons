@@ -1,17 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
 import Link from "next/link";
 import Maps from "@/components/maps/NewGoogleMaps";
 
-export default function Dashboard() {
-  const [hideTotalUser, setHideTotalUser] = useState(true);
-  const [hideActiveUser, setHideActiveUser] = useState(false);
-  const [hidePendingUser, setHidePendingUser] = useState(false);
-  const [hideDeviceList, setHideDeviceList] = useState(false);
-
+export default function DashboardMaps() {
   return (
     <div className="h-[calc(100vh-78px)]">
       <>

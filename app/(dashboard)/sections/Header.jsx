@@ -11,7 +11,9 @@ export default function DashboardHeader() {
   const getTitle = (pathname) => {
     switch (pathname) {
       case "/dashboard/":
-        return "Dashboard";
+        return "Dashboard with Maps";
+      case "/dashboard/outline/":
+        return "Dashboard with Outline";
       case "/dashboard/voltage/":
         return "Voltage";
       case "/dashboard/current/":
