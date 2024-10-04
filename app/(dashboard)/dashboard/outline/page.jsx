@@ -7,7 +7,9 @@ import VoltageLinearChart from "@/components/charts/line/VoltageLinearChart";
 export default function DashboardOutline() {
   return (
     <div id="outline-template" className="w-full h-fit">
-      <VoltageLinearChart key={"voltage-linear-chart"}></VoltageLinearChart>
+      <div id="charts" className="w-full h-[350px]">
+        <VoltageLinearChart key={"voltage-linear-chart"}></VoltageLinearChart>
+      </div>
       <PrelineScript />
     </div>
   );

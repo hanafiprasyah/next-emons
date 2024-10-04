@@ -557,7 +557,7 @@ export default function Energy() {
                       return (
                         <DynamicCardEnergy
                           id={"energy-kwh-input"}
-                          key={"kwh-input"}
+                          key={`kwh-input${index}`}
                           alt={"Input"}
                           title="KWH Input"
                           valueR={
@@ -615,7 +615,7 @@ export default function Energy() {
                       return (
                         <DynamicCardEnergy
                           id={"energy-kwh-output"}
-                          key={"kwh-output"}
+                          key={`kwh-output${index}`}
                           alt={"Output"}
                           title="KWH Output"
                           valueR={
@@ -708,6 +708,7 @@ export default function Energy() {
             </div>
           </div>
         </div>
+
         {/* Energy KVARH */}
         <div className="flex flex-col mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
@@ -737,7 +738,7 @@ export default function Energy() {
                       return (
                         <DynamicCardEnergy
                           id={"energy-kvarh-input"}
-                          key={"kvarh-input"}
+                          key={`kvarh-input${index}`}
                           alt={"Input"}
                           title="KVARH Input"
                           valueR={
@@ -795,7 +796,7 @@ export default function Energy() {
                       return (
                         <DynamicCardEnergy
                           id={"energy-kvarh-output"}
-                          key={"kvarh-output"}
+                          key={`kvarh-output${index}`}
                           alt={"Output"}
                           title="KVARH Output"
                           valueR={

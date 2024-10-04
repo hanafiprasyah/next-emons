@@ -38,26 +38,40 @@ const fetcher = async (url) => {
   }
 
   const result = await response.json();
-  return result.voltage["data"].map((item) => ({
+  return result.energy["data"].map((item) => ({
     time: new Date(item.send_date).toLocaleTimeString(),
-    v_rn_input: item.v_rn_input,
-    v_sn_input: item.v_sn_input,
-    v_tn_input: item.v_tn_input,
-    v_rn_output: item.v_rn_output,
-    v_sn_output: item.v_sn_output,
-    v_tn_output: item.v_tn_output,
+    // KWH input
+    kwh_r_input: item.kwh_r_input,
+    kwh_s_input: item.kwh_s_input,
+    kwh_t_input: item.kwh_t_input,
+    kwh_total_input: item.kwh_total_input,
+    // KWH output
+    kwh_r_output: item.kwh_r_output,
+    kwh_s_output: item.kwh_s_output,
+    kwh_t_output: item.kwh_t_output,
+    kwh_total_output: item.kwh_total_output,
+    // KVARH input
+    kvarh_r_input: item.kvarh_r_input,
+    kvarh_s_input: item.kvarh_s_input,
+    kvarh_t_input: item.kvarh_t_input,
+    kvarh_total_input: item.kvarh_total_input,
+    // KVARH output
+    kvarh_r_output: item.kvarh_r_output,
+    kvarh_s_output: item.kvarh_s_output,
+    kvarh_t_output: item.kvarh_t_output,
+    kvarh_total_output: item.kvarh_total_output,
   }));
 };
 
-const RealTimeVoltageSplineChart = () => {
+const EnergyKVARHLinearChart = ({ id, name, chartType }) => {
   const [chartData, setChartData] = useState([]);
 
   const {
     data: newData,
     isLoading,
     error,
-  } = useSWR("/api/monitoring/voltage/getdata", fetcher, {
-    refreshInterval: 3000,
+  } = useSWR("/api/monitoring/energy/getdata", fetcher, {
+    refreshInterval: 2000,
   });
 
   useEffect(() => {
@@ -88,58 +102,11 @@ const RealTimeVoltageSplineChart = () => {
     );
   }
 
-  const template = tooltipTemplate;
-  function tooltipTemplate(args) {
-    return (
-      <>
-        {/* Top Countries Card */}
-        <div className="flex flex-col h-full bg-white border shadow-sm border-stone-200 rounded-xl dark:bg-neutral-800/95 dark:border-neutral-700">
-          {/* Header */}
-          <div className="flex items-center pb-0 justify-evenly">
-            <h2 className="inline-block mt-5 font-semibold text-stone-800 dark:text-neutral-200">
-              Voltage
-            </h2>
-            <span className="mt-5 text-xs font-light text-gray-400">
-              {args.x}
-            </span>
-          </div>
-          {/* End Header */}
-          {/* Body */}
-          <div className="flex flex-col justify-between h-full px-5 pb-5">
-            <div className="flex items-center py-3 mt-4 text-sm text-stone-800 before:flex-1 before:border-stone-200 before:me-3 after:flex-1 after:border-stone-200 after:ms-3 dark:text-white dark:before:border-neutral-600 dark:after:border-neutral-600">
-              <span className="py-1 ps-1.5 pe-2.5 inline-flex items-center gap-x-1.5 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
-                <svg
-                  className="shrink-0 size-3"
-                  width={8}
-                  height={8}
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
-                </svg>
-                <strong>
-                  {parseInt(args.y) >= 200 && parseInt(args.y) < 240
-                    ? "Good"
-                    : "Bad"}
-                </strong>
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-stone-500 dark:text-neutral-200">
-              Voltage value is {args.y}
-            </p>
-          </div>
-          {/* End Body */}
-        </div>
-        {/* End Top Countries Card */}
-      </>
-    );
-  }
-
   return (
     <ChartComponent
-      id="voltage-chart"
-      alt="Voltage EMONS Chart"
+      id={id}
+      name={name}
+      alt="Energy EMONS Chart"
       titleStyle={{ color: "white", fontFamily: "Outfit" }}
       border={{ width: 0 }}
       chartArea={{ opacity: 0 }}
@@ -148,12 +115,13 @@ const RealTimeVoltageSplineChart = () => {
       enableAnimation={true}
       enableCanvas={false}
       width="100%"
+      height="140px"
       tooltip={{
         enable: true,
         fill: "#333",
         shared: true,
         roundedCorner: { radius: 10 },
-        header: "Voltage Realtime Data",
+        header: "Energy KVARH Data",
         textStyle: {
           color: "#fff",
           fontWeight: "light",
@@ -161,15 +129,14 @@ const RealTimeVoltageSplineChart = () => {
           fontFamily: "Outfit",
         },
         format: "${series.name} : ${point.y}",
-        // template: template,
-        // location: { x: 80, y: 85 },
       }}
       crosshair={{
         enable: true,
         lineType: "Vertical",
       }}
       primaryXAxis={{
-        title: "Time",
+        // title: "Time",
+        visible: false,
         titlePadding: 10,
         labelPadding: 10,
         valueType: "Category",
@@ -177,7 +144,7 @@ const RealTimeVoltageSplineChart = () => {
         majorTickLines: { width: 0 },
         minorGridLines: { width: 0 },
         minorTickLines: { width: 0 },
-        lineStyle: { width: 1, color: "white" },
+        lineStyle: { width: 0, color: "white" },
         intervalType: "Seconds",
         labelIntersectAction: "Rotate45",
         titleStyle: {
@@ -185,15 +152,16 @@ const RealTimeVoltageSplineChart = () => {
           color: "white",
         },
         labelStyle: {
-          opacity: 1,
+          opacity: 0,
           color: "white",
           fontFamily: "Outfit",
           size: "10px",
         },
       }}
       primaryYAxis={{
-        labelFormat: "{value} V",
-        title: "Voltage",
+        labelFormat: "{value}",
+        // title: "Energy",
+        visible: false,
         titlePadding: 10,
         labelPadding: 10,
         titleStyle: {
@@ -201,29 +169,30 @@ const RealTimeVoltageSplineChart = () => {
           color: "white",
         },
         crosshairTooltip: { enable: false, fill: "green" },
-        majorGridLines: { width: 0.5, color: "white", dashArray: "2px" },
+        majorGridLines: { width: 0, color: "white", dashArray: "2px" },
         majorTickLines: { width: 0 },
         minorGridLines: { width: 0, color: "white" },
         minorTickLines: { width: 0 },
-        lineStyle: { width: 0.5, color: "white" },
+        lineStyle: { width: 0, color: "white" },
         labelStyle: {
+          opacity: 0,
           color: "white",
           fontFamily: "Outfit",
           size: "10px",
         },
       }}
       margin={{
-        top: 40,
-        bottom: 20,
-        right: 30,
-        left: 20,
+        top: 0,
+        bottom: 0,
+        right: 0,
+        left: 0,
       }}
       legendSettings={{
-        visible: true,
+        visible: false,
         alignment: "Center",
-        position: "Top",
+        position: "Bottom",
         textWrap: "Wrap",
-        containerPadding: { top: 10, bottom: 10 },
+        containerPadding: { top: 0, bottom: 0 },
         maximumLabelWidth: 50,
         shapeHeight: 8,
         shapeWidth: 8,
@@ -245,9 +214,20 @@ const RealTimeVoltageSplineChart = () => {
           Crosshair,
         ]}
       />
+
       <SeriesCollectionDirective>
-        {/* Spline for v_rn_input */}
+        {/* =========== KVARH */}
+        {/* Spline for kvarh_r_Input */}
         <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 1 : 0}
+          dataSource={chartType === "energy-kvarh-input" ? chartData : []}
+          animation={{ enable: true, duration: 1100 }}
+          xName="time"
+          yName="kvarh_r_input"
+          type="Spline"
+          name="KVARH R Input"
+          width={2}
+          fill="#3b82f6"
           marker={{
             visible: false,
             width: 5,
@@ -261,20 +241,23 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
+        ></SeriesDirective>
+        {/* Spline for kvarh_s_Input */}
+        <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 1 : 0}
+          dataSource={chartType === "energy-kvarh-input" ? chartData : []}
           animation={{ enable: true, duration: 1100 }}
           xName="time"
-          yName="v_rn_input"
+          yName="kvarh_s_input"
           type="Spline"
-          name="RN Input"
+          name="KVARH S Input"
           width={2}
-        ></SeriesDirective>
-        {/* Spline for v_sn_input */}
-        <SeriesDirective
+          fill="#6366f1"
           marker={{
             visible: false,
             width: 5,
             height: 5,
+            border: 0,
             isFilled: true,
             dataLabel: {
               format: "n1",
@@ -283,20 +266,23 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
+        ></SeriesDirective>
+        {/* Spline for kvarh_t_Input */}
+        <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 1 : 0}
+          dataSource={chartType === "energy-kvarh-input" ? chartData : []}
           animation={{ enable: true, duration: 1100 }}
           xName="time"
-          yName="v_sn_input"
+          yName="kvarh_t_input"
           type="Spline"
-          name="SN Input"
+          name="KVARH T Input"
           width={2}
-        ></SeriesDirective>
-        {/* Spline for v_tn_input */}
-        <SeriesDirective
+          fill="#10b981"
           marker={{
             visible: false,
             width: 5,
             height: 5,
+            border: 0,
             isFilled: true,
             dataLabel: {
               format: "n1",
@@ -305,20 +291,23 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
+        ></SeriesDirective>
+        {/* Spline for kvarh_r_Output */}
+        <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 0 : 1}
+          dataSource={chartType === "energy-kvarh-input" ? [] : chartData}
           animation={{ enable: true, duration: 1100 }}
           xName="time"
-          yName="v_tn_input"
+          yName="kvarh_r_output"
           type="Spline"
-          name="TN Input"
+          name="KVARH R Output"
           width={2}
-        ></SeriesDirective>
-        {/* Spline for v_rn_output */}
-        <SeriesDirective
+          fill="#3b82f6"
           marker={{
             visible: false,
             width: 5,
             height: 5,
+            border: 0,
             isFilled: true,
             dataLabel: {
               format: "n1",
@@ -327,20 +316,23 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
+        ></SeriesDirective>
+        {/* Spline for kvarh_s_Output */}
+        <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 0 : 1}
+          dataSource={chartType === "energy-kvarh-input" ? [] : chartData}
           animation={{ enable: true, duration: 1100 }}
           xName="time"
-          yName="v_rn_output"
+          yName="kvarh_s_output"
           type="Spline"
-          name="RN Output"
+          name="KVARH S Output"
           width={2}
-        ></SeriesDirective>
-        {/* Spline for v_sn_output */}
-        <SeriesDirective
+          fill="#6366f1"
           marker={{
             visible: false,
             width: 5,
             height: 5,
+            border: 0,
             isFilled: true,
             dataLabel: {
               format: "n1",
@@ -349,20 +341,23 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
+        ></SeriesDirective>
+        {/* Spline for kvarh_t_Output */}
+        <SeriesDirective
+          opacity={chartType === "energy-kvarh-input" ? 0 : 1}
+          dataSource={chartType === "energy-kvarh-input" ? [] : chartData}
           animation={{ enable: true, duration: 1100 }}
           xName="time"
-          yName="v_sn_output"
+          yName="kvarh_t_output"
           type="Spline"
-          name="SN Output"
+          name="KVARH T Output"
           width={2}
-        ></SeriesDirective>
-        {/* Spline for v_tn_output */}
-        <SeriesDirective
+          fill="#10b981"
           marker={{
             visible: false,
             width: 5,
             height: 5,
+            border: 0,
             isFilled: true,
             dataLabel: {
               format: "n1",
@@ -371,17 +366,10 @@ const RealTimeVoltageSplineChart = () => {
               visible: false,
             },
           }}
-          dataSource={chartData}
-          animation={{ enable: true, duration: 1100 }}
-          xName="time"
-          yName="v_tn_output"
-          type="Spline"
-          name="TN Output"
-          width={2}
         ></SeriesDirective>
       </SeriesCollectionDirective>
     </ChartComponent>
   );
 };
 
-export default RealTimeVoltageSplineChart;
+export default EnergyKVARHLinearChart;

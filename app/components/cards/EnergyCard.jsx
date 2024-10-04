@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import EnergyLinearChart from "@/components/charts/line/EnergyLinearChart";
+import EnergyKVARHLinearChart from "@/components/charts/line/EnergyKVARHLinearChart";
 
 const Default = ({
   id,
@@ -11,6 +13,7 @@ const Default = ({
   valueS,
   valueT,
   valueTotal,
+  child,
 }) => {
   const [loaded, isLoaded] = useState(true);
 
@@ -36,7 +39,7 @@ const Default = ({
         <>
           {/* Sales Stats Card */}
           <div
-            className={`flex flex-col mx-2 my-2 bg-white border border-gray-200 shadow-sm md:my-3 md:mx-3 rounded-xl dark:bg-neutral-800 ${
+            className={`flex flex-col bg-white border mx-2 my-2 border-gray-200 shadow-sm rounded-xl dark:bg-neutral-800 ${
               alt === "Input"
                 ? "dark:border-rose-500"
                 : "dark:border-emerald-500"
@@ -47,12 +50,14 @@ const Default = ({
               <h2 className="inline-block font-semibold text-gray-800 dark:text-neutral-200">
                 Total {title}
               </h2>
-              <div className="inline-flex p-0 lg:p-0.5 border border-gray-200 rounded-full dark:border-neutral-700">
+              {/* Pulse */}
+              <div className="inline-flex">
                 <span className="relative flex w-3 h-3">
                   <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
                   <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
                 </span>
               </div>
+              {/* End Pulse */}
             </div>
             {/* End Header */}
             {/* Body */}
@@ -165,6 +170,30 @@ const Default = ({
               {/* End List Group */}
             </div>
             {/* End Body */}
+            {/* Footer */}
+            <div className="p-5 pt-0 space-y-8">
+              <div className="w-full">
+                {/* Realtime Line Chart */}
+                {id === "energy-kwh-input" || id === "energy-kwh-output" ? (
+                  <div id="charts-kwh" key={key} className="w-full h-[140px]">
+                    <EnergyLinearChart
+                      id={id}
+                      name={key}
+                      chartType={id}
+                    ></EnergyLinearChart>
+                  </div>
+                ) : (
+                  <div id="charts-kvarh" key={key} className="w-full h-[140px]">
+                    <EnergyKVARHLinearChart
+                      id={id}
+                      name={key}
+                      chartType={id}
+                    ></EnergyKVARHLinearChart>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* End Footer */}
           </div>
           {/* End Sales Stats Card */}
         </>
