@@ -1,8 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import EnergyLinearChart from "@/components/charts/line/EnergyLinearChart";
-import EnergyKVARHLinearChart from "@/components/charts/line/EnergyKVARHLinearChart";
+import dynamic from "next/dynamic";
+
+const EnergyKWHLinearChart = dynamic(
+  () => import("@/components/charts/line/EnergyKWHLinearChart"),
+  {
+    ssr: true,
+  }
+);
+const EnergyKVARHLinearChart = dynamic(
+  () => import("@/components/charts/line/EnergyKVARHLinearChart"),
+  {
+    ssr: true,
+  }
+);
 
 const Default = ({
   id,
@@ -176,11 +188,11 @@ const Default = ({
                 {/* Realtime Line Chart */}
                 {id === "energy-kwh-input" || id === "energy-kwh-output" ? (
                   <div id="charts-kwh" key={key} className="w-full h-[140px]">
-                    <EnergyLinearChart
+                    <EnergyKWHLinearChart
                       id={id}
                       name={key}
                       chartType={id}
-                    ></EnergyLinearChart>
+                    ></EnergyKWHLinearChart>
                   </div>
                 ) : (
                   <div id="charts-kvarh" key={key} className="w-full h-[140px]">
