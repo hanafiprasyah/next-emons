@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import {
   ChartComponent,
@@ -72,6 +74,13 @@ const EnergyKVARHLinearChart = ({ id, name, chartType }) => {
     error,
   } = useSWR("/api/monitoring/energy/getdata", fetcher, {
     refreshInterval: 2000,
+    dedupingInterval: 500,
+    refreshWhenHidden: true,
+    refreshWhenOffline: false,
+    errorRetryInterval: 1000,
+    errorRetryCount: 10,
+    shouldRetryOnError: true,
+    keepPreviousData: true,
   });
 
   useEffect(() => {
@@ -128,11 +137,12 @@ const EnergyKVARHLinearChart = ({ id, name, chartType }) => {
           fontSize: "12px",
           fontFamily: "Outfit",
         },
-        format: "${series.name} : ${point.y}",
+        format: "${point.y} KWH at ${point.x}",
       }}
       crosshair={{
         enable: true,
         lineType: "Vertical",
+        dashArray: "2,2",
       }}
       primaryXAxis={{
         // title: "Time",

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import {
   ChartComponent,
@@ -63,7 +65,7 @@ const fetcher = async (url) => {
   }));
 };
 
-const EnergyLinearChart = ({ id, name, chartType }) => {
+const EnergyKWHLinearChart = ({ id, name, chartType }) => {
   const [chartData, setChartData] = useState([]);
 
   const {
@@ -71,7 +73,14 @@ const EnergyLinearChart = ({ id, name, chartType }) => {
     isLoading,
     error,
   } = useSWR("/api/monitoring/energy/getdata", fetcher, {
-    refreshInterval: 3000,
+    refreshInterval: 2000,
+    dedupingInterval: 500,
+    refreshWhenHidden: true,
+    refreshWhenOffline: false,
+    errorRetryInterval: 1000,
+    errorRetryCount: 10,
+    shouldRetryOnError: true,
+    keepPreviousData: true,
   });
 
   useEffect(() => {
@@ -128,11 +137,12 @@ const EnergyLinearChart = ({ id, name, chartType }) => {
           fontSize: "12px",
           fontFamily: "Outfit",
         },
-        format: "${series.name} : ${point.y}",
+        format: "${point.y} KWH at ${point.x}",
       }}
       crosshair={{
         enable: true,
         lineType: "Vertical",
+        dashArray: "2,2",
       }}
       primaryXAxis={{
         // title: "Time",
@@ -372,4 +382,4 @@ const EnergyLinearChart = ({ id, name, chartType }) => {
   );
 };
 
-export default EnergyLinearChart;
+export default EnergyKWHLinearChart;
