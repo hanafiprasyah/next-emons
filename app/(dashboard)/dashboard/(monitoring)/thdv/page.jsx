@@ -212,15 +212,16 @@ export default function Thdv() {
       isPaused: () => (selectDev.length === 0 ? true : false),
       refreshInterval: 500,
       dedupingInterval: 500,
-      revalidateIfStale: true,
-      revalidateOnFocus: true,
-      revalidateOnMount: true,
-      revalidateOnReconnect: true,
       refreshWhenHidden: false,
       refreshWhenOffline: false,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
+      keepPreviousData: true,
+      loadingTimeout: 5000,
+      onLoadingSlow: () => {
+        setChannel("Unstable network, please wait..");
+      },
     }
   );
 
@@ -249,6 +250,7 @@ export default function Thdv() {
 
       if (dataSite.message == "OK") {
         setDataLoc(dataSite.site["data"]);
+        setChannel("Loading data..");
 
         const firstIndexSite = dataSite.site["data"][0];
         if (selectLoc.length === 0) {
@@ -274,6 +276,7 @@ export default function Thdv() {
 
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
+              setChannel("Validate your connection..");
 
               const firstIndexDev = dataLocation.loc["data"][0];
               if (selectDev.length === 0) {
@@ -281,7 +284,7 @@ export default function Thdv() {
               }
             } else {
               setSignal(false);
-              setChannel("Unreachable");
+              setChannel("Failed to load resource");
             }
           });
         }
