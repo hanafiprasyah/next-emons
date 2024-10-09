@@ -287,7 +287,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/frequency"
+                      path === "/dashboard/frequency/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -371,7 +371,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/pf"
+                      path === "/dashboard/pf/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -398,7 +398,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/thdv"
+                      path === "/dashboard/thdv/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
@@ -425,7 +425,7 @@ export default function DashboardSidebar() {
                   <Link
                     className={`flex px-3 py-2 text-sm text-gray-800 bg-gray-100 rounded-lg gap-x-3 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 
                     ${
-                      path === "/dashboard/thdi"
+                      path === "/dashboard/thdi/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
