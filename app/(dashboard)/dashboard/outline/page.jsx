@@ -589,7 +589,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -627,7 +627,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -665,7 +665,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -703,7 +703,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -741,7 +741,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -779,7 +779,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -884,7 +884,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -922,7 +922,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -960,7 +960,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -998,7 +998,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -1036,7 +1036,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -1074,7 +1074,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages ===
                               undefined ||
@@ -1173,7 +1173,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1211,7 +1211,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1249,7 +1249,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1346,7 +1346,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1384,7 +1384,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1422,7 +1422,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents ===
                               undefined ||
@@ -1494,7 +1494,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datagrounds === undefined ||
                     monitoring.monitoring["data"].datagrounds.length === 0
@@ -1557,7 +1557,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datagrounds === undefined ||
                     monitoring.monitoring["data"].datagrounds.length === 0
@@ -1626,7 +1626,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datafrequencys ===
                       undefined ||
@@ -1697,7 +1697,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datafrequencys ===
                       undefined ||
@@ -1798,7 +1798,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -1836,7 +1836,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -1874,7 +1874,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -1912,7 +1912,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -1950,7 +1950,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -1988,7 +1988,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2096,7 +2096,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2134,7 +2134,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2172,7 +2172,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2210,7 +2210,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2248,7 +2248,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2286,7 +2286,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys ===
                               undefined ||
@@ -2358,7 +2358,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].dataPowerFactors ===
                       undefined ||
@@ -2426,7 +2426,7 @@ export default function DashboardOutline() {
               <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
-                monitoring === []
+                monitoring.length === 0
                   ? 0
                   : monitoring.monitoring["data"].dataPowerFactors ===
                       undefined ||
@@ -2519,7 +2519,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2556,7 +2556,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2593,7 +2593,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2630,7 +2630,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2667,7 +2667,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2704,7 +2704,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2802,7 +2802,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2839,7 +2839,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2876,7 +2876,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2913,7 +2913,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2950,7 +2950,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -2987,7 +2987,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs ===
                               undefined ||
@@ -3085,7 +3085,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
@@ -3122,7 +3122,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
@@ -3159,7 +3159,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
@@ -3255,7 +3255,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
@@ -3292,7 +3292,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
@@ -3329,7 +3329,7 @@ export default function DashboardOutline() {
                       <span className="text-lg text-gray-800 dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
-                        monitoring === []
+                        monitoring.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis ===
                               undefined ||
