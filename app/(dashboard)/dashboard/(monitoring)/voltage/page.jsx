@@ -7,8 +7,8 @@ import Loader from "@/loading";
 import Link from "next/link";
 import useSWR from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
-
 import dynamic from "next/dynamic";
+
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/VoltageRadialGauge"),
   {
@@ -152,42 +152,48 @@ export default function Voltage() {
         end_date: "",
       }),
     })
-      .then((res) => (res.ok ? res.json() : setChannel("Unreachable")))
+      .then((res) => (res.ok ? res.json() : res.statusText))
       .then((datas) => {
-        if (datas.message == "OK") {
-          if (selectDev.length != 0) {
+        // Check response message
+        if (datas.message === "OK") {
+          // Check if device list is not null
+          if (selectDev.length !== 0) {
+            // Check if data voltage length is null
             if (datas.monitoring["data"]["datavoltages"].length === 0) {
+              // Give signal to offline, and set channel to unreachable
               setSignal(false);
               setChannel("Unreachable");
             } else {
-              // We will check the difference about last send_date from API and current date
+              // We will check the difference about last send_date from API and current date from NOW()
               const currentDate = new Date();
               const sendDate =
                 datas.monitoring["data"]["datavoltages"][0].send_date;
-
+              // format the send_date value
               const isoConvSendDate = new Date(sendDate);
+              // count the diff
               const diffTime = currentDate - isoConvSendDate;
+              // set the minutes value
               const minutes = Math.floor(diffTime / 60000);
 
-              if (minutes >= 15) {
-                setDataVolt([]);
+              // Set offline status if the diff time more than 5 minutes from NOW()
+              if (minutes >= 5) {
+                setSignal(false);
+                setChannel("Device signal interference");
               } else {
                 setDataVolt(datas.monitoring["data"]["datavoltages"]);
-              }
-
-              if (dataVolt.length === 0 || dataVolt === undefined) {
-                setSignal(false);
-                setChannel("Unreachable");
-              } else {
                 setSignal(true);
                 setChannel("Stable");
               }
             }
-          } else {
-            setSignal(false);
-            setChannel("Unreachable");
           }
-        } else {
+          // if device list is null?
+          else {
+            setSignal(false);
+            setChannel("Cannot get device location");
+          }
+        }
+        // If response message is not OK
+        else {
           setDataVolt([]);
         }
       })
@@ -198,22 +204,17 @@ export default function Voltage() {
 
   // SWR
   const { data, error } = useSWR(
-    localTenant !== "" && localTenant !== undefined && localTenant !== null
-      ? [
-          "/api/monitoring/getmonitoring",
-          localTenant,
-          selectDev[0],
-          hoursAgo ?? "2023-01-01 00:00:00",
-        ]
-      : null,
+    ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
     ([url, localTenant, locationid, start_date]) =>
       fetchVoltageRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () => (selectDev.length === 0 ? true : false),
+      isPaused: () =>
+        selectDev.length === 0 ||
+        (localTenant == "" && localTenant == undefined) ||
+        (hoursAgo == "" && hoursAgo == undefined)
+          ? true
+          : false,
       refreshInterval: 500,
-      dedupingInterval: 500,
-      refreshWhenHidden: false,
-      refreshWhenOffline: false,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
@@ -225,40 +226,97 @@ export default function Voltage() {
     }
   );
 
+  // TODO: Get current datetime, this will be mounted at the first time
+  useEffect(() => {
+    const dateIns = new Date();
+    // const isoDate = "2024-09-13T11:30:54";
+    // const isoConvDate = new Date(isoDate);
+
+    // Get current date time
+    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
+      dateIns.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours()}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // Get -1 hour of current date time
+    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours() - 1}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // const diffTime = dateIns - isoConvDate;
+    // const minutes = Math.floor((diffTime % 3600000) / 60000);
+    if (getFormatedCurrentDate.startsWith("202")) {
+      setCurrentDate(getFormatedCurrentDate);
+      setHoursAgo(getHoursAgo);
+      // setDifferentTime(diffTime);
+    }
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log(
+    //     "Current date: " +
+    //       getFormatedCurrentDate +
+    //       "| 1 hours ago: " +
+    //       getHoursAgo
+    //   );
+    //   console.log("Different time: " + minutes);
+    // }
+  }, []);
+
   // TODO: Get default site and location
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
-    if (localStorage.length != 0) {
+
+    // Check if currentUser length is not null
+    if (
+      currentUser.length !== 0 ||
+      currentUser !== "" ||
+      currentUser !== null ||
+      currentUser !== undefined
+    ) {
+      // save local tenant value to state
       setLocalTenant(`${currentUser.toString()}`);
-    }
 
-    // TODO: fetch the site data
-    fetchSite(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      "",
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    ).then((dataSite) => {
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(dataSite.site["data"]);
-      // }
+      // TODO: fetch the site data
+      fetchSite(
+        currentUser,
+        0,
+        "",
+        "",
+        "",
+        "",
+        "2023-01-01 00:00:00",
+        "2024-12-30 23:59:00"
+      ).then((dataSite) => {
+        // if (process.env.NODE_ENV === "development") {
+        //   console.log(dataSite.site["data"]);
+        // }
 
-      if (dataSite.message == "OK") {
-        setDataLoc(dataSite.site["data"]);
-        setChannel("Loading data..");
+        // If site response is OK
+        if (dataSite.message == "OK") {
+          setDataLoc(dataSite.site["data"]);
+          setChannel("Almost done..");
 
-        const firstIndexSite = dataSite.site["data"][0];
-        if (selectLoc.length === 0) {
-          setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-          setSelectDev([]);
-        }
+          // Scrap the first index data
+          const firstIndexSite = dataSite.site["data"][0];
+          if (selectLoc.length === 0) {
+            // set code and name as location state
+            setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
+            // set device state to null in order to refresh the device list
+            // when user move to another site
+            setSelectDev([]);
+          }
 
-        if (selectLoc.length != 0) {
           // TODO: fetch the device (location)
           fetchDevice(
             currentUser,
@@ -274,25 +332,37 @@ export default function Voltage() {
             //   console.log("fetchDevice: " + dataLocation.loc["data"]);
             // }
 
+            // device location response is OK
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
-              setChannel("Validate your connection..");
+              setChannel("Ensure you are on the right place..");
 
+              // Scrap the first index data
               const firstIndexDev = dataLocation.loc["data"][0];
               if (selectDev.length === 0) {
+                // set code and name as device state
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
+
+              setSignal(true);
             } else {
               setSignal(false);
               setChannel("Failed to load resource");
             }
           });
         }
-      } else {
-        setSignal(false);
-        setChannel("Unreachable");
-      }
-    });
+        // If site response is not OK
+        else {
+          setSignal(false);
+          setChannel("Unreachable");
+        }
+      });
+    }
+    // If tenant local storage is undefined or null
+    else {
+      // set local tenant state to null
+      setLocalTenant("");
+    }
   }, [selectLoc, selectDev]);
 
   // If SWR Realtime connection error then show this widget below
@@ -686,6 +756,7 @@ export default function Voltage() {
             </div>
           </div>
         </div>
+
         {/* S-N */}
         <div className="flex flex-col mb-4 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
@@ -836,6 +907,7 @@ export default function Voltage() {
             </div>
           </div>
         </div>
+
         {/* T-N */}
         <div className="flex flex-col mb-4 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
@@ -1140,6 +1212,7 @@ export default function Voltage() {
             </div>
           </div>
         </div>
+
         {/* S-T */}
         <div className="flex flex-col mb-4 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
@@ -1290,6 +1363,7 @@ export default function Voltage() {
             </div>
           </div>
         </div>
+
         {/* R-T */}
         <div className="flex flex-col mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
