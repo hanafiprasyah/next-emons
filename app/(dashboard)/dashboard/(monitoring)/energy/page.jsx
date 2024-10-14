@@ -157,7 +157,7 @@ export default function Energy() {
         if (datas.message === "OK") {
           // Check if device list is not null
           if (selectDev.length !== 0) {
-            // Check if data current length is null
+            // Check if data energy length is null
             if (datas.monitoring["data"]["dataenergys"].length === 0) {
               // Give signal to offline, and set channel to unreachable
               setSignal(false);
