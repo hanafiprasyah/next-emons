@@ -203,7 +203,7 @@ export default function Thdi() {
   };
 
   // SWR
-  const { data, error } = useSWR(
+  const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
     ([url, localTenant, locationid, start_date]) =>
       fetchThdiRealtime(url, localTenant, locationid, start_date),
@@ -740,15 +740,23 @@ export default function Thdi() {
                 htmlFor="hs-pro-dupccn1"
                 className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
               >
-                <span
-                  className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                    channel == "Stable"
-                      ? "dark:text-emerald-400"
-                      : "dark:text-gray-500"
-                  }`}
-                >
-                  {channel}
-                </span>
+                {isLoading ? (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden dark:text-gray-500`}
+                  >
+                    Load data..
+                  </span>
+                ) : (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                      channel == "Stable"
+                        ? "dark:text-emerald-400"
+                        : "dark:text-gray-500"
+                    }`}
+                  >
+                    {channel}
+                  </span>
+                )}
               </label>
             </div>
           </div>
@@ -890,15 +898,23 @@ export default function Thdi() {
                 htmlFor="hs-pro-dupccn1"
                 className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
               >
-                <span
-                  className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                    channel == "Stable"
-                      ? "dark:text-emerald-400"
-                      : "dark:text-gray-500"
-                  }`}
-                >
-                  {channel}
-                </span>
+                {isLoading ? (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden dark:text-gray-500`}
+                  >
+                    Load data..
+                  </span>
+                ) : (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                      channel == "Stable"
+                        ? "dark:text-emerald-400"
+                        : "dark:text-gray-500"
+                    }`}
+                  >
+                    {channel}
+                  </span>
+                )}
               </label>
             </div>
           </div>
@@ -1040,15 +1056,23 @@ export default function Thdi() {
                 htmlFor="hs-pro-dupccn1"
                 className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
               >
-                <span
-                  className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                    channel == "Stable"
-                      ? "dark:text-emerald-400"
-                      : "dark:text-gray-500"
-                  }`}
-                >
-                  {channel}
-                </span>
+                {isLoading ? (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden dark:text-gray-500`}
+                  >
+                    Load data..
+                  </span>
+                ) : (
+                  <span
+                    className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                      channel == "Stable"
+                        ? "dark:text-emerald-400"
+                        : "dark:text-gray-500"
+                    }`}
+                  >
+                    {channel}
+                  </span>
+                )}
               </label>
             </div>
           </div>
