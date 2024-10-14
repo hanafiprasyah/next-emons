@@ -29,9 +29,14 @@ const RealTimeVoltageOutputSplineChart = dynamic(
 );
 
 // TODO: Fetch monitoring data with SWR isolated
-function useMonitoring(localTenant, locationid) {
+function useMonitoring(localTenant, locationid, start_date) {
   // Function to fetch the data API [REALTIME]
-  const fetchDataRealtime = async (url, localTenant, locationid) => {
+  const fetchDataRealtime = async (
+    url,
+    localTenant,
+    locationid,
+    start_date
+  ) => {
     return fetch(url, {
       method: "POST",
       headers: {
@@ -50,7 +55,7 @@ function useMonitoring(localTenant, locationid) {
         status: "",
         value: "",
         side: "",
-        start_date: "2024-01-01 00:40:20",
+        start_date: start_date ?? "2024-01-01 00:40:20",
         end_date: "",
       }),
     }).then((res) => {
@@ -58,30 +63,25 @@ function useMonitoring(localTenant, locationid) {
         throw new Error("500. An error occured.");
       }
 
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(
-      //     "Response from fetchVoltageRealtime using new API on Voltage Sub Component: " +
-      //       res.statusText
-      //   );
-      // }
-
       const data = res.json();
       return data;
     });
   };
 
-  const { data, isLoading, error, isValidating } = useSWR(
+  const { data, isLoading, error } = useSWR(
     localTenant !== "" && localTenant !== undefined && localTenant !== null
-      ? ["/api/monitoring/getmonitoring", localTenant, locationid]
+      ? ["/api/monitoring/getmonitoring", localTenant, locationid, start_date]
       : null,
-    ([url, localTenant, locationid]) =>
-      fetchDataRealtime(url, localTenant, locationid),
+    ([url, localTenant, locationid, start_date]) =>
+      fetchDataRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () => locationid === null || locationid === undefined,
-      refreshInterval: 1000,
-      dedupingInterval: 500,
-      refreshWhenHidden: false,
-      refreshWhenOffline: false,
+      isPaused: () =>
+        (localTenant == "" && localTenant == undefined) ||
+        (locationid === null && locationid === undefined) ||
+        (start_date == "" && start_date == undefined)
+          ? true
+          : false,
+      refreshInterval: 500,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
@@ -93,12 +93,53 @@ function useMonitoring(localTenant, locationid) {
     }
   );
 
-  return {
-    monitoring: data,
-    isMonitoringError: error,
-    isMonitoringLoading: isLoading,
-    isMonitoringValidating: isValidating,
-  };
+  if (data != undefined) {
+    if (data.message === "OK") {
+      if (data.monitoring["data"]["datavoltages"].length === 0) {
+        return {
+          monitoring: null,
+          isMonitoringError: error,
+          isMonitoringLoading: isLoading,
+        };
+      } else {
+        const currentDate = new Date();
+        const sendDate = data.monitoring["data"]["datavoltages"][0].send_date;
+        // format the send_date value
+        const isoConvSendDate = new Date(sendDate);
+        // count the diff
+        const diffTime = currentDate - isoConvSendDate;
+        // set the minutes value
+        const minutes = Math.floor(diffTime / 60000);
+
+        // Set offline status if the diff time more than 5 minutes from NOW()
+        if (minutes >= 5) {
+          return {
+            monitoring: null,
+            isMonitoringError: error,
+            isMonitoringLoading: isLoading,
+          };
+        } else {
+          return {
+            monitoring: data,
+            isMonitoringError: error,
+            isMonitoringLoading: isLoading,
+          };
+        }
+      }
+    } else {
+      return {
+        monitoring: null,
+        isMonitoringError: error,
+        isMonitoringLoading: isLoading,
+      };
+    }
+  } else {
+    return {
+      monitoring: null,
+      isMonitoringError: error,
+      isMonitoringLoading: isLoading,
+    };
+  }
 }
 
 export default function DashboardOutline() {
@@ -107,6 +148,10 @@ export default function DashboardOutline() {
    */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
+
+  // Dates
+  const [currentDate, setCurrentDate] = useState("");
+  const [hoursAgo, setHoursAgo] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -131,12 +176,11 @@ export default function DashboardOutline() {
   const [dateState, setDateState] = useState(new Date());
 
   // Used to control value of monitoring
-  const {
-    monitoring,
-    isMonitoringError,
-    isMonitoringLoading,
-    isMonitoringValidating,
-  } = useMonitoring(localTenant, selectDev[0]);
+  const { monitoring, isMonitoringError, isMonitoringLoading } = useMonitoring(
+    localTenant,
+    selectDev[0],
+    hoursAgo
+  );
 
   /**
    * END OF STATE COLLECTION
@@ -216,14 +260,48 @@ export default function DashboardOutline() {
     return response.json();
   };
 
-  // console.log(voltage.monitoring["data"].datavoltages[0]);
-  // console.log(voltage);
-
-  // TODO: Get current date time
+  // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
-    const dateInterval = setInterval(() => setDateState(new Date()), 500);
+    const dateIns = new Date();
+    // const isoDate = "2024-09-13T11:30:54";
+    // const isoConvDate = new Date(isoDate);
 
-    return () => clearInterval(dateInterval);
+    // Get current date time
+    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
+      dateIns.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours()}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // Get -1 hour of current date time
+    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours() - 1}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // const diffTime = dateIns - isoConvDate;
+    // const minutes = Math.floor((diffTime % 3600000) / 60000);
+    if (getFormatedCurrentDate.startsWith("202")) {
+      setCurrentDate(getFormatedCurrentDate);
+      setHoursAgo(getHoursAgo);
+    }
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log(
+    //     "Current date: " +
+    //       getFormatedCurrentDate +
+    //       "| 1 hours ago: " +
+    //       getHoursAgo
+    //   );
+    // }
   }, []);
 
   // TODO: Get default site and location
