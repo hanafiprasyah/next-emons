@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
 import Loader from "@/loading";
