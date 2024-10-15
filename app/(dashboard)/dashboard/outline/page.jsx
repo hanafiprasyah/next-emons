@@ -462,18 +462,18 @@ export default function DashboardOutline() {
               </div>
             </div>
             {/* End Look Dropdown */}
-            <h2 className="inline-flex text-3xl">
+            <h2 className="inline-flex text-lg lg:text-3xl">
               Welcome,&nbsp;<strong>prasyah</strong>!
             </h2>
           </div>
-          <p className="w-full pt-2 text-sm font-light ps-7 text-wrap text-clip">
+          <p className="w-full pt-2 text-xs font-light lg:text-sm ps-7 text-wrap text-clip">
             This is a page that provides a summary of the electrical quality in
             your tenant.
           </p>
         </div>
         {/* Location */}
         <div className="py-4 mx-2 h-fit">
-          <p className="w-full pb-2 text-sm font-light text-center text-wrap text-clip">
+          <p className="w-full pb-2 text-xs font-light text-center lg:text-sm text-wrap text-clip">
             Currently you are viewing data:
           </p>
           <div className="flex items-center justify-center gap-1 sm:gap-2">
@@ -635,11 +635,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              Voltage Input (V)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              Voltage Input
             </h2>
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-1 text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* V_RN Input */}
@@ -664,7 +664,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -675,7 +675,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rn_input}
+                              .v_rn_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -702,7 +703,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -713,7 +714,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_sn_input}
+                              .v_sn_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -740,7 +742,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -751,7 +753,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_tn_input}
+                              .v_tn_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -778,7 +781,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -789,7 +792,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rs_input}
+                              .v_rs_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -816,7 +820,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -827,7 +831,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_st_input}
+                              .v_st_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -854,7 +859,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -865,7 +870,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rt_input}
+                              .v_rt_input}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -874,7 +880,7 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full col-span-3">
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageInputSplineChart /> */}
               </div>
             </div>
@@ -930,11 +936,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              Voltage Output (V)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              Voltage Output
             </h2>
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-1 text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* V_RN Output */}
@@ -959,7 +965,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -970,7 +976,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rn_output}
+                              .v_rn_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -997,7 +1004,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1008,7 +1015,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_sn_output}
+                              .v_sn_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -1035,7 +1043,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1046,7 +1054,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_tn_output}
+                              .v_tn_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -1073,7 +1082,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1084,7 +1093,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rs_output}
+                              .v_rs_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -1111,7 +1121,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1122,7 +1132,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_st_output}
+                              .v_st_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -1149,7 +1160,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1160,7 +1171,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rt_output}
+                              .v_rt_output}{" "}
+                        V
                       </span>
                     </div>
                   </li>
@@ -1169,7 +1181,7 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full col-span-3">
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
             </div>
@@ -1219,11 +1231,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              Current Input (A)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              Current Input
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Input */}
@@ -1248,7 +1260,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1259,7 +1271,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_r_Input}
+                              .i_r_Input}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1286,7 +1299,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1297,7 +1310,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_s_Input}
+                              .i_s_Input}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1324,7 +1338,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1335,7 +1349,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_t_Input}
+                              .i_t_Input}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1344,7 +1359,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-sessions-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1392,11 +1409,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              Current Output (A)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              Current Output
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Output */}
@@ -1421,7 +1438,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1432,7 +1449,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_r_Output}
+                              .i_r_Output}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1459,7 +1477,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1470,7 +1488,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_s_Output}
+                              .i_s_Output}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1497,7 +1516,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1508,7 +1527,8 @@ export default function DashboardOutline() {
                               .length === 0
                           ? 0
                           : monitoring.monitoring["data"].datacurrents[0]
-                              .i_t_Output}
+                              .i_t_Output}{" "}
+                        A
                       </span>
                     </div>
                   </li>
@@ -1517,7 +1537,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-sessions-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1565,11 +1587,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              Ground Input (V)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              Ground Input
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -1577,10 +1599,14 @@ export default function DashboardOutline() {
                   : monitoring.monitoring["data"].datagrounds === undefined ||
                     monitoring.monitoring["data"].datagrounds.length === 0
                   ? 0
-                  : monitoring.monitoring["data"].datagrounds[0].voltage_input}
+                  : monitoring.monitoring["data"].datagrounds[0]
+                      .voltage_input}{" "}
+                V
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-avg-click-rate-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1628,11 +1654,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              Ground Output (V)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              Ground Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -1640,10 +1666,14 @@ export default function DashboardOutline() {
                   : monitoring.monitoring["data"].datagrounds === undefined ||
                     monitoring.monitoring["data"].datagrounds.length === 0
                   ? 0
-                  : monitoring.monitoring["data"].datagrounds[0].voltage_output}
+                  : monitoring.monitoring["data"].datagrounds[0]
+                      .voltage_output}{" "}
+                V
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-avg-click-rate-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1697,11 +1727,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              Frequency Input (Hz)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              Frequency Input
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -1711,10 +1741,13 @@ export default function DashboardOutline() {
                     monitoring.monitoring["data"].datafrequencys.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datafrequencys[0]
-                      .frequency_input}
+                      .frequency_input}{" "}
+                Hz
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-session-duration-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1768,11 +1801,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              Frequency Output (Hz)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              Frequency Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -1782,10 +1815,13 @@ export default function DashboardOutline() {
                     monitoring.monitoring["data"].datafrequencys.length === 0
                   ? 0
                   : monitoring.monitoring["data"].datafrequencys[0]
-                      .frequency_output}
+                      .frequency_output}{" "}
+                Hz
               </div>
-              {/* Apex Line Chart */}
-              {/* <div id="hs-session-duration-line-chart" /> */}
+              {/* Line Chart */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -1844,11 +1880,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              Energy Input (KWH)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              Energy Input
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* KWH R Input */}
@@ -1870,10 +1906,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1884,7 +1920,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_r_input}
+                              .kwh_r_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -1908,10 +1945,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1922,7 +1959,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_s_input}
+                              .kwh_s_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -1946,10 +1984,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1960,7 +1998,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_t_input}
+                              .kwh_t_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -1984,10 +2023,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -1998,7 +2037,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_r_input}
+                              .kvarh_r_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2022,10 +2062,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2036,7 +2076,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_s_input}
+                              .kvarh_s_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2060,10 +2101,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2074,7 +2115,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_t_input}
+                              .kvarh_t_input}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2083,7 +2125,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-users-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -2142,11 +2186,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Energy Output
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* KWH R Output */}
@@ -2168,10 +2212,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2182,7 +2226,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_r_output}
+                              .kwh_r_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2206,10 +2251,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2220,7 +2265,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_s_output}
+                              .kwh_s_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2244,10 +2290,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2258,7 +2304,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_t_output}
+                              .kwh_t_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2282,10 +2329,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2296,7 +2343,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_r_output}
+                              .kvarh_r_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2320,10 +2368,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2334,7 +2382,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_s_output}
+                              .kvarh_s_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2358,10 +2407,10 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2372,7 +2421,8 @@ export default function DashboardOutline() {
                               0
                           ? 0
                           : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_t_output}
+                              .kvarh_t_output}{" "}
+                        KWH
                       </span>
                     </div>
                   </li>
@@ -2381,7 +2431,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-users-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -2429,11 +2481,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Power Factor Input
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -2449,7 +2501,9 @@ export default function DashboardOutline() {
                       .cosphi_input}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-session-duration-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -2497,11 +2551,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Power Factor Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
                 {monitoring === undefined ||
                 monitoring === null ||
                 monitoring.length === 0
@@ -2516,8 +2570,10 @@ export default function DashboardOutline() {
                   : monitoring.monitoring["data"].dataPowerFactors[0]
                       .cosphi_output}
               </div>
-              {/* Apex Line Chart */}
-              {/* <div id="hs-session-duration-line-chart" /> */}
+              {/* Line Chart */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -2565,11 +2621,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              THDv Input (%)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              THDv Input
             </h2>
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-1 text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* RN Input */}
@@ -2594,7 +2650,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2604,7 +2660,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rn_Input}
+                              .thdv_rn_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2631,7 +2688,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2641,7 +2698,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_sn_Input}
+                              .thdv_sn_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2668,7 +2726,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2678,7 +2736,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_tn_Input}
+                              .thdv_tn_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2705,7 +2764,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2715,7 +2774,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rs_Input}
+                              .thdv_rs_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2742,7 +2802,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2752,7 +2812,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_st_Input}
+                              .thdv_st_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2779,7 +2840,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2789,7 +2850,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rt_Input}
+                              .thdv_rt_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2798,8 +2860,8 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full col-span-3">
-                {/* <RealTimeVoltageInputSplineChart /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
             </div>
             <div className="flex items-center gap-x-2">
@@ -2848,11 +2910,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              THDv Output (%)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              THDv Output
             </h2>
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-1 text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* RN Output */}
@@ -2877,7 +2939,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2887,7 +2949,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rn_output}
+                              .thdv_rn_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2914,7 +2977,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2924,7 +2987,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_sn_output}
+                              .thdv_sn_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2951,7 +3015,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2961,7 +3025,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_tn_output}
+                              .thdv_tn_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -2988,7 +3053,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -2998,7 +3063,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rs_output}
+                              .thdv_rs_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3025,7 +3091,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3035,7 +3101,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_st_output}
+                              .thdv_st_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3062,7 +3129,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3072,7 +3139,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].dataThdvs.length === 0
                           ? 0
                           : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rt_output}
+                              .thdv_rt_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3081,8 +3149,8 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full col-span-3">
-                {/* <RealTimeVoltageInputSplineChart /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
             </div>
             <div className="flex items-center gap-x-2">
@@ -3131,11 +3199,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-rose-500 dark:text-rose-400">
-              THDi Input (%)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+              THDi Input
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Input */}
@@ -3160,7 +3228,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3170,7 +3238,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_r_Input}
+                              .thdi_r_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3197,7 +3266,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3207,7 +3276,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_s_Input}
+                              .thdi_s_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3234,7 +3304,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3244,7 +3314,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_t_Input}
+                              .thdi_t_Input}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3253,7 +3324,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-sessions-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
@@ -3301,11 +3374,11 @@ export default function DashboardOutline() {
           </span>
           {/* End Icon */}
           <div className="space-y-2">
-            <h2 className="text-sm font-bold uppercase text-emerald-500 dark:text-emerald-400">
-              THDi Output (%)
+            <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
+              THDi Output
             </h2>
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="text-2xl font-semibold text-gray-800 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Output */}
@@ -3330,7 +3403,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3340,7 +3413,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_r_output}
+                              .thdi_r_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3367,7 +3441,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3377,7 +3451,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_s_output}
+                              .thdi_s_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3404,7 +3479,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-lg text-gray-800 dark:text-neutral-200">
+                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
                         {monitoring === undefined ||
                         monitoring === null ||
                         monitoring.length === 0
@@ -3414,7 +3489,8 @@ export default function DashboardOutline() {
                             monitoring.monitoring["data"].datathdis.length === 0
                           ? 0
                           : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_t_output}
+                              .thdi_t_output}{" "}
+                        %
                       </span>
                     </div>
                   </li>
@@ -3423,7 +3499,9 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              {/* <div id="hs-sessions-line-chart" /> */}
+              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
+                {/* <RealTimeVoltageOutputSplineChart /> */}
+              </div>
             </div>
             <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
