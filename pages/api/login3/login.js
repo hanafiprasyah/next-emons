@@ -47,11 +47,12 @@ export default async function handler(req, res) {
       }
       throw new Error("Service Unavailable");
     } else {
+      const expiresAt = new Date(Date.now() + oneDay).toUTCString();
       res.setHeader(
         "Set-Cookie",
-        `tenant=${encryptedCookieString}; Path=/; HttpOnly; SameSite=None; Secure=${
+        `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; Secure=${
           process.env.NODE_ENV === "production"
-        }; Expires=${Date.now - oneDay}`
+        }; Expires=${expiresAt}`
       );
 
       const data = await response.json();

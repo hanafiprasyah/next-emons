@@ -30,6 +30,7 @@ function LoginForm() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    setError("");
 
     const regex = /\\$/;
 
@@ -190,10 +191,9 @@ function LoginForm() {
                   );
                   localStorage.setItem("tenant", `${pureTenant}`);
                 } else {
+                  setLoading(false);
                   setLoggedIn(false);
-                  setError(
-                    "Oops! Something went wrong! Please check your data again."
-                  );
+                  setError("Please check your data again.");
                 }
               });
             });
