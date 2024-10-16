@@ -28,6 +28,12 @@ export default async function handler(req, res) {
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
           "Cache-Control": "s-maxage=10",
+          "Content-Security-Policy":
+            "default-src 'self'; script-src 'self'; object-src 'none';",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          "X-XSS-Protection": "1; mode=block",
+          "X-API-Version": "1.0.0",
           tenant: tenant,
           token: process.env.AUTH_TOKEN,
         },
@@ -59,6 +65,12 @@ export default async function handler(req, res) {
       res
         .status(response.status)
         .json({ message: "Login successfully", datalogin: data });
+
+      // If the token activated from BE, we will use this code to store token securely
+      // const { csrfToken } = await response.json(); // Get token from API response
+      // localStorage.setItem("csrfToken", csrfToken); // Store in-memory or localStorage
+      // When FE send it to BE to validate the token, use this code on client side
+      // const csrfToken = localStorage.getItem('csrfToken'); // Retrieve token
     }
   } catch (e) {
     if (process.env.NODE_ENV === "development") {

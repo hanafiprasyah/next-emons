@@ -30,6 +30,13 @@ export default async function handler(req, res) {
           "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
+          "Cache-Control": "s-maxage=10",
+          "Content-Security-Policy":
+            "default-src 'self'; script-src 'self'; object-src 'none';",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          "X-XSS-Protection": "1; mode=block",
+          "X-API-Version": "1.0.0",
           tenant: tenant,
           token: process.env.AUTH_TOKEN,
         },
