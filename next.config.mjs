@@ -12,6 +12,8 @@ const nextConfig = {
   poweredByHeader: false,
   // Optimize fonts for performance
   optimizeFonts: true,
+  // Image opt on production
+  output: "standalone",
   images: {
     // Use modern formats for images
     formats: ["image/webp", "image/avif"],
