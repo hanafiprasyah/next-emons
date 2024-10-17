@@ -11,6 +11,10 @@ export default function AccountDropdown() {
   const [username, setUsername] = useState("");
   const router = useRouter();
 
+  const handleDisableClick = (e) => {
+    e.preventDefault();
+  };
+
   const handleLogout = async () => {
     setLoading(true);
 
@@ -23,8 +27,6 @@ export default function AccountDropdown() {
       if (response.ok) {
         // Clear storage if response OK
         setLoading(false);
-        // window.localStorage.removeItem("userName");
-        // window.localStorage.removeItem("tenant");
         // TODO: Clear all localStorage key
         window.localStorage.clear();
         router.replace("/login");
@@ -83,7 +85,7 @@ export default function AccountDropdown() {
           <Link
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
-            onClick={(e) => e.preventDefault()}
+            onClick={handleDisableClick.bind(null)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +106,7 @@ export default function AccountDropdown() {
           <Link
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
-            onClick={(e) => e.preventDefault()}
+            onClick={handleDisableClick.bind(null)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -130,7 +132,7 @@ export default function AccountDropdown() {
           <Link
             className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
-            onClick={(e) => e.preventDefault()}
+            onClick={handleDisableClick.bind(null)}
           >
             <svg
               className="flex-shrink-0 mt-0.5 size-4"

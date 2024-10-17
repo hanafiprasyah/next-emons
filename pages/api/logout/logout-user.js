@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   try {
     res.setHeader(
       "Set-Cookie",
-      "tenant=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+      "enc-header-site=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
     );
     res.status(200).json({ message: "User signed out successfully" });
   } catch (e) {

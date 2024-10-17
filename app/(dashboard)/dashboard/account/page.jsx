@@ -137,7 +137,7 @@ export default function AccountSetting() {
                     <button
                       type="button"
                       className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-200 rounded-lg shadow-sm gap-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                      onClick={() => setPersonal(false)}
+                      // onClick={() => setPersonal(false)}
                     >
                       Cancel
                     </button>
@@ -152,7 +152,7 @@ export default function AccountSetting() {
                     <button
                       type="button"
                       className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg gap-x-2 hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onClick={() => setPersonal(true)}
+                      // onClick={() => setPersonal(true)}
                     >
                       Edit
                     </button>

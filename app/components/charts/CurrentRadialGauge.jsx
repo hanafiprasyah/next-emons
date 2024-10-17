@@ -28,6 +28,14 @@ const Default = ({ id, key, alt, title, value }) => {
     gaugeInstance.export("PNG", `Current ${alt} output`);
   }
 
+  const handleExportClick = (titleFromCons) => {
+    if (titleFromCons === "Input") {
+      rnExportInputHandler();
+    } else {
+      rnExportOutputHandler();
+    }
+  };
+
   return (
     <>
       {/* Gauge Card */}
@@ -215,11 +223,7 @@ const Default = ({ id, key, alt, title, value }) => {
                   <button
                     type="button"
                     className="hs-tooltip-toggle size-[25px] lg:size-[30px] inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                    onClick={
-                      title == "Input"
-                        ? rnExportInputHandler
-                        : rnExportOutputHandler
-                    }
+                    onClick={() => handleExportClick(title)}
                   >
                     <svg
                       className="shrink-0 size-3 lg:size-4"

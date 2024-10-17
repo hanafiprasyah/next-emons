@@ -54,6 +54,27 @@ export default function Grounding() {
    * END OF STATE COLLECTION
    */
 
+  // Scripts
+  const handleSelectLocation = (code, name, e) => {
+    e.preventDefault();
+    setSelectLoc([code, name]);
+    isShowDev(true);
+    setSelectDev([]);
+  };
+
+  const handleSelectDevice = (code, name, e) => {
+    e.preventDefault();
+    setSelectDev([code, name]);
+  };
+
+  const handleResetButton = (e) => {
+    e.preventDefault();
+    setSelectLoc([]);
+    setSelectDev([]);
+    isShowDev(true);
+  };
+  // End of Scripts
+
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
     tenant,
@@ -488,12 +509,11 @@ export default function Grounding() {
                         key={index}
                         className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                         href=""
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setSelectLoc([item.code, item.name]);
-                          isShowDev(true);
-                          setSelectDev([]);
-                        }}
+                        onClick={handleSelectLocation.bind(
+                          null,
+                          item.code,
+                          item.name
+                        )}
                       >
                         <span className="inline-flex text-sm text-white">
                           {item.name}
@@ -552,10 +572,11 @@ export default function Grounding() {
                       key={index}
                       className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                       href=""
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectDev([item.code, item.name]);
-                      }}
+                      onClick={handleSelectDevice.bind(
+                        null,
+                        item.code,
+                        item.name
+                      )}
                     >
                       <span className="inline-flex text-sm text-white">
                         {item.name}
@@ -575,12 +596,7 @@ export default function Grounding() {
             type="button"
             disabled={selectDev.length === 0 ? true : false}
             className="py-[7px] px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-teal-500"
-            onClick={(e) => {
-              e.preventDefault();
-              setSelectLoc([]);
-              setSelectDev([]);
-              isShowDev(true);
-            }}
+            onClick={handleResetButton.bind(null)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

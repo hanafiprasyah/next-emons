@@ -3,6 +3,12 @@
 import Link from "next/link";
 
 export default function GlobalError({ error, reset }) {
+  //  Scripts
+  const handleDisableLogoClick = (e) => {
+    e.preventDefault();
+  };
+  // End Scripts
+
   return (
     <html className="dark" lang="en">
       <body className="antialiased">
@@ -12,7 +18,7 @@ export default function GlobalError({ error, reset }) {
               <Link
                 className="flex-none text-xl font-semibold cursor-default select-none sm:text-3xl dark:text-white"
                 href=""
-                onClick={(e) => e.preventDefault()}
+                onClick={handleDisableLogoClick.bind(null)}
                 aria-label="EMONS"
               >
                 EMONS

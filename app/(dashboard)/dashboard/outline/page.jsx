@@ -186,6 +186,24 @@ export default function DashboardOutline() {
    * END OF STATE COLLECTION
    */
 
+  // Scripts
+  const handleSelectLocation = (code, name, e) => {
+    e.preventDefault();
+    setSelectLoc([code, name]);
+    isShowDev(true);
+    setSelectDev([]);
+  };
+
+  const handleSelectDevice = (code, name, e) => {
+    e.preventDefault();
+    setSelectDev([code, name]);
+  };
+
+  const handleDisableClick = (e) => {
+    e.preventDefault();
+  };
+  // End of Scripts
+
   // Function to fetch the /tool/dataside API
   const fetchSite = async (
     tenant,
@@ -417,7 +435,7 @@ export default function DashboardOutline() {
                     <Link
                       className="p-2.5 flex items-center gap-x-2 cursor-default rounded-lg hover:bg-gray-200 focus:outline-none focus:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-900 dark:focus:bg-neutral-900"
                       href=""
-                      onClick={(e) => e.preventDefault()}
+                      onClick={handleDisableClick.bind(null)}
                     >
                       <div className="grow">
                         <span className="block text-sm text-gray-800 dark:text-neutral-200">
@@ -527,12 +545,11 @@ export default function DashboardOutline() {
                           key={index}
                           className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                           href=""
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setSelectLoc([item.code, item.name]);
-                            isShowDev(true);
-                            setSelectDev([]);
-                          }}
+                          onClick={handleSelectLocation.bind(
+                            null,
+                            item.code,
+                            item.name
+                          )}
                         >
                           <span className="inline-flex text-sm text-white">
                             {item.name}
@@ -590,10 +607,11 @@ export default function DashboardOutline() {
                         key={index}
                         className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
                         href=""
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setSelectDev([item.code, item.name]);
-                        }}
+                        onClick={handleSelectDevice.bind(
+                          null,
+                          item.code,
+                          item.name
+                        )}
                       >
                         <span className="inline-flex text-sm text-white">
                           {item.name}

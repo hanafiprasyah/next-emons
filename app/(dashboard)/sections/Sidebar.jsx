@@ -27,6 +27,10 @@ export default function DashboardSidebar() {
    */
   const path = usePathname();
 
+  const handleDisableClick = (e) => {
+    e.preventDefault();
+  };
+
   return (
     /**
      * This jsx will heading you on the sidebar menu list
@@ -126,7 +130,7 @@ export default function DashboardSidebar() {
                     >
                       <>
                         <Link
-                          // onClick={(e) => e.preventDefault()}
+                          // onClick={handleDisableClick.bind(null)}
                           data-hs-overlay="#hs-pro-sidebar"
                           aria-controls="hs-pro-sidebar"
                           aria-label="Toggle navigation"
@@ -156,7 +160,7 @@ export default function DashboardSidebar() {
                           Map Info
                         </Link>
                         <Link
-                          // onClick={(e) => e.preventDefault()}
+                          // onClick={handleDisableClick.bind(null)}
                           data-hs-overlay="#hs-pro-sidebar"
                           aria-controls="hs-pro-sidebar"
                           aria-label="Toggle navigation"
@@ -211,7 +215,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -238,7 +242,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -291,7 +295,7 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
@@ -321,7 +325,7 @@ export default function DashboardSidebar() {
                     // data-hs-overlay="#hs-pro-sidebar"
                     // aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={handleDisableClick.bind(null)}
                     href="/dashboard/temperature/"
                     // prefetch={true}
                   >
@@ -352,7 +356,7 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/energy"
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     prefetch={true}
                   >
                     <Image
@@ -378,7 +382,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/pf/"
                     prefetch={true}
                   >
@@ -405,7 +409,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/thdv/"
                     prefetch={true}
                   >
@@ -432,7 +436,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    // onClick={(e) => e.preventDefault()}
+                    // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/thdi/"
                     prefetch={true}
                   >
@@ -505,7 +509,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={handleDisableClick.bind(null)}
                     href="/dashboard/database-logger"
                     prefetch={true}
                   >
@@ -542,7 +546,7 @@ export default function DashboardSidebar() {
                     data-hs-overlay="#hs-pro-sidebar"
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={handleDisableClick.bind(null)}
                     href="/dashboard/sd-card-logger"
                     prefetch={true}
                   >
