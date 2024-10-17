@@ -62,10 +62,10 @@ const nextConfig = {
       },
     ];
   },
-  experimental: {
-    swcMinify: true,
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   swcMinify: true,
+  //   optimizeCss: true,
+  // },
 };
 
 export default nextConfig;
