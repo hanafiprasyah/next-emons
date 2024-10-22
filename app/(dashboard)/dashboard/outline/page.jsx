@@ -81,12 +81,13 @@ function useMonitoring(localTenant, locationid, start_date) {
         (start_date == "" && start_date == undefined)
           ? true
           : false,
-      refreshInterval: 500,
+      refreshInterval: 1000,
+      focusThrottleInterval: 3000,
       errorRetryInterval: 1000,
       errorRetryCount: 10,
       shouldRetryOnError: true,
       keepPreviousData: true,
-      loadingTimeout: 5000,
+      loadingTimeout: 6000,
       onLoadingSlow: () => {
         setChannel("Unstable network, please wait..");
       },
