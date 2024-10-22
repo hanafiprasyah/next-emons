@@ -9,9 +9,10 @@ import {
 } from "@vis.gl/react-google-maps";
 import useSWR from "swr";
 
-function useVoltage(tenantRef, locationid) {
-  // Function to fetch the /device/getlastdatavoltage API [REALTIME]
-  const fetchVoltageRealtime = async (url, tenantRef, locationid) => {
+// TODO: Fetch monitoring data with SWR isolated
+function useMonitoring(tenantRef, locationid, start_date) {
+  // Function to fetch the data API [REALTIME]
+  const fetchDataRealtime = async (url, tenantRef, locationid, start_date) => {
     return fetch(url, {
       method: "POST",
       headers: {
@@ -30,7 +31,7 @@ function useVoltage(tenantRef, locationid) {
         status: "",
         value: "",
         side: "",
-        start_date: "",
+        start_date: start_date ?? "2024-01-01 00:40:20",
         end_date: "",
       }),
     }).then((res) => {
@@ -38,158 +39,81 @@ function useVoltage(tenantRef, locationid) {
         throw new Error("500. An error occured.");
       }
 
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(
-      //     "Response from fetchVoltageRealtime on Voltage Sub Component: " +
-      //       res.statusText
-      //   );
-      // }
-
       const data = res.json();
       return data;
     });
   };
 
-  const { data, error } = useSWR(
-    tenantRef !== "" && tenantRef !== undefined
-      ? ["/api/monitoring/voltage/getdata", tenantRef, locationid]
+  const { data, isLoading, error } = useSWR(
+    tenantRef !== "" && tenantRef !== undefined && tenantRef !== null
+      ? ["/api/monitoring/getmonitoring", tenantRef, locationid, start_date]
       : null,
-    ([url, tenantRef, locationid]) =>
-      fetchVoltageRealtime(url, tenantRef, locationid),
+    ([url, tenantRef, locationid, start_date]) =>
+      fetchDataRealtime(url, tenantRef, locationid, start_date),
     {
+      isPaused: () =>
+        (tenantRef == "" && tenantRef == undefined) ||
+        (locationid === null && locationid === undefined) ||
+        (start_date == "" && start_date == undefined)
+          ? true
+          : false,
       refreshInterval: 1000,
-      refreshWhenHidden: true,
-      refreshWhenOffline: false,
-      revalidateOnReconnect: true,
+      focusThrottleInterval: 3000,
+      errorRetryInterval: 1000,
+      errorRetryCount: 10,
+      shouldRetryOnError: true,
+      keepPreviousData: true,
+      loadingTimeout: 6000,
     }
   );
 
-  return {
-    voltage: data,
-    isVoltageError: error,
-  };
-}
+  if (data != undefined) {
+    if (data.message === "OK") {
+      if (data.monitoring["data"]["datavoltages"].length === 0) {
+        return {
+          monitoring: null,
+          isMonitoringError: error,
+          isMonitoringLoading: isLoading,
+        };
+      } else {
+        const currentDate = new Date();
+        const sendDate = data.monitoring["data"]["datavoltages"][0].send_date;
+        // format the send_date value
+        const isoConvSendDate = new Date(sendDate);
+        // count the diff
+        const diffTime = currentDate - isoConvSendDate;
+        // set the minutes value
+        const minutes = Math.floor(diffTime / 60000);
 
-function useGround(tenantRef, locationid) {
-  // Function to fetch the /device/getlastdataground API [REALTIME]
-  const fetchGroundRealtime = async (url, tenantRef, locationid) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenantRef,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenantRef,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: "",
-        end_date: "",
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error("500. An error occured.");
+        // Set offline status if the diff time more than 5 minutes from NOW()
+        if (minutes >= 5) {
+          return {
+            monitoring: null,
+            isMonitoringError: error,
+            isMonitoringLoading: isLoading,
+          };
+        } else {
+          return {
+            monitoring: data,
+            isMonitoringError: error,
+            isMonitoringLoading: isLoading,
+          };
+        }
       }
-
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(
-      //     "Response from fetchGroundRealtime on Ground Sub Component: " +
-      //       res.statusText
-      //   );
-      // }
-
-      const data = res.json();
-      return data;
-    });
-  };
-
-  const { data, error } = useSWR(
-    tenantRef !== "" && tenantRef !== undefined
-      ? ["/api/monitoring/ground/getdata", tenantRef, locationid]
-      : null,
-    ([url, tenantRef, locationid]) =>
-      fetchGroundRealtime(url, tenantRef, locationid),
-    {
-      refreshInterval: 1000,
-      refreshWhenHidden: true,
-      refreshWhenOffline: false,
-      revalidateOnReconnect: true,
+    } else {
+      return {
+        monitoring: null,
+        isMonitoringError: error,
+        isMonitoringLoading: isLoading,
+      };
     }
-  );
-
-  return {
-    ground: data,
-    isGroundError: error,
-  };
-}
-
-function useCurrent(tenantRef, locationid) {
-  // Function to fetch the /device/getlastdatacurrent API [REALTIME]
-  const fetchCurrentRealtime = async (url, tenantRef, locationid) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenantRef,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenantRef,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: "",
-        end_date: "",
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error("500. An error occured.");
-      }
-
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(
-      //     "Response from fetchCurrentRealtime on Current Sub Component: " +
-      //       res.statusText
-      //   );
-      // }
-
-      const data = res.json();
-      return data;
-    });
-  };
-
-  const { data, error } = useSWR(
-    tenantRef !== "" && tenantRef !== undefined
-      ? ["/api/monitoring/current/getdata", tenantRef, locationid]
-      : null,
-    ([url, tenantRef, locationid]) =>
-      fetchCurrentRealtime(url, tenantRef, locationid),
-    {
-      refreshInterval: 1000,
-      refreshWhenHidden: true,
-      refreshWhenOffline: false,
-      revalidateOnReconnect: true,
-    }
-  );
-
-  return {
-    current: data,
-    isCurrentError: error,
-  };
+  } else {
+    return {
+      monitoring: null,
+      isMonitoringError: error,
+      isMonitoringLoading: isLoading,
+    };
+  }
 }
 
 const Marker = ({
@@ -204,15 +128,66 @@ const Marker = ({
   // marker state
   const [markerRef, marker] = useAdvancedMarkerRef();
 
+  // Dates
+  const [currentDate, setCurrentDate] = useState("");
+  const [hoursAgo, setHoursAgo] = useState("");
+
   // popup info state
   const [infoWindowShown, setInfoWindowShown] = useState(false);
   const [infoClickable, setInfoClickable] = useState(true);
+
+  // Set monitoring data state
+  const [connected, setConnection] = useState(false);
 
   // set parent name from API
   const [parentName, setParentName] = useState("");
 
   // show/hide marker based on voltage value
   const [showMarker, setShowMarker] = useState(false);
+
+  // TODO: Get current datetime, this will be mounted at the first time
+  useEffect(() => {
+    const dateIns = new Date();
+    // const isoDate = "2024-09-13T11:30:54";
+    // const isoConvDate = new Date(isoDate);
+
+    // Get current date time
+    const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
+      dateIns.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours()}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // Get -1 hour of current date time
+    const getHoursAgo = `${dateIns.getFullYear()}-${(dateIns.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${dateIns.getDate().toLocaleString("en-US", {
+      minimumIntegerDigits: 2,
+    })} ${dateIns.getHours() - 1}:${dateIns
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
+
+    // const diffTime = dateIns - isoConvDate;
+    // const minutes = Math.floor((diffTime % 3600000) / 60000);
+    if (getFormatedCurrentDate.startsWith("202")) {
+      setCurrentDate(getFormatedCurrentDate);
+      setHoursAgo(getHoursAgo);
+    }
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log(
+    //     "Current date: " +
+    //       getFormatedCurrentDate +
+    //       "| 1 hours ago: " +
+    //       getHoursAgo
+    //   );
+    // }
+  }, []);
 
   // Custom Pin with SVG
   const parser = new DOMParser();
@@ -242,11 +217,13 @@ const Marker = ({
    * We will map this data based on their Index
    * then we will get the tenancy (more than 2 devices) with their own datas
    */
-  const { voltage, isVoltageError } = useVoltage(tenantRef, locationid);
+  const { monitoring, isMonitoringError, isMonitoringLoading } = useMonitoring(
+    tenantRef,
+    locationid,
+    hoursAgo
+  );
 
-  const { ground, isGroundError } = useGround(tenantRef, locationid);
-
-  const { current, isCurrentError } = useCurrent(tenantRef, locationid);
+  // console.log(monitoring);
 
   // Function to fetch the /tool/dataside API
   const fetchSite = async (tenantRef, locationid) => {
@@ -285,19 +262,20 @@ const Marker = ({
   const handleClose = useCallback(() => setInfoWindowShown(false), []);
 
   useEffect(() => {
-    if (voltage && ground && current) {
+    if (monitoring) {
+      setConnection(true);
       if (signal) {
+        setConnection(true);
         fetchSite(tenantRef, locationid).then((data) => {
           const siteData = data.siteloc["data"][0].site;
           if (siteData) {
             setParentName(siteData.name);
-            // console.log(siteData.name);
           }
         });
 
-        const dataVoltage = voltage.voltage["data"][0];
-        const dataGround = ground.ground["data"][0];
-        const dataCurrent = current.current["data"][0];
+        const dataVoltage = monitoring?.monitoring["data"].datavoltages[0];
+        const dataGround = monitoring?.monitoring["data"].datagrounds[0];
+        const dataCurrent = monitoring?.monitoring["data"].datacurrents[0];
 
         if (
           dataVoltage != undefined &&
@@ -306,6 +284,7 @@ const Marker = ({
         ) {
           setShowMarker(true);
           setInfoClickable(true);
+          setConnection(true);
 
           // if (process.env.NODE_ENV === "development") {
           //   console.log(dataVoltage);
@@ -410,18 +389,24 @@ const Marker = ({
       } else {
         setShowMarker(false);
         setInfoClickable(false);
+        setConnection(false);
         // if (process.env.NODE_ENV === "development") {
         //   console.log("Data -> error(Connection is not stable / unreachable)");
         // }
       }
+    } else if (monitoring === null) {
+      setShowMarker(true);
+      setInfoClickable(false);
+      setConnection(false);
     } else {
       setShowMarker(false);
       setInfoClickable(false);
+      setConnection(false);
       // if (process.env.NODE_ENV === "development") {
       //   console.log("Data -> error(Data Undefined)");
       // }
     }
-  }, [voltage, ground, current, signal, locationid, tenantRef]);
+  }, [monitoring, signal, locationid, tenantRef]);
 
   return (
     <>
@@ -458,9 +443,15 @@ const Marker = ({
                   <div className="relative flex items-center pb-2 md:p-4 gap-x-3">
                     {/* Logo */}
                     <div className="shrink-0">
-                      <div className="border border-sky-200 shrink-0 rounded-xl dark:border-sky-400">
+                      <div
+                        className={`border border-sky-200 shrink-0 rounded-xl ${
+                          connected
+                            ? "dark:border-sky-400"
+                            : "dark:border-red-400"
+                        }`}
+                      >
                         <div className="flex items-center justify-center size-8 md:size-10 lg:size-12">
-                          {signal ? (
+                          {connected ? (
                             <svg
                               className="text-sky-500 shrink-0 size-4 md:size-6 lg:size-8 dark:text-sky-700"
                               width={32}
@@ -509,13 +500,15 @@ const Marker = ({
                       <div className="block shrink-0">
                         <h4
                           className={`text-xs font-medium truncate ${
-                            signal ? "text-sky-800" : "text-neutral-500"
+                            connected ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
                           {parentName != null ||
                           parentName != undefined ||
                           parentName != ""
-                            ? parentName
+                            ? connected
+                              ? parentName
+                              : "Connection interrupted"
                             : "Loading data.."}
                         </h4>
                       </div>
@@ -537,7 +530,8 @@ const Marker = ({
                               className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${voltageColor}`}
                             />
                           </span>
-                          {voltage.voltage["data"][0].v_rn_output}
+                          {monitoring?.monitoring["data"].datavoltages[0]
+                            .v_rn_output ?? "-"}
                           <svg
                             className="shrink-0 size-3"
                             width="24"
@@ -573,7 +567,8 @@ const Marker = ({
                               className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${currentColor}`}
                             />
                           </span>
-                          {current.current["data"][0].i_r_Output}
+                          {monitoring?.monitoring["data"].datacurrents[0]
+                            .i_r_Output ?? "-"}
                           <svg
                             className=" shrink-0 size-3"
                             width="24"
@@ -632,7 +627,8 @@ const Marker = ({
                               className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${groundColor}`}
                             />
                           </span>
-                          {ground.ground["data"][0].voltage_output}
+                          {monitoring?.monitoring["data"].datagrounds[0]
+                            .voltage_output ?? "-"}
                           <svg
                             className=" shrink-0 size-3"
                             width="24"
@@ -693,10 +689,10 @@ const Marker = ({
                       <div className="grow">
                         <p
                           className={`text-xs md:text-sm font-medium ${
-                            signal ? "text-sky-700" : "text-neutral-500"
+                            connected ? "text-sky-700" : "text-neutral-500"
                           }`}
                         >
-                          {signal ? "Just now" : "Offline"}
+                          {connected ? "Just now" : "Offline"}
                         </p>
                       </div>
                     </div>
@@ -710,10 +706,10 @@ const Marker = ({
                         <span className="py-px px-2 inline-flex items-center gap-x-1 md:gap-x-1.5 bg-gray-100 text-xs lg:text-sm text-gray-800 rounded-md dark:bg-neutral-700 dark:text-neutral-200">
                           <span
                             className={`inline-block w-1 h-3 ${
-                              signal ? "bg-emerald-600" : "bg-red-600"
+                              connected ? "bg-emerald-600" : "bg-red-600"
                             } rounded-full`}
                           />
-                          {signal ? "Online" : "Unreachable"}
+                          {connected ? "Online" : "Unreachable"}
                         </span>
                       </div>
                     </div>
@@ -723,7 +719,11 @@ const Marker = ({
                   {/* Footer */}
                   <div className="flex items-center justify-center px-4 py-3 mt-auto border-t border-gray-200 md:justify-evenly dark:border-sky-700">
                     {/* Tenant */}
-                    <span className="flex justify-center items-center gap-x-1 text-sm sm:text-[13px] text-gray-500 dark:text-sky-800">
+                    <span
+                      className={`flex justify-center items-center gap-x-1 text-sm sm:text-[13px] text-gray-500 ${
+                        connected ? "dark:text-sky-800" : "dark:text-red-800"
+                      }`}
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -738,7 +738,11 @@ const Marker = ({
                           d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
                         />
                       </svg>
-                      <small>Linked to {tenantRef}</small>
+                      {connected ? (
+                        <small>Linked to {tenantRef}</small>
+                      ) : (
+                        <small>Not linked to {tenantRef}</small>
+                      )}
                     </span>
                     {/* End Tenant */}
                     {/* Progress */}
@@ -746,20 +750,20 @@ const Marker = ({
                       <div
                         className="flex w-full h-1 overflow-hidden bg-gray-200 rounded-full dark:bg-neutral-700"
                         role="progressbar"
-                        aria-valuenow={signal ? 100 : 0}
+                        aria-valuenow={connected ? 100 : 0}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       >
                         <div
                           className={`flex flex-col justify-center rounded-full overflow-hidden ${
-                            signal ? "bg-green-500" : "bg-red-500"
+                            connected ? "bg-green-500" : "bg-red-500"
                           } text-sm sm:text-[13px] text-white text-center whitespace-nowrap transition duration-500`}
-                          style={{ width: signal ? "100%" : "0%" }}
+                          style={{ width: connected ? "100%" : "0%" }}
                         />
                       </div>
                       <div className="w-10 text-end -mt-0.5">
                         <span className="text-sm sm:text-[13px] text-gray-500 dark:text-neutral-500">
-                          {signal ? "100%" : "0%"}
+                          {connected ? "100%" : "0%"}
                         </span>
                       </div>
                     </div>
