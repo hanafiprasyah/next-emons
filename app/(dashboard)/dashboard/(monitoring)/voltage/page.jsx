@@ -31,6 +31,7 @@ export default function Voltage() {
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
   const [channel, setChannel] = useState("Connecting..");
+  const [onLoading, setOnLoading] = useState(true);
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -57,6 +58,7 @@ export default function Voltage() {
   // Scripts
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectLoc([code, name]);
     isShowDev(true);
     setSelectDev([]);
@@ -64,11 +66,13 @@ export default function Voltage() {
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectDev([code, name]);
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectLoc([]);
     setSelectDev([]);
     isShowDev(true);
@@ -182,6 +186,7 @@ export default function Voltage() {
             // Check if data voltage length is null
             if (datas.monitoring["data"]["datavoltages"].length === 0) {
               // Give signal to offline, and set channel to unreachable
+              setOnLoading(false);
               setSignal(false);
               setChannel("Unreachable");
             } else {
@@ -198,12 +203,14 @@ export default function Voltage() {
 
               // Set offline status if the diff time more than 5 minutes from NOW()
               if (minutes >= 5) {
+                setOnLoading(false);
                 setSignal(false);
                 setChannel("Device signal interference");
               } else {
                 setDataVolt(datas.monitoring["data"]["datavoltages"]);
                 setSignal(true);
                 setChannel("Stable");
+                setOnLoading(false);
               }
             }
           }
@@ -211,6 +218,7 @@ export default function Voltage() {
           else {
             setSignal(false);
             setChannel("Cannot get device location");
+            setOnLoading(false);
           }
         }
         // If response message is not OK
@@ -235,11 +243,8 @@ export default function Voltage() {
         (hoursAgo == "" && hoursAgo == undefined)
           ? true
           : false,
-      refreshInterval: 1000,
+      refreshInterval: 500,
       focusThrottleInterval: 3000,
-      errorRetryInterval: 1000,
-      errorRetryCount: 10,
-      shouldRetryOnError: true,
       keepPreviousData: true,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -322,7 +327,6 @@ export default function Voltage() {
         // If site response is OK
         if (dataSite.message == "OK") {
           setDataLoc(dataSite.site["data"]);
-          setChannel("Almost done..");
 
           // Scrap the first index data
           const firstIndexSite = dataSite.site["data"][0];
@@ -352,7 +356,6 @@ export default function Voltage() {
             // device location response is OK
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
-              setChannel("Ensure you are on the right place..");
 
               // Scrap the first index data
               const firstIndexDev = dataLocation.loc["data"][0];
@@ -361,8 +364,10 @@ export default function Voltage() {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
 
-              setSignal(true);
+              setOnLoading(true);
+              setChannel("Validating data..");
             } else {
+              setOnLoading(false);
               setSignal(false);
               setChannel("Failed to load resource");
             }
@@ -370,6 +375,7 @@ export default function Voltage() {
         }
         // If site response is not OK
         else {
+          setOnLoading(false);
           setSignal(false);
           setChannel("Unreachable");
         }
@@ -640,92 +646,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          id={"voltage-rn-input"}
-                          key={`rn-input${index}`}
-                          alt={"R-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rn_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              id={"voltage-rn-input"}
+                              key={`rn-input${index}`}
+                              alt={"R-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rn_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rn-output${index}`}
-                          id={"voltage-rn-output"}
-                          alt={"R-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rn-output${index}`}
+                              id={"voltage-rn-output"}
+                              alt={"R-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -791,92 +809,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`sn-input${index}`}
-                          id={"voltage-sn-input"}
-                          alt={"S-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_sn_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`sn-input${index}`}
+                              id={"voltage-sn-input"}
+                              alt={"S-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_sn_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`sn-output${index}`}
-                          id={"voltage-sn-output"}
-                          alt={"S-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_sn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`sn-output${index}`}
+                              id={"voltage-sn-output"}
+                              alt={"S-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_sn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -942,92 +972,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`tn-input${index}`}
-                          id={"voltage-tn-input"}
-                          alt={"T-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_tn_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="t-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`tn-input${index}`}
+                              id={"voltage-tn-input"}
+                              alt={"T-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_tn_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="t-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`tn-output${index}`}
-                          id={"voltage-tn-output"}
-                          alt={"T-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_tn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="t-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`tn-output${index}`}
+                              id={"voltage-tn-output"}
+                              alt={"T-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_tn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="t-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1096,92 +1138,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rs-input${index}`}
-                          id={"voltage-rs-input"}
-                          alt={"R-S"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rs_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-s input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rs-input${index}`}
+                              id={"voltage-rs-input"}
+                              alt={"R-S"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rs_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-s input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rs-output${index}`}
-                          id={"voltage-rs-output"}
-                          alt={"R-S"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rs_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-s output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rs-output${index}`}
+                              id={"voltage-rs-output"}
+                              alt={"R-S"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rs_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-s output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1247,92 +1301,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`st-input${index}`}
-                          id={"voltage-st-input"}
-                          alt={"S-T"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_st_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-t input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`st-input${index}`}
+                              id={"voltage-st-input"}
+                              alt={"S-T"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_st_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-t input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`st-output${index}`}
-                          id={"voltage-st-output"}
-                          alt={"S-T"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_st_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-t output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`st-output${index}`}
+                              id={"voltage-st-output"}
+                              alt={"S-T"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_st_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-t output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1398,92 +1464,104 @@ export default function Voltage() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rt-input${index}`}
-                          id={"voltage-rt-input"}
-                          alt={"R-T"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rt_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-t input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rt-input${index}`}
+                              id={"voltage-rt-input"}
+                              alt={"R-T"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rt_input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-t input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataVolt.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rt-output${index}`}
-                          id={"voltage-rt-output"}
-                          alt={"R-T"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.v_rt_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-t output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataVolt.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rt-output${index}`}
+                              id={"voltage-rt-output"}
+                              alt={"R-T"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.v_rt_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-t output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
