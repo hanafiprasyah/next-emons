@@ -2,8 +2,12 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { APIProvider, Map } from "@vis.gl/react-google-maps";
-import MarkerWithInfo from "./Marker";
 import useSWR from "swr";
+import dynamic from "next/dynamic";
+
+const DynamicMarkerWithInfo = dynamic(() => import("./Marker"), {
+  ssr: true,
+});
 
 const Default = () => {
   // local Value
@@ -90,8 +94,10 @@ const Default = () => {
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
-    if (localStorage.length != 0) {
+    if (currentUser) {
       setLocalTenant(`${currentUser.toString()}`);
+    } else {
+      setLocalTenant("");
     }
 
     if (data) {
@@ -176,7 +182,7 @@ const Default = () => {
           {localTenant.length != 0
             ? dataDev.map((location) =>
                 location.parent != 0 ? (
-                  <MarkerWithInfo
+                  <DynamicMarkerWithInfo
                     key={location.code}
                     locationid={location.code}
                     tenantRef={localTenant}
