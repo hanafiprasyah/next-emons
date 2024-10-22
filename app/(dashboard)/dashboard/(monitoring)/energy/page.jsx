@@ -299,12 +299,7 @@ export default function Energy() {
     const currentUser = localStorage.getItem("tenant");
 
     // Check if currentUser length is not null
-    if (
-      currentUser.length !== 0 ||
-      currentUser !== "" ||
-      currentUser !== null ||
-      currentUser !== undefined
-    ) {
+    if (currentUser) {
       // save local tenant value to state
       setLocalTenant(`${currentUser.toString()}`);
 
