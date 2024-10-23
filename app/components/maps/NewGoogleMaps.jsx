@@ -28,41 +28,44 @@ const Default = () => {
     start_trancation_date,
     end_trancation_date
   ) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenant,
-        locationid: 0,
-        lane: "",
-        status: "",
-        value: "",
-        side: "0",
-        start_trancation_date: start_trancation_date,
-        end_trancation_date: end_trancation_date,
-      }),
-    }).then((res) => {
-      if (!res.ok) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenant,
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: "0",
+          start_trancation_date: start_trancation_date,
+          end_trancation_date: end_trancation_date,
+        }),
+      });
+
+      if (!response.ok) {
         setDeviceStatus(false);
-        throw new Error("500. An error occured.");
+        throw new Error(`Please check your connection..`);
       }
 
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log("Response from fetchDeviceRealtime: " + res.statusText);
-      // }
-
       setDeviceStatus(true);
-      const data = res.json();
+      const data = await response.json();
       return data;
-    });
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchDeviceRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
   // SWR
@@ -71,23 +74,36 @@ const Default = () => {
    * then we will get the tenancy (more than 2 devices) with their own datas
    */
   const { data, isLoading, error } = useSWR(
-    localTenant !== "" && localTenant !== undefined
-      ? [
-          "/api/tools/location/getlocation",
-          localTenant,
-          "2023-01-01 00:00:00",
-          "2024-12-30 23:59:00",
-        ]
-      : null,
-    ([url, tenant, start_trancation_date, end_trancation_date]) =>
-      fetchDeviceRealtime(
-        url,
-        tenant,
-        start_trancation_date,
-        end_trancation_date
-      ),
+    [
+      "/api/tools/location/getlocation",
+      localTenant,
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00",
+    ],
+    async ([url, tenant, start_trancation_date, end_trancation_date]) => {
+      try {
+        return await fetchDeviceRealtime(
+          url,
+          tenant,
+          start_trancation_date,
+          end_trancation_date
+        );
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("Error SWR Fetch data: ", err);
+        }
+        throw err;
+      }
+    },
     {
-      refreshInterval: 1000,
+      isPaused: () => (localTenant === "" ? true : false),
+      refreshInterval: 500,
+      focusThrottleInterval: 1000,
+      keepPreviousData: true,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setChannel("Unstable network, please wait..");
+      },
     }
   );
 
@@ -95,29 +111,28 @@ const Default = () => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
     if (currentUser) {
+      setDeviceStatus(true);
       setLocalTenant(`${currentUser.toString()}`);
-    } else {
-      setLocalTenant("");
-    }
 
-    if (data) {
-      setDataDev(data.loc["data"]);
-      const firstIndexSite = data.loc["data"][0];
-      setSelectDev([firstIndexSite["lat"], firstIndexSite["lot"]]);
-    } else if (error) {
+      if (data) {
+        setDeviceStatus(true);
+        setDataDev(data.loc["data"]);
+        const firstIndexSite = data.loc["data"][0];
+        setSelectDev([firstIndexSite["lat"], firstIndexSite["lot"]]);
+      } else if (error) {
+        setDeviceStatus(false);
+      }
+    } else {
       setDeviceStatus(false);
+      setLocalTenant("");
     }
   }, [data, error]);
 
-  if (!data) {
+  if (error) {
     return (
-      <div
-        className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
-        role="status"
-        aria-label="loading"
-      >
-        <span className="sr-only">Loading...</span>
-      </div>
+      <span className="text-sm text-white text-wrap text-clip">
+        {`${error}`}
+      </span>
     );
   }
 
@@ -131,10 +146,6 @@ const Default = () => {
         <span className="sr-only">Loading...</span>
       </div>
     );
-  }
-
-  if (error) {
-    return <span>{error}</span>;
   }
 
   return (
