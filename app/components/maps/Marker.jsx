@@ -418,7 +418,7 @@ const Marker = ({
             position={{ lat: lat, lng: lot }}
             onClick={handleMarkerClick}
             clickable={infoClickable}
-            title={title}
+            title={connected ? `${parentName} - ${title}` : `Connection lost`}
             draggable={false}
             collisionBehavior="OPTIONAL_AND_HIDES_LOWER_PRIORITY"
           >
@@ -508,7 +508,7 @@ const Marker = ({
                           parentName != ""
                             ? connected
                               ? parentName
-                              : "Connection interrupted"
+                              : "Connection lost"
                             : "Loading data.."}
                         </h4>
                       </div>

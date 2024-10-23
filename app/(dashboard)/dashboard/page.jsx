@@ -8,7 +8,7 @@ import Maps from "@/components/maps/NewGoogleMaps";
 
 export default function DashboardMaps() {
   return (
-    <div className="h-[100dvh]">
+    <div className="h-[calc(100dvh-78px)]">
       <>
         {/* Maps */}
         <section id="map-layout">
