@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
-import Loader from "@/loading";
 import Link from "next/link";
 import useSWR from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
-
 import dynamic from "next/dynamic";
+
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/ThdvRadialGauge"),
   {
@@ -31,6 +30,7 @@ export default function Thdv() {
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
   const [channel, setChannel] = useState("Connecting..");
+  const [onLoading, setOnLoading] = useState(true);
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -57,6 +57,7 @@ export default function Thdv() {
   // Scripts
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectLoc([code, name]);
     isShowDev(true);
     setSelectDev([]);
@@ -64,11 +65,14 @@ export default function Thdv() {
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectDev([code, name]);
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
+    setSignal(false);
+    setOnLoading(true);
     setSelectLoc([]);
     setSelectDev([]);
     isShowDev(true);
@@ -151,83 +155,112 @@ export default function Thdv() {
 
   // Function to fetch the API [REALTIME]
   const fetchThdvRealtime = async (url, tenant, locationid, start_date) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenant,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: start_date,
-        end_date: "",
-      }),
-    })
-      .then((res) => (res.ok ? res.json() : res.statusText))
-      .then((datas) => {
-        // Check response message
-        if (datas.message === "OK") {
-          // Check if device list is not null
-          if (selectDev.length !== 0) {
-            // Check if data thdv length is null
-            if (datas.monitoring["data"]["dataThdvs"].length === 0) {
-              // Give signal to offline, and set channel to unreachable
-              setSignal(false);
-              setChannel("Unreachable");
-            } else {
-              // We will check the difference about last send_date from API and current date from NOW()
-              const currentDate = new Date();
-              const sendDate =
-                datas.monitoring["data"]["dataThdvs"][0].send_date;
-              // format the send_date value
-              const isoConvSendDate = new Date(sendDate);
-              // count the diff
-              const diffTime = currentDate - isoConvSendDate;
-              // set the minutes value
-              const minutes = Math.floor(diffTime / 60000);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenant,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: "",
+        }),
+      });
 
-              // Set offline status if the diff time more than 5 minutes from NOW()
-              if (minutes >= 5) {
-                setSignal(false);
-                setChannel("Device signal interference");
-              } else {
-                setDataThdv(datas.monitoring["data"]["dataThdvs"]);
-                setSignal(true);
-                setChannel("Stable");
-              }
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Check response message
+      if (data.message === "OK") {
+        setSignal(true);
+
+        // Check if device list is not null
+        if (selectDev.length !== 0) {
+          setSignal(true);
+          // Check if data ground length is null
+          if (data.monitoring["data"]["dataThdvs"][0] === []) {
+            // Give signal to offline, and set channel to unreachable
+            setOnLoading(false);
+            setSignal(false);
+            setChannel("Unreachable");
+          } else {
+            setSignal(true);
+            // We will check the difference about last send_date from API and current date from NOW()
+            const currentDate = new Date();
+            const sendDate = data.monitoring["data"]["dataThdvs"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= 5) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Device signal interference");
+            } else {
+              setDataThdv(data.monitoring["data"]["dataThdvs"]);
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
             }
           }
-          // if device list is null?
-          else {
-            setSignal(false);
-            setChannel("Cannot get device location");
-          }
         }
-        // If response message is not OK
+        // if device list is null?
         else {
-          setDataThdv([]);
+          setSignal(false);
+          setChannel("Cannot get device location");
+          setOnLoading(false);
         }
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
+      }
+      // If response message is not OK
+      else {
+        setSignal(false);
+        setDataThdv([]);
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchThdvRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
   // SWR
   const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
-    ([url, localTenant, locationid, start_date]) =>
-      fetchThdvRealtime(url, localTenant, locationid, start_date),
+    async ([url, localTenant, locationid, start_date]) => {
+      try {
+        return await fetchThdvRealtime(
+          url,
+          localTenant,
+          locationid,
+          start_date
+        );
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("Error SWR Fetch data: ", err);
+        }
+        throw err;
+      }
+    },
     {
       isPaused: () =>
         selectDev.length === 0 ||
@@ -235,11 +268,8 @@ export default function Thdv() {
         (hoursAgo == "" && hoursAgo == undefined)
           ? true
           : false,
-      refreshInterval: 1000,
+      refreshInterval: 500,
       focusThrottleInterval: 3000,
-      errorRetryInterval: 1000,
-      errorRetryCount: 10,
-      shouldRetryOnError: true,
       keepPreviousData: true,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -322,7 +352,6 @@ export default function Thdv() {
         // If site response is OK
         if (dataSite.message == "OK") {
           setDataLoc(dataSite.site["data"]);
-          setChannel("Almost done..");
 
           // Scrap the first index data
           const firstIndexSite = dataSite.site["data"][0];
@@ -352,7 +381,6 @@ export default function Thdv() {
             // device location response is OK
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
-              setChannel("Ensure you are on the right place..");
 
               // Scrap the first index data
               const firstIndexDev = dataLocation.loc["data"][0];
@@ -361,7 +389,8 @@ export default function Thdv() {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
 
-              setSignal(true);
+              setOnLoading(true);
+              setChannel("Validating data..");
             } else {
               setSignal(false);
               setChannel("Failed to load resource");
@@ -370,6 +399,7 @@ export default function Thdv() {
         }
         // If site response is not OK
         else {
+          setOnLoading(false);
           setSignal(false);
           setChannel("Unreachable");
         }
@@ -640,92 +670,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          id={"thdv-rn-input"}
-                          key={`rn-input${index}`}
-                          alt={"R-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rn_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              id={"thdv-rn-input"}
+                              key={`rn-input${index}`}
+                              alt={"R-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rn_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rn-output${index}`}
-                          id={"thdv-rn-output"}
-                          alt={"R-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rn-output${index}`}
+                              id={"thdv-rn-output"}
+                              alt={"R-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -790,92 +832,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`sn-input${index}`}
-                          id={"thdv-sn-input"}
-                          alt={"S-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_sn_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`sn-input${index}`}
+                              id={"thdv-sn-input"}
+                              alt={"S-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_sn_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`sn-output${index}`}
-                          id={"thdv-sn-output"}
-                          alt={"S-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_sn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`sn-output${index}`}
+                              id={"thdv-sn-output"}
+                              alt={"S-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_sn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -940,92 +994,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`tn-input${index}`}
-                          id={"thdv-tn-input"}
-                          alt={"T-N"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_tn_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="t-n input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`tn-input${index}`}
+                              id={"thdv-tn-input"}
+                              alt={"T-N"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_tn_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="t-n input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`tn-output${index}`}
-                          id={"thdv-tn-output"}
-                          alt={"T-N"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_tn_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="t-n output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`tn-output${index}`}
+                              id={"thdv-tn-output"}
+                              alt={"T-N"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_tn_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="t-n output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1094,92 +1160,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rs-input${index}`}
-                          id={"thdv-rs-input"}
-                          alt={"R-S"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rs_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-s input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rs-input${index}`}
+                              id={"thdv-rs-input"}
+                              alt={"R-S"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rs_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-s input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rs-output${index}`}
-                          id={"thdv-rs-output"}
-                          alt={"R-S"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rs_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-s output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rs-output${index}`}
+                              id={"thdv-rs-output"}
+                              alt={"R-S"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rs_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-s output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1244,92 +1322,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`st-input${index}`}
-                          id={"thdv-st-input"}
-                          alt={"S-T"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_st_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-t input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`st-input${index}`}
+                              id={"thdv-st-input"}
+                              alt={"S-T"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_st_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-t input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`st-output${index}`}
-                          id={"thdv-st-output"}
-                          alt={"S-T"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_st_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="s-t output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`st-output${index}`}
+                              id={"thdv-st-output"}
+                              alt={"S-T"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_st_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="s-t output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1394,92 +1484,104 @@ export default function Thdv() {
           {/* Body */}
           <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
             <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rt-input${index}`}
-                          id={"thdv-rt-input"}
-                          alt={"R-T"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rt_Input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-t input">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+              {!onLoading ? (
+                <>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rt-input${index}`}
+                              id={"thdv-rt-input"}
+                              alt={"R-T"}
+                              title="Input"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rt_Input
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-t input">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataThdv.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          key={`rt-output${index}`}
-                          id={"thdv-rt-output"}
-                          alt={"R-T"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.thdv_rt_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id="r-t output">
-                    <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
+                  <div className="w-full h-full md:w-1/2">
+                    {signal ? (
+                      dataThdv.map((item, index) => {
+                        if (item.location_id === selectDev[0]) {
+                          return (
+                            <RadialDynamicGauge
+                              key={`rt-output${index}`}
+                              id={"thdv-rt-output"}
+                              alt={"R-T"}
+                              title="Output"
+                              value={
+                                item.location_id === selectDev[0]
+                                  ? item.thdv_rt_output
+                                  : 0
+                              }
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <div id="r-t output">
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
             </div>
           </div>
 
