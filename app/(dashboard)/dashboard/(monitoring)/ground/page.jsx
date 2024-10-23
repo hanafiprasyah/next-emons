@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
-import Loader from "@/loading";
 import Link from "next/link";
 import useSWR from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
 
 import dynamic from "next/dynamic";
+
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/GroundRadialGauge"),
   {
@@ -156,91 +156,114 @@ export default function Grounding() {
 
   // Function to fetch the API [REALTIME]
   const fetchGroundRealtime = async (url, tenant, locationid, start_date) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenant,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: start_date,
-        end_date: "",
-      }),
-    })
-      .then((res) => (res.ok ? res.json() : res.statusText))
-      .then((datas) => {
-        // Check response message
-        if (datas.message === "OK") {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenant,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Check response message
+      if (data.message === "OK") {
+        setSignal(true);
+
+        // Check if device list is not null
+        if (selectDev.length !== 0) {
           setSignal(true);
-          // Check if device list is not null
-          if (selectDev.length !== 0) {
+          // Check if data ground length is null
+          if (data.monitoring["data"]["datagrounds"][0] === []) {
+            // Give signal to offline, and set channel to unreachable
+            setOnLoading(false);
+            setSignal(false);
+            setChannel("Unreachable");
+          } else {
             setSignal(true);
-            // Check if data ground length is null
-            if (datas.monitoring["data"]["datagrounds"].length === 0) {
-              // Give signal to offline, and set channel to unreachable
+            // We will check the difference about last send_date from API and current date from NOW()
+            const currentDate = new Date();
+            const sendDate =
+              data.monitoring["data"]["datagrounds"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= 5) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Unreachable");
+              setChannel("Device signal interference");
             } else {
+              setDataGround(data.monitoring["data"]["datagrounds"]);
               setSignal(true);
-              // We will check the difference about last send_date from API and current date from NOW()
-              const currentDate = new Date();
-              const sendDate =
-                datas.monitoring["data"]["datagrounds"][0].send_date;
-              // format the send_date value
-              const isoConvSendDate = new Date(sendDate);
-              // count the diff
-              const diffTime = currentDate - isoConvSendDate;
-              // set the minutes value
-              const minutes = Math.floor(diffTime / 60000);
-
-              // Set offline status if the diff time more than 5 minutes from NOW()
-              if (minutes >= 5) {
-                setOnLoading(false);
-                setSignal(false);
-                setChannel("Device signal interference");
-              } else {
-                setDataGround(datas.monitoring["data"]["datagrounds"]);
-                setSignal(true);
-                setChannel("Stable");
-                setOnLoading(false);
-              }
+              setChannel("Stable");
+              setOnLoading(false);
             }
           }
-          // if device list is null?
-          else {
-            setSignal(false);
-            setChannel("Cannot get device location");
-            setOnLoading(false);
-          }
         }
-        // If response message is not OK
+        // if device list is null?
         else {
           setSignal(false);
-          setDataGround([]);
+          setChannel("Cannot get device location");
+          setOnLoading(false);
         }
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
+      }
+      // If response message is not OK
+      else {
+        console.log("message is not ok");
+        setSignal(false);
+        setDataGround([]);
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchGroundRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
   // SWR
   const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
-    ([url, localTenant, locationid, start_date]) =>
-      fetchGroundRealtime(url, localTenant, locationid, start_date),
+    async ([url, localTenant, locationid, start_date]) => {
+      try {
+        return await fetchGroundRealtime(
+          url,
+          localTenant,
+          locationid,
+          start_date
+        );
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("Error SWR Fetch data: ", err);
+        }
+        throw err;
+      }
+    },
     {
       isPaused: () =>
         selectDev.length === 0 ||
