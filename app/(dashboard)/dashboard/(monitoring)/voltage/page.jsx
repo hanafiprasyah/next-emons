@@ -233,7 +233,6 @@ export default function Voltage() {
       }
       // If response message is not OK
       else {
-        console.log("message is not ok");
         setSignal(false);
         setDataVolt([]);
       }

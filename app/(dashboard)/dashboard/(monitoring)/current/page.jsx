@@ -233,7 +233,6 @@ export default function Current() {
       }
       // If response message is not OK
       else {
-        console.log("message is not ok");
         setSignal(false);
         setDataCurrent([]);
       }

@@ -238,7 +238,6 @@ export default function Frequency() {
       }
       // If response message is not OK
       else {
-        console.log("message is not ok");
         setSignal(false);
         setDataFreq([]);
       }
