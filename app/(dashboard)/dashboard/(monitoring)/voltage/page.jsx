@@ -72,6 +72,7 @@ export default function Voltage() {
 
   const handleResetButton = (e) => {
     e.preventDefault();
+    setSignal(false);
     setOnLoading(true);
     setSelectLoc([]);
     setSelectDev([]);
@@ -181,8 +182,10 @@ export default function Voltage() {
       .then((datas) => {
         // Check response message
         if (datas.message === "OK") {
+          setSignal(true);
           // Check if device list is not null
           if (selectDev.length !== 0) {
+            setSignal(true);
             // Check if data voltage length is null
             if (datas.monitoring["data"]["datavoltages"].length === 0) {
               // Give signal to offline, and set channel to unreachable
@@ -190,6 +193,7 @@ export default function Voltage() {
               setSignal(false);
               setChannel("Unreachable");
             } else {
+              setSignal(true);
               // We will check the difference about last send_date from API and current date from NOW()
               const currentDate = new Date();
               const sendDate =
@@ -223,6 +227,7 @@ export default function Voltage() {
         }
         // If response message is not OK
         else {
+          setSignal(false);
           setDataVolt([]);
         }
       })
