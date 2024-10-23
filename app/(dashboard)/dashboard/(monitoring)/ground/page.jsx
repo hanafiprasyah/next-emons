@@ -194,7 +194,7 @@ export default function Grounding() {
         if (selectDev.length !== 0) {
           setSignal(true);
           // Check if data ground length is null
-          if (data.monitoring["data"]["datagrounds"][0] === []) {
+          if (data.monitoring["data"]["datagrounds"][0] === null) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
