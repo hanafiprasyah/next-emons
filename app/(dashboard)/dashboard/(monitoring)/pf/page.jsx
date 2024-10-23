@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
-import Loader from "@/loading";
 import Link from "next/link";
 import useSWR from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
 
 import dynamic from "next/dynamic";
+
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/PowerFactorRadialGauge"),
   {
@@ -31,6 +31,7 @@ export default function PowerFactor() {
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
   const [channel, setChannel] = useState("Connecting..");
+  const [onLoading, setOnLoading] = useState(true);
 
   // Used to set the /tool/dataside API
   const [dataLoc, setDataLoc] = useState([]);
@@ -57,6 +58,7 @@ export default function PowerFactor() {
   // Scripts
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectLoc([code, name]);
     isShowDev(true);
     setSelectDev([]);
@@ -64,11 +66,14 @@ export default function PowerFactor() {
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
+    setOnLoading(true);
     setSelectDev([code, name]);
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
+    setSignal(false);
+    setOnLoading(true);
     setSelectLoc([]);
     setSelectDev([]);
     isShowDev(true);
@@ -151,83 +156,108 @@ export default function PowerFactor() {
 
   // Function to fetch the API [REALTIME]
   const fetchPFRealtime = async (url, tenant, locationid, start_date) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenant,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: start_date,
-        end_date: "",
-      }),
-    })
-      .then((res) => (res.ok ? res.json() : res.statusText))
-      .then((datas) => {
-        // Check response message
-        if (datas.message === "OK") {
-          // Check if device list is not null
-          if (selectDev.length !== 0) {
-            // Check if data pf length is null
-            if (datas.monitoring["data"]["dataPowerFactors"].length === 0) {
-              // Give signal to offline, and set channel to unreachable
-              setSignal(false);
-              setChannel("Unreachable");
-            } else {
-              // We will check the difference about last send_date from API and current date from NOW()
-              const currentDate = new Date();
-              const sendDate =
-                datas.monitoring["data"]["dataPowerFactors"][0].send_date;
-              // format the send_date value
-              const isoConvSendDate = new Date(sendDate);
-              // count the diff
-              const diffTime = currentDate - isoConvSendDate;
-              // set the minutes value
-              const minutes = Math.floor(diffTime / 60000);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenant,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: "",
+        }),
+      });
 
-              // Set offline status if the diff time more than 5 minutes from NOW()
-              if (minutes >= 5) {
-                setSignal(false);
-                setChannel("Device signal interference");
-              } else {
-                setDataPF(datas.monitoring["data"]["dataPowerFactors"]);
-                setSignal(true);
-                setChannel("Stable");
-              }
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Check response message
+      if (data.message === "OK") {
+        setSignal(true);
+
+        // Check if device list is not null
+        if (selectDev.length !== 0) {
+          setSignal(true);
+          // Check if data ground length is null
+          if (data.monitoring["data"]["dataPowerFactors"][0] === []) {
+            // Give signal to offline, and set channel to unreachable
+            setOnLoading(false);
+            setSignal(false);
+            setChannel("Unreachable");
+          } else {
+            setSignal(true);
+            // We will check the difference about last send_date from API and current date from NOW()
+            const currentDate = new Date();
+            const sendDate =
+              data.monitoring["data"]["dataPowerFactors"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= 5) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Device signal interference");
+            } else {
+              setDataPF(data.monitoring["data"]["dataPowerFactors"]);
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
             }
           }
-          // if device list is null?
-          else {
-            setSignal(false);
-            setChannel("Cannot get device location");
-          }
         }
-        // If response message is not OK
+        // if device list is null?
         else {
-          setDataPF([]);
+          setSignal(false);
+          setChannel("Cannot get device location");
+          setOnLoading(false);
         }
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
+      }
+      // If response message is not OK
+      else {
+        setSignal(false);
+        setDataPF([]);
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchPFRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
   // SWR
   const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
-    ([url, localTenant, locationid, start_date]) =>
-      fetchPFRealtime(url, localTenant, locationid, start_date),
+    async ([url, localTenant, locationid, start_date]) => {
+      try {
+        return await fetchPFRealtime(url, localTenant, locationid, start_date);
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("Error SWR Fetch data: ", err);
+        }
+        throw err;
+      }
+    },
     {
       isPaused: () =>
         selectDev.length === 0 ||
@@ -235,11 +265,8 @@ export default function PowerFactor() {
         (hoursAgo == "" && hoursAgo == undefined)
           ? true
           : false,
-      refreshInterval: 1000,
+      refreshInterval: 500,
       focusThrottleInterval: 3000,
-      errorRetryInterval: 1000,
-      errorRetryCount: 10,
-      shouldRetryOnError: true,
       keepPreviousData: true,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -322,7 +349,6 @@ export default function PowerFactor() {
         // If site response is OK
         if (dataSite.message == "OK") {
           setDataLoc(dataSite.site["data"]);
-          setChannel("Almost done..");
 
           // Scrap the first index data
           const firstIndexSite = dataSite.site["data"][0];
@@ -352,7 +378,6 @@ export default function PowerFactor() {
             // device location response is OK
             if (dataLocation.message == "OK") {
               setDataDev(dataLocation.loc["data"]);
-              setChannel("Ensure you are on the right place..");
 
               // Scrap the first index data
               const firstIndexDev = dataLocation.loc["data"][0];
@@ -361,8 +386,10 @@ export default function PowerFactor() {
                 setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
               }
 
-              setSignal(true);
+              setOnLoading(true);
+              setChannel("Validating data..");
             } else {
+              setOnLoading(false);
               setSignal(false);
               setChannel("Failed to load resource");
             }
@@ -615,154 +642,164 @@ export default function PowerFactor() {
       {/* End Page Heading */}
 
       {/* PF gauge list */}
-      <>
-        {/* PF Input and Output */}
-        <div className="flex flex-col mt-2 mb-2 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
-          {/* Header */}
-          <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
-            <div>
-              <span
-                className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
-                  signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
-                } dark:text-neutral-200`}
-              >
-                {signal ? "Online" : "Offline"}
-              </span>
-            </div>
-          </div>
-
-          {/* Body */}
-          <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
-            <div className="flex flex-wrap items-center justify-center md:justify-evenly">
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataPF.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          id={"pf-input"}
-                          key={"pf-input"}
-                          alt={"Power Factor"}
-                          title="Input"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.cosphi_input
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id={"pfInput"}>
-                    <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="w-full h-full md:w-1/2">
-                {signal ? (
-                  dataPF.map((item, index) => {
-                    if (item.location_id === selectDev[0]) {
-                      return (
-                        <RadialDynamicGauge
-                          id={"pf-output"}
-                          key={"pf-output"}
-                          alt={"Power Factor"}
-                          title="Output"
-                          value={
-                            item.location_id === selectDev[0]
-                              ? item.cosphi_output
-                              : 0
-                          }
-                        />
-                      );
-                    }
-                    return null;
-                  })
-                ) : (
-                  <div id={"pfOutput"}>
-                    <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                      <svg
-                        className="shrink-0 size-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" x2="12" y1="2" y2="12"></line>
-                      </svg>
-                      Device is not connected
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
-            <div>
-              <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
-                <span className="relative flex w-2 h-2">
-                  <span
-                    className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
-                      signal ? "bg-sky-400" : "bg-red-400"
-                    }`}
-                  ></span>
-                  <span
-                    className={`relative inline-flex w-2 h-2 rounded-full ${
-                      signal ? "bg-sky-500" : "bg-red-500"
-                    }`}
-                  ></span>
-                </span>
-                {signal
-                  ? "Updated every seconds"
-                  : "Cannot update data right now"}
-              </span>
-            </div>
-            <div>
-              <label
-                htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
-              >
-                <span
-                  className={`relative z-10 text-gray-800 peer-checked:hidden ${
-                    channel == "Stable"
-                      ? "dark:text-emerald-400"
-                      : "dark:text-gray-500"
-                  }`}
-                >
-                  {channel}
-                </span>
-              </label>
-            </div>
+      {/* PF Input and Output */}
+      <div className="flex flex-col mt-2 mb-2 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        {/* Header */}
+        <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
+          <div>
+            <span
+              className={`hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full ${
+                signal ? "dark:bg-emerald-700" : "dark:bg-red-700"
+              } dark:text-neutral-200`}
+            >
+              {signal ? "Online" : "Offline"}
+            </span>
           </div>
         </div>
-      </>
+
+        {/* Body */}
+        <div className="p-3 pt-0 text-center md:px-5 md:pb-5">
+          <div className="flex flex-wrap items-center justify-center md:justify-evenly">
+            {!onLoading ? (
+              <>
+                <div className="w-full h-full md:w-1/2">
+                  {signal ? (
+                    dataPF.map((item, index) => {
+                      if (item.location_id === selectDev[0]) {
+                        return (
+                          <RadialDynamicGauge
+                            id={"pf-input"}
+                            key={"pf-input"}
+                            alt={"Power Factor"}
+                            title="Input"
+                            value={
+                              item.location_id === selectDev[0]
+                                ? item.cosphi_input
+                                : 0
+                            }
+                          />
+                        );
+                      }
+                      return null;
+                    })
+                  ) : (
+                    <div id={"pfInput"}>
+                      <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                        <svg
+                          className="shrink-0 size-3"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                          <line x1="12" x2="12" y1="2" y2="12"></line>
+                        </svg>
+                        Device is not connected
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="w-full h-full md:w-1/2">
+                  {signal ? (
+                    dataPF.map((item, index) => {
+                      if (item.location_id === selectDev[0]) {
+                        return (
+                          <RadialDynamicGauge
+                            id={"pf-output"}
+                            key={"pf-output"}
+                            alt={"Power Factor"}
+                            title="Output"
+                            value={
+                              item.location_id === selectDev[0]
+                                ? item.cosphi_output
+                                : 0
+                            }
+                          />
+                        );
+                      }
+                      return null;
+                    })
+                  ) : (
+                    <div id={"pfOutput"}>
+                      <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                        <svg
+                          className="shrink-0 size-3"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                          <line x1="12" x2="12" y1="2" y2="12"></line>
+                        </svg>
+                        Device is not connected
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div
+                className="animate-spin inline-block size-4 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                role="status"
+                aria-label="loading"
+              >
+                <span className="sr-only">Loading...</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex flex-col px-5 py-3 text-center border-t border-gray-200 sm:flex-row sm:justify-between sm:items-center gap-y-1 sm:gap-y-0 gap-x-2 sm:text-start dark:border-neutral-700">
+          <div>
+            <span className="hidden md:inline-flex items-center gap-x-1.5 py-1 px-2.5 font-medium rounded-full  text-xs text-gray-500 dark:text-neutral-500">
+              <span className="relative flex w-2 h-2">
+                <span
+                  className={`absolute inline-block w-full h-full rounded-full opacity-75 animate-ping shrink-0 ${
+                    signal ? "bg-sky-400" : "bg-red-400"
+                  }`}
+                ></span>
+                <span
+                  className={`relative inline-flex w-2 h-2 rounded-full ${
+                    signal ? "bg-sky-500" : "bg-red-500"
+                  }`}
+                ></span>
+              </span>
+              {signal
+                ? "Updated every seconds"
+                : "Cannot update data right now"}
+            </span>
+          </div>
+          <div>
+            <label
+              htmlFor="hs-pro-dupccn1"
+              className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+            >
+              <span
+                className={`relative z-10 text-gray-800 peer-checked:hidden ${
+                  channel == "Stable"
+                    ? "dark:text-emerald-400"
+                    : "dark:text-gray-500"
+                }`}
+              >
+                {channel}
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
       {/* End PF gauge list */}
 
       <PrelineScript />

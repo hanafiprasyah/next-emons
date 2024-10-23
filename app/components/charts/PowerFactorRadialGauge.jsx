@@ -196,7 +196,7 @@ const Default = ({ id, key, alt, title, value }) => {
                     <AnnotationsDirective>
                       <AnnotationDirective
                         angle={0}
-                        radius={value >= 3 || value <= 7 ? "-30%" : "30%"}
+                        radius={value >= 0.25 && value <= 0.75 ? "30%" : "-30%"}
                         zIndex="1"
                         textStyle={{ size: "10px" }}
                         content={`<div><div><span> ${
