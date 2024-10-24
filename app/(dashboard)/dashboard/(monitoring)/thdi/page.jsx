@@ -286,8 +286,13 @@ export default function Thdi() {
         if (error.status === 404) return;
         // TODO: Disable retry for spesific key
         if (
-          key ===
-          ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo]
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/getmonitoring",
+            localTenant,
+            selectDev[0],
+            hoursAgo,
+          ])
         )
           return;
         // TODO: Only 10 times retry
