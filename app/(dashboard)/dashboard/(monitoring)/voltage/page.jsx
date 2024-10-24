@@ -23,9 +23,7 @@ export default function Voltage() {
   const [localTenant, setLocalTenant] = useState("");
 
   // Dates
-  const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
-  const [differentTime, setDifferentTime] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -42,9 +40,6 @@ export default function Voltage() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
-  // Used to set the data on site
-  const [dataVolt, setDataVolt] = useState([]);
-
   /**
    * Used to conditioning the device dropdown pointer event
    * if location === [] (null), then disable the device dropdown
@@ -57,6 +52,7 @@ export default function Voltage() {
   // Scripts
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
+    setSignal(false);
     setOnLoading(true);
     setSelectLoc([code, name]);
     isShowDev(true);
@@ -65,6 +61,7 @@ export default function Voltage() {
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
+    setSignal(false);
     setOnLoading(true);
     setSelectDev([code, name]);
   };
@@ -217,10 +214,10 @@ export default function Voltage() {
               setSignal(false);
               setChannel("Device signal interference");
             } else {
-              setDataVolt(data.monitoring["data"]["datavoltages"]);
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
+              return data.monitoring["data"]["datavoltages"];
             }
           }
         }
@@ -234,7 +231,11 @@ export default function Voltage() {
       // If response message is not OK
       else {
         setSignal(false);
-        setDataVolt([]);
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "Error in fetchVoltageRealtime: Response Message is Not OK"
+          );
+        }
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
@@ -269,9 +270,8 @@ export default function Voltage() {
         (hoursAgo == "" && hoursAgo == undefined)
           ? true
           : false,
-      refreshInterval: 500,
-      focusThrottleInterval: 3000,
-      keepPreviousData: true,
+      refreshInterval: 3500,
+      revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
         setChannel("Unstable network, please wait..");
@@ -310,9 +310,7 @@ export default function Voltage() {
     // const diffTime = dateIns - isoConvDate;
     // const minutes = Math.floor((diffTime % 3600000) / 60000);
     if (getFormatedCurrentDate.startsWith("202")) {
-      setCurrentDate(getFormatedCurrentDate);
       setHoursAgo(getHoursAgo);
-      // setDifferentTime(diffTime);
     }
     // if (process.env.NODE_ENV === "development") {
     //   console.log(
@@ -676,7 +674,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -719,7 +717,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -839,7 +837,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -882,7 +880,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1002,7 +1000,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1045,7 +1043,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1168,7 +1166,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1211,7 +1209,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1331,7 +1329,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1374,7 +1372,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1494,7 +1492,7 @@ export default function Voltage() {
                 <>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
@@ -1537,7 +1535,7 @@ export default function Voltage() {
                   </div>
                   <div className="w-full h-full md:w-1/2">
                     {signal ? (
-                      dataVolt.map((item, index) => {
+                      data.map((item, index) => {
                         if (item.location_id === selectDev[0]) {
                           return (
                             <RadialDynamicGauge
