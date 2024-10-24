@@ -183,13 +183,12 @@ function LoginForm() {
                 }
 
                 if (dataLoggedIn.message === "Login successfully") {
-                  setLoading(false);
-                  setLoggedIn(true);
                   localStorage.setItem(
                     "userName",
                     `${dataLoggedIn.datalogin["decript"]}`
                   );
                   localStorage.setItem("tenant", `${pureTenant}`);
+                  router.replace("/dashboard/");
                 } else {
                   setLoading(false);
                   setLoggedIn(false);
@@ -202,16 +201,25 @@ function LoginForm() {
   }
 
   useEffect(() => {
+    if (isLoggedIn) {
+      router.replace("/dashboard/");
+    }
+  }, [router, isLoggedIn]);
+
+  useEffect(() => {
     const storedLocalValue = localStorage.getItem("userName");
 
     if (storedLocalValue) {
+      setLoading(false);
+      setLoggedIn(true);
+
       // if (process.env.NODE_ENV === "development") {
       //   console.log("Local key: " + storedLocalValue);
       // }
-
-      isLoggedIn ? router.replace("/dashboard/") : null;
+    } else {
+      router.replace("/login/");
     }
-  }, [router, isLoggedIn]);
+  }, [router]);
 
   return (
     <>

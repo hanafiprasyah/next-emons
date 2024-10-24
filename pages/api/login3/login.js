@@ -12,9 +12,15 @@ export default async function handler(req, res) {
   }
 
   const { tenant, userName, password, salt } = JSON.parse(req.body);
-  const oneDay = 24 * 60 * 60 * 1000;
   const secretKey = process.env.CRYPT_SECRET;
   const encryptedCookieString = encryptCookies(tenant, secretKey);
+
+  const expiresAt = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000); // 1 hours from now
+  const expiresAtUTC = expiresAt.toUTCString();
+
+  const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
+
+  let data;
 
   try {
     const response = await fetch(
@@ -53,24 +59,23 @@ export default async function handler(req, res) {
       }
       throw new Error("Service Unavailable");
     } else {
-      const expiresAt = new Date(Date.now() + oneDay).toUTCString();
       res.setHeader(
         "Set-Cookie",
-        `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; Secure=${
-          process.env.NODE_ENV === "production"
-        }; Expires=${expiresAt}`
+        `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; ${secureFlag}; Expires=${expiresAtUTC}`
       );
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        res
+          .status(response.status)
+          .json({ message: "Login failed", datalogin: null });
+      }
+
       res
         .status(response.status)
         .json({ message: "Login successfully", datalogin: data });
-
-      // If the token activated from BE, we will use this code to store token securely
-      // const { csrfToken } = await response.json(); // Get token from API response
-      // localStorage.setItem("csrfToken", csrfToken); // Store in-memory or localStorage
-      // When FE send it to BE to validate the token, use this code on client side
-      // const csrfToken = localStorage.getItem('csrfToken'); // Retrieve token
     }
   } catch (e) {
     if (process.env.NODE_ENV === "development") {

@@ -7,10 +7,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
+
   try {
     res.setHeader(
       "Set-Cookie",
-      "enc-header-site=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+      `enc-header-site=; Path=/; HttpOnly; ${secureFlag}; SameSite=Strict; Max-Age=0`
     );
     res.status(200).json({ message: "User signed out successfully" });
   } catch (e) {

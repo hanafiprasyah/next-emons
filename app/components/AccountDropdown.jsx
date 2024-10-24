@@ -21,7 +21,6 @@ export default function AccountDropdown() {
     try {
       const response = await fetch("/api/logout/logout-user", {
         method: "POST",
-        credentials: "include",
       });
 
       if (response.ok) {
@@ -29,7 +28,7 @@ export default function AccountDropdown() {
         setLoading(false);
         // TODO: Clear all localStorage key
         window.localStorage.clear();
-        router.replace("/login");
+        router.refresh();
       }
     } catch (error) {
       setLoading(false);
