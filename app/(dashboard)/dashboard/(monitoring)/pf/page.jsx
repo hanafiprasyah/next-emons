@@ -243,6 +243,13 @@ export default function PowerFactor() {
     }
   };
 
+  // Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
   // SWR
   const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
@@ -268,6 +275,21 @@ export default function PowerFactor() {
       loadingTimeout: 6000,
       onLoadingSlow: () => {
         setChannel("Unstable network, please wait..");
+      },
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          key ===
+          ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo]
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
       },
     }
   );
