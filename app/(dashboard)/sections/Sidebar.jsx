@@ -141,7 +141,6 @@ export default function DashboardSidebar() {
                         : "dark:bg-neutral-800"
                     }`}
                           href="/dashboard/"
-                          prefetch={true}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -171,7 +170,6 @@ export default function DashboardSidebar() {
                         : "dark:bg-neutral-800"
                     }`}
                           href="/dashboard/outline/"
-                          prefetch={true}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -220,7 +218,6 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/voltage"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -247,7 +244,6 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/current"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -273,7 +269,6 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/ground"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -300,7 +295,6 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/frequency/"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -327,7 +321,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     onClick={handleDisableClick.bind(null)}
                     href="/dashboard/temperature/"
-                    // prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -357,7 +350,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     href="/dashboard/energy"
                     // onClick={handleDisableClick.bind(null)}
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -384,7 +376,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/pf/"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -411,7 +402,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/thdv/"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -438,7 +428,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     // onClick={handleDisableClick.bind(null)}
                     href="/dashboard/thdi/"
-                    prefetch={true}
                   >
                     <Image
                       priority={true}
@@ -477,7 +466,6 @@ export default function DashboardSidebar() {
                     aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     href="/dashboard/alarm-logger"
-                    prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <svg
@@ -511,7 +499,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     onClick={handleDisableClick.bind(null)}
                     href="/dashboard/database-logger"
-                    prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <svg
@@ -548,7 +535,6 @@ export default function DashboardSidebar() {
                     aria-label="Toggle navigation"
                     onClick={handleDisableClick.bind(null)}
                     href="/dashboard/sd-card-logger"
-                    prefetch={true}
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
                       <Image
