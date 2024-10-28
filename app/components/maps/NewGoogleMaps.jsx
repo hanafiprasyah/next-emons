@@ -96,8 +96,8 @@ const Default = () => {
       }
     },
     {
-      isPaused: () => (localTenant === "" ? true : false),
-      refreshInterval: 3500,
+      isPaused: () => (localTenant === "" && !deviceStatus ? true : false),
+      refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -113,8 +113,8 @@ const Default = () => {
           JSON.stringify([
             "/api/tools/location/getlocation",
             localTenant,
-            selectDev[0],
             "2023-01-01 00:00:00",
+            "2024-12-30 23:59:00",
           ])
         )
           return;
@@ -147,8 +147,6 @@ const Default = () => {
       setLocalTenant("");
     }
   }, [data, error]);
-
-  console.log(data?.loc["data"]);
 
   if (error) {
     return (
