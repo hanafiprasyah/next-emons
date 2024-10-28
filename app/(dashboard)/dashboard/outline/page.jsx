@@ -113,7 +113,7 @@ function useMonitoring(localTenant, locationid, start_date) {
         const minutes = Math.floor(diffTime / 60000);
 
         // Set offline status if the diff time more than 5 minutes from NOW()
-        if (minutes >= 5) {
+        if (minutes >= 1) {
           return {
             monitoring: null,
             isMonitoringError: error,

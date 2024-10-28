@@ -209,7 +209,7 @@ export default function PowerFactor() {
             const minutes = Math.floor(diffTime / 60000);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= 5) {
+            if (minutes >= 1) {
               setOnLoading(false);
               setSignal(false);
               setChannel("Device signal interference");
