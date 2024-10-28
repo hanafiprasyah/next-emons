@@ -14,7 +14,6 @@ const Default = () => {
   const [localTenant, setLocalTenant] = useState("");
 
   // Used to set the /tool/dataLocation API
-  const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
@@ -61,6 +60,7 @@ const Default = () => {
       const data = await response.json();
       return data;
     } catch (err) {
+      setDeviceStatus(false);
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchDeviceRealtime: ", err);
       }
@@ -97,12 +97,31 @@ const Default = () => {
     },
     {
       isPaused: () => (localTenant === "" ? true : false),
-      refreshInterval: 500,
-      focusThrottleInterval: 1000,
-      keepPreviousData: true,
+      refreshInterval: 3500,
+      revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
         setChannel("Unstable network, please wait..");
+      },
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/location/getlocation",
+            localTenant,
+            selectDev[0],
+            "2023-01-01 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
       },
     }
   );
@@ -111,15 +130,16 @@ const Default = () => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
     if (currentUser) {
-      setDeviceStatus(true);
       setLocalTenant(`${currentUser.toString()}`);
 
       if (data) {
         setDeviceStatus(true);
-        setDataDev(data.loc["data"]);
         const firstIndexSite = data.loc["data"][0];
         setSelectDev([firstIndexSite["lat"], firstIndexSite["lot"]]);
       } else if (error) {
+        setDeviceStatus(false);
+        setSelectDev([]);
+      } else {
         setDeviceStatus(false);
       }
     } else {
@@ -127,6 +147,8 @@ const Default = () => {
       setLocalTenant("");
     }
   }, [data, error]);
+
+  console.log(data?.loc["data"]);
 
   if (error) {
     return (
@@ -188,11 +210,11 @@ const Default = () => {
           clickableIcons={true}
           zoomControl={true}
           fullscreenControl={true}
-          className="w-full h-[calc(100vh-168px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
+          className="w-full h-[calc(100dvh-168px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
         >
           {localTenant.length != 0
-            ? dataDev.map((location) =>
-                location.parent != 0 ? (
+            ? data?.loc["data"].map((location) =>
+                location.parent != 0 && deviceStatus ? (
                   <DynamicMarkerWithInfo
                     key={location.code}
                     locationid={location.code}
