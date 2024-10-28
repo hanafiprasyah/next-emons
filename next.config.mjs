@@ -2,16 +2,7 @@
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-const cspHeader = isDevelopment
-  ? `
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval';
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' data:;
-    font-src 'self';
-    connect-src 'self' http://localhost:3000;
-`
-  : `
+const cspHeader = `
   default-src 'self';
   script-src 'self' https://maps.googleapis.com https://maps.gstatic.com 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -31,7 +22,7 @@ const nextConfig = {
   // Enable gzip compression
   compress: true,
   // Helps detect potential issues in React components
-  reactStrictMode: true,
+  reactStrictMode: isDevelopment ? true : false,
   // Optional: Avoid trailing slashes in URLs if not needed
   trailingSlash: true,
   // Hide "x-powered-by" header for security
@@ -39,7 +30,7 @@ const nextConfig = {
   // Optimize fonts for performance
   optimizeFonts: true,
   // Image opt on production, disable it on development mode
-  // output: "standalone",
+  output: "standalone",
   images: {
     // Use modern formats for images
     formats: ["image/webp", "image/avif"],
@@ -56,30 +47,32 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   async headers() {
-    return [
-      {
-        source: "/(.*)", // Apply these headers globally
-        headers: [
+    return !isDevelopment
+      ? [
           {
-            key: "X-Frame-Options",
-            value: "SAMEORIGIN", // Protect against clickjacking
+            source: "/(.*)", // Apply these headers globally
+            headers: [
+              {
+                key: "X-Frame-Options",
+                value: "SAMEORIGIN", // Protect against clickjacking
+              },
+              {
+                key: "X-Content-Type-Options",
+                value: "nosniff", // Prevent MIME type sniffing
+              },
+              {
+                key: "Strict-Transport-Security",
+                value: "max-age=31536000; includeSubDomains; preload", // Force HTTPS
+              },
+              // disable for development only
+              {
+                key: "Content-Security-Policy",
+                value: cspHeader.replace(/\n/g, ""),
+              },
+            ],
           },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff", // Prevent MIME type sniffing
-          },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload", // Force HTTPS
-          },
-          // disable for development only
-          // {
-          //   key: "Content-Security-Policy",
-          //   value: cspHeader.replace(/\n/g, ""),
-          // },
-        ],
-      },
-    ];
+        ]
+      : [];
   },
   async redirects() {
     return [
