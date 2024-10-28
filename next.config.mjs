@@ -1,4 +1,30 @@
 /** @type {import('next').NextConfig} */
+
+const isDevelopment = process.env.NODE_ENV === "development";
+
+const cspHeader = isDevelopment
+  ? `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data:;
+    font-src 'self';
+    connect-src 'self' http://localhost:3000;
+`
+  : `
+  default-src 'self';
+  script-src 'self' https://maps.googleapis.com https://maps.gstatic.com 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' blob: data: https://maps.gstatic.com https://*.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'none';
+  connect-src 'self' https://maps.googleapis.com https://*.googleapis.com;
+  upgrade-insecure-requests;
+`;
+
 const nextConfig = {
   // Ensure cookies are sent properly between domains
   crossOrigin: "use-credentials",
@@ -12,8 +38,8 @@ const nextConfig = {
   poweredByHeader: false,
   // Optimize fonts for performance
   optimizeFonts: true,
-  // Image opt on production
-  output: "standalone",
+  // Image opt on production, disable it on development mode
+  // output: "standalone",
   images: {
     // Use modern formats for images
     formats: ["image/webp", "image/avif"],
@@ -46,10 +72,10 @@ const nextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains; preload", // Force HTTPS
           },
+          // disable for development only
           // {
           //   key: "Content-Security-Policy",
-          //   value:
-          //     "default-src 'self'; img-src 'self' *.emons.id https:; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline';", // Secure content loading
+          //   value: cspHeader.replace(/\n/g, ""),
           // },
         ],
       },
@@ -64,10 +90,6 @@ const nextConfig = {
       },
     ];
   },
-  // experimental: {
-  //   swcMinify: true,
-  //   optimizeCss: true,
-  // },
 };
 
 export default nextConfig;
