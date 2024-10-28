@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
 import Link from "next/link";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
 import dynamic from "next/dynamic";
 
