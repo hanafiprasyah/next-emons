@@ -38,7 +38,7 @@ export default async function handler(req, res) {
           "Content-Security-Policy":
             "default-src 'self'; script-src 'self'; object-src 'none';",
           "X-Content-Type-Options": "nosniff",
-          "X-Frame-Options": "DENY",
+          "X-Frame-Options": "SAMEORIGIN",
           "X-XSS-Protection": "1; mode=block",
           "X-API-Version": "1.0.0",
           tenant: tenant,
