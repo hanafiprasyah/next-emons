@@ -19,12 +19,17 @@ export const metadata = {
   description: "Help you monitoring your electrical in real time!",
   referrer: "origin-when-cross-origin",
   alternates: {
-    canonical: "https://emons.id/",
+    canonical: "https://emons.id",
+  },
+  bookmarks: ["https://emons.id/login"],
+  appleWebApp: {
+    title: "EMONS | Electrical Monitoring System",
+    statusBarStyle: "black-translucent",
   },
   openGraph: {
     title: "EMONS | Electrical Monitoring System",
     description: "Help you monitoring your electrical in real time!",
-    url: "https://emons.id/",
+    url: "https://emons.id",
     type: "website",
   },
   keywords: [
@@ -69,7 +74,7 @@ export const metadata = {
     },
     {
       name: "Electrical Monitoring System",
-      url: "https://emons.id/",
+      url: "https://emons.id",
     },
   ],
   creator: "Muhammad Hanafi Prasyah",
@@ -84,6 +89,8 @@ export const metadata = {
   category: "technology",
   verification: {
     google: "google",
+    yandex: "yandex",
+    yahoo: "yahoo",
   },
 };
 
