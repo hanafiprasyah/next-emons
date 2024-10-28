@@ -494,8 +494,8 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
+                    // data-hs-overlay="#hs-pro-sidebar"
+                    // aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     onClick={handleDisableClick.bind(null)}
                     href="/dashboard/database-logger"
@@ -530,8 +530,8 @@ export default function DashboardSidebar() {
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
+                    // data-hs-overlay="#hs-pro-sidebar"
+                    // aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
                     onClick={handleDisableClick.bind(null)}
                     href="/dashboard/sd-card-logger"
