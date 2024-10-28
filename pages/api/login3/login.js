@@ -2,8 +2,9 @@
 
 import { NextResponse, NextRequest } from "next/server";
 import { encryptCookies } from "@/lib/helper/cookie-encryption";
+import rateLimitMiddleware from "../../utils/rateLimit";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     if (process.env.NODE_ENV === "development") {
       return res.status(405).json({ error: "Method not allowed" });
@@ -84,3 +85,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export default rateLimitMiddleware(handler);
