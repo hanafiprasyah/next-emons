@@ -3,7 +3,7 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import MonitoringPicture from "../../../public/images/monitoring-system.jpg";
+import MonitoringPicture from "../../../public/images/user-profile.png";
 import AccountDropdown from "@/components/AccountDropdown";
 // import NotificationDropdown from "@/components/NotificationDropdown";
 
@@ -147,9 +147,9 @@ export default function DashboardHeader() {
                 {/* Set the user image from API */}
                 <Image
                   priority={true}
-                  width={500}
-                  height={500}
-                  className="flex-shrink-0 size-[38px] rounded-full"
+                  width={40}
+                  height={40}
+                  className="flex-shrink-0 rounded-full aspect-auto"
                   src={MonitoringPicture}
                   alt="EMONS | Electrical Monitoring System"
                 />
