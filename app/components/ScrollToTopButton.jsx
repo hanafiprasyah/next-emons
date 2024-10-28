@@ -41,6 +41,8 @@ export default function ScrollToTopButton() {
       } transition duration-300 ease-in-out`}
     >
       <button
+        aria-label="Scroll to top"
+        title="Scroll to top"
         type="button"
         onClick={scrollToTop}
         className="flex flex-shrink-0 justify-center items-center gap-2 size-[38px] text-sm font-semibold rounded-lg border border-transparent bg-blue-600/50 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none transition duration-200 ease-in-out"

@@ -3,7 +3,6 @@
 import React from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
-import Link from "next/link";
 import Maps from "@/components/maps/NewGoogleMaps";
 
 export default function DashboardMaps() {
@@ -29,12 +28,15 @@ export default function DashboardMaps() {
                     {/* Total Device */}
                     <button
                       type="button"
+                      aria-label="Device list button"
+                      title="Device List"
                       className="hs-tab-active:after:bg-stone-800 pointer-events-none hs-tab-active:text-stone-800 px-2.5 py-1.5 mb-2 relative inline-flex items-center gap-x-2 hover:bg-stone-100 text-stone-500 hover:text-stone-800 text-xs md:text-sm rounded-lg disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-stone-100 after:absolute after:-bottom-2 after:inset-x-0 after:z-10 after:h-0.5 after:pointer-events-none dark:hs-tab-active:text-neutral-200 dark:hs-tab-active:after:bg-emerald-400 dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 active"
                       id="hs-pro-tabs-dtsch-item-revenue"
                       aria-selected="true"
                       data-hs-tab="#hs-pro-tabs-dtsch-revenue"
                       aria-controls="hs-pro-tabs-dtsch-revenue"
                       role="tab"
+                      tabIndex="0" // Make the button accessible via keyboard
                     >
                       Device(s) Map
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-teal-800 bg-teal-100 rounded-full gap-x-1 dark:bg-teal-500/10 dark:text-teal-500">
@@ -50,7 +52,14 @@ export default function DashboardMaps() {
               {/* Map Layout */}
               <div className="col-span-8 pt-2 pb-4 ps-4 pe-4">
                 {/* Maps component */}
-                <Maps></Maps>
+                <div
+                  id="hs-pro-tabs-dtsch-revenue"
+                  role="tabpanel"
+                  aria-labelledby="hs-pro-tabs-dtsch-item-revenue"
+                  hidden={false} // Change this dynamically based on active state
+                >
+                  <Maps></Maps>
+                </div>
                 {/* End Maps component */}
               </div>
               {/* End Map Layout */}
