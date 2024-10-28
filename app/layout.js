@@ -20,6 +20,15 @@ export const metadata = {
   title: "EMONS | Electrical Monitoring System",
   description: "Help you monitoring your electrical in real time!",
   referrer: "origin-when-cross-origin",
+  alternates: {
+    canonical: "https://emons.id/",
+  },
+  openGraph: {
+    title: "EMONS | Electrical Monitoring System",
+    description: "Help you monitoring your electrical in real time!",
+    url: "https://emons.id/",
+    type: "website",
+  },
   keywords: [
     "Wibawa Solusi Elektrik",
     "Electrical Monitoring System",
