@@ -8,6 +8,7 @@ import {
   useAdvancedMarkerRef,
 } from "@vis.gl/react-google-maps";
 import useSWR, { mutate } from "swr";
+import Link from "next/link";
 
 // TODO: Fetch monitoring data with SWR isolated
 function useMonitoring(tenantRef, locationid, start_date) {
@@ -168,6 +169,7 @@ const Marker = ({
 
   // set parent name from API
   const [parentName, setParentName] = useState("");
+  const [parentCode, setParentCode] = useState("");
 
   // show/hide marker based on voltage value
   const [showMarker, setShowMarker] = useState(false);
@@ -297,6 +299,7 @@ const Marker = ({
           const siteData = data.siteloc["data"][0].site;
           if (siteData) {
             setParentName(siteData.name);
+            setParentCode(siteData.code);
           }
         });
 
@@ -544,164 +547,236 @@ const Marker = ({
                   </div>
                   {/* End Header */}
                   {/* List */}
-                  <div className="grid items-center justify-center grid-cols-1 py-3 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-4 md:gap-y-0 md:divide-x md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
+                  <div className="grid items-center justify-center grid-cols-1 py-3 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-4 md:gap-y-0 md:divide-none md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
                     <>
                       {/* Voltage */}
-                      <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
-                        <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
-                          <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
-                            <span
-                              className={`absolute inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full opacity-75 animate-ping ${voltageColor}`}
-                            />
-                            <span
-                              className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${voltageColor}`}
-                            />
+                      <Link
+                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                          connected
+                            ? "cursor-pointer"
+                            : "select-none cursor-not-allowed"
+                        } dark:hover:bg-sky-300/20`}
+                        aria-label="Navigate to detail"
+                        title="Navigate to detail"
+                        href={{
+                          pathname: "/dashboard/voltage/",
+                          query: {
+                            param1: JSON.stringify([
+                              parentCode.toString(),
+                              parentName.toString(),
+                            ]),
+                            param2: JSON.stringify([
+                              `${monitoring?.monitoring["data"].datavoltages[0].location_id}`,
+                              `${markerLabel}`,
+                            ]),
+                          },
+                        }}
+                      >
+                        <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
+                          <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl gap-x-1">
+                            <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                              <span
+                                className={`absolute inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full opacity-75 animate-ping ${voltageColor}`}
+                              />
+                              <span
+                                className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${voltageColor}`}
+                              />
+                            </span>
+                            {monitoring?.monitoring["data"].datavoltages[0]
+                              .v_rn_input ?? "-"}
+                            <svg
+                              className="shrink-0 size-3"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M3.75 13.5L14.25 2.25L12 10.5H20.25L9.75 21.75L12 13.5H3.75Z"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           </span>
-                          {monitoring?.monitoring["data"].datavoltages[0]
-                            .v_rn_output ?? "-"}
-                          <svg
-                            className="shrink-0 size-3"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M3.75 13.5L14.25 2.25L12 10.5H20.25L9.75 21.75L12 13.5H3.75Z"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </span>
-                        <span className="text-center">
-                          <p className="text-xs xl:text-xl text-neutral-800">
-                            Voltage
-                          </p>
-                        </span>
-                      </div>
+                          <span className="text-center">
+                            <p className="mb-2 text-xs xl:text-lg text-neutral-800">
+                              Voltage
+                            </p>
+                          </span>
+                        </div>
+                      </Link>
                       {/* End Voltage */}
+
                       {/* Current */}
-                      <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
-                        <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
-                          <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
-                            <span
-                              className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${currentColor}`}
-                            />
-                            <span
-                              className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${currentColor}`}
-                            />
+                      <Link
+                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                          connected
+                            ? "cursor-pointer"
+                            : "select-none cursor-not-allowed"
+                        } dark:hover:bg-sky-300/20`}
+                        aria-label="Navigate to detail"
+                        title="Navigate to detail"
+                        href={{
+                          pathname: "/dashboard/current/",
+                          query: {
+                            param1: JSON.stringify([
+                              parentCode.toString(),
+                              parentName.toString(),
+                            ]),
+                            param2: JSON.stringify([
+                              `${monitoring?.monitoring["data"].datavoltages[0].location_id}`,
+                              `${markerLabel}`,
+                            ]),
+                          },
+                        }}
+                      >
+                        <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
+                          <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl gap-x-1">
+                            <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                              <span
+                                className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${currentColor}`}
+                              />
+                              <span
+                                className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${currentColor}`}
+                              />
+                            </span>
+                            {monitoring?.monitoring["data"].datacurrents[0]
+                              .i_r_Input ?? "-"}
+                            <svg
+                              className=" shrink-0 size-3"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="9.01235"
+                                stroke="black"
+                                strokeWidth="1.5"
+                              />
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="9.01235"
+                                stroke="black"
+                                strokeOpacity="0.2"
+                                strokeWidth="1.5"
+                              />
+                              <path
+                                d="M0 12L3.44368 12"
+                                stroke="black"
+                                strokeWidth="1.5"
+                              />
+                              <path
+                                d="M20.5563 12H24"
+                                stroke="black"
+                                strokeWidth="1.5"
+                              />
+                              <path
+                                d="M5.16534 12.3873C11.1481 3.0961 13.2923 20.1278 18.8346 12.3873"
+                                stroke="black"
+                                strokeWidth="1.5"
+                              />
+                            </svg>
                           </span>
-                          {monitoring?.monitoring["data"].datacurrents[0]
-                            .i_r_Output ?? "-"}
-                          <svg
-                            className=" shrink-0 size-3"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="9.01235"
-                              stroke="black"
-                              strokeWidth="1.5"
-                            />
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="9.01235"
-                              stroke="black"
-                              strokeOpacity="0.2"
-                              strokeWidth="1.5"
-                            />
-                            <path
-                              d="M0 12L3.44368 12"
-                              stroke="black"
-                              strokeWidth="1.5"
-                            />
-                            <path
-                              d="M20.5563 12H24"
-                              stroke="black"
-                              strokeWidth="1.5"
-                            />
-                            <path
-                              d="M5.16534 12.3873C11.1481 3.0961 13.2923 20.1278 18.8346 12.3873"
-                              stroke="black"
-                              strokeWidth="1.5"
-                            />
-                          </svg>
-                        </span>
-                        <span className="text-center">
-                          <p className="text-xs xl:text-xl text-neutral-800">
-                            Current/Ampere
-                          </p>
-                        </span>
-                      </div>
+                          <span className="text-center">
+                            <p className="mb-2 text-xs xl:text-lg text-neutral-800">
+                              Current/Ampere
+                            </p>
+                          </span>
+                        </div>
+                      </Link>
                       {/* End Current */}
+
                       {/* Ground */}
-                      <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
-                        <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl 2xl:text-2xl gap-x-1">
-                          <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
-                            <span
-                              className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${groundColor}`}
-                            />
-                            <span
-                              className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${groundColor}`}
-                            />
+                      <Link
+                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                          connected
+                            ? "cursor-pointer"
+                            : "select-none cursor-not-allowed"
+                        } dark:hover:bg-sky-300/20`}
+                        aria-label="Navigate to detail"
+                        title="Navigate to detail"
+                        href={{
+                          pathname: "/dashboard/ground/",
+                          query: {
+                            param1: JSON.stringify([
+                              parentCode.toString(),
+                              parentName.toString(),
+                            ]),
+                            param2: JSON.stringify([
+                              `${monitoring?.monitoring["data"].datavoltages[0].location_id}`,
+                              `${markerLabel}`,
+                            ]),
+                          },
+                        }}
+                      >
+                        <div className="flex flex-col items-center justify-center px-4 text-center align-middle">
+                          <span className="flex items-center px-2 py-1 pt-2 text-lg font-bold bg-transparent rounded-full text-neutral-800 xl:text-xl gap-x-1">
+                            <span className="me-2 relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4">
+                              <span
+                                className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${groundColor}`}
+                              />
+                              <span
+                                className={`relative inline-flex size-1.5 md:size-2 lg:size-2.5 xl:size-3 2xl:size-4 rounded-full ${groundColor}`}
+                              />
+                            </span>
+                            {monitoring?.monitoring["data"].datagrounds[0]
+                              .voltage_input ?? "-"}
+                            <svg
+                              className=" shrink-0 size-3"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M2.49376 15.5327H21.5062"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M12 1.39389L12 13.1749"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M3.495 17.8905H20.505"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M4.495 20.2483H19.505"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M5.495 22.6061H18.505"
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
+                            </svg>
                           </span>
-                          {monitoring?.monitoring["data"].datagrounds[0]
-                            .voltage_output ?? "-"}
-                          <svg
-                            className=" shrink-0 size-3"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M2.49376 15.5327H21.5062"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M12 1.39389L12 13.1749"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M3.495 17.8905H20.505"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M4.495 20.2483H19.505"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="M5.495 22.6061H18.505"
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </span>
-                        <span className="text-center">
-                          <p className="text-xs xl:text-xl text-neutral-800">
-                            Ground
-                          </p>
-                        </span>
-                      </div>
+                          <span className="text-center">
+                            <p className="mb-2 text-xs xl:text-xl text-neutral-800">
+                              Ground
+                            </p>
+                          </span>
+                        </div>
+                      </Link>
+
                       {/* End Ground */}
                     </>
                   </div>
@@ -719,7 +794,7 @@ const Marker = ({
                             connected ? "text-sky-700" : "text-neutral-500"
                           }`}
                         >
-                          {connected ? "Just now" : "Offline"}
+                          {connected ? "Just now" : "-"}
                         </p>
                       </div>
                     </div>
@@ -736,7 +811,7 @@ const Marker = ({
                               connected ? "bg-emerald-600" : "bg-red-600"
                             } rounded-full`}
                           />
-                          {connected ? "Online" : "Unreachable"}
+                          {connected ? "Online" : "Offline"}
                         </span>
                       </div>
                     </div>

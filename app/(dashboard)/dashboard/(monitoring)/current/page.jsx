@@ -7,6 +7,7 @@ import Link from "next/link";
 import useSWR, { mutate } from "swr";
 import ErrorImage from "../../../../../public/images/error500.svg";
 import dynamic from "next/dynamic";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/CurrentRadialGauge"),
@@ -21,6 +22,13 @@ export default function Current() {
    */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
+
+  // Parameter from direct map access
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const param1 = searchParams.get("param1") ?? [];
+  const param2 = searchParams.get("param2") ?? [];
+  // console.log(`${param1} | ${param2}`);
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
@@ -54,25 +62,42 @@ export default function Current() {
     e.preventDefault();
     setSignal(false);
     setOnLoading(true);
-    setSelectLoc([code, name]);
-    isShowDev(true);
-    setSelectDev([]);
+    if (param1.length !== 0 && param2.length !== 0) {
+      router.replace("/dashboard/current/");
+      router.refresh();
+    } else {
+      setSelectLoc([code, name]);
+      isShowDev(true);
+      setSelectDev([]);
+    }
   };
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
     setSignal(false);
     setOnLoading(true);
-    setSelectDev([code, name]);
+    // indicate user bring params and clear the params after this button clicked
+    if (param1.length !== 0 && param2.length !== 0) {
+      router.replace("/dashboard/current/");
+      router.refresh();
+    } else {
+      setSelectDev([code, name]);
+    }
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
     setSignal(false);
     setOnLoading(true);
-    setSelectLoc([]);
-    setSelectDev([]);
     isShowDev(true);
+    // indicate user bring params and clear the params after this button clicked
+    if (param1.length !== 0 && param2.length !== 0) {
+      router.replace("/dashboard/current/");
+      router.refresh();
+    } else {
+      setSelectLoc([]);
+      setSelectDev([]);
+    }
   };
   // End of Scripts
 
@@ -268,6 +293,7 @@ export default function Current() {
       fetchCurrentRealtime(url, localTenant, locationid, start_date),
     {
       isPaused: () =>
+        selectLoc.length === 0 ||
         selectDev.length === 0 ||
         (localTenant == "" && localTenant == undefined) ||
         (hoursAgo == "" && hoursAgo == undefined)
@@ -378,47 +404,75 @@ export default function Current() {
           // Scrap the first index data
           const firstIndexSite = dataSite.site["data"][0];
           if (selectLoc.length === 0) {
-            // set code and name as location state
-            setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-            // set device state to null in order to refresh the device list
-            // when user move to another site
-            setSelectDev([]);
+            // check if user dont bring parameters
+            if (param1.length === 0) {
+              // set code and name as location state
+              setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
+              // set device state to null in order to refresh the device list
+              // when user move to another site
+              setSelectDev([]);
+            } else {
+              // user bring params, set the default selectLoc to param1
+              var params1 = JSON.parse(param1);
+
+              // set code and name as location state from param1
+              setSelectLoc([params1[0], params1[1]]);
+              // set device state to null in order to refresh the device list
+              // when user move to another site
+              setSelectDev([]);
+            }
           }
 
-          // TODO: fetch the device (location)
-          fetchDevice(
-            currentUser,
-            0,
-            "",
-            "",
-            "",
-            selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
-            "2023-01-01 00:00:00",
-            "2024-12-30 23:59:00"
-          ).then((dataLocation) => {
-            // if (process.env.NODE_ENV === "development") {
-            //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-            // }
+          if (selectLoc.length !== 0) {
+            // TODO: fetch the device (location)
+            fetchDevice(
+              currentUser,
+              0,
+              "",
+              "",
+              "",
+              param1.length !== 0 && param2.length !== 0
+                ? selectLoc[0]
+                : JSON.stringify(selectLoc[0]),
+              "2023-01-01 00:00:00",
+              "2024-12-30 23:59:00"
+            ).then((dataLocation) => {
+              // if (process.env.NODE_ENV === "development") {
+              //   console.log("fetchDevice: " + dataLocation.loc["data"]);
+              // }
 
-            // device location response is OK
-            if (dataLocation.message == "OK") {
-              setDataDev(dataLocation.loc["data"]);
+              // device location response is OK
+              if (dataLocation.message == "OK") {
+                setDataDev(dataLocation.loc["data"]);
 
-              // Scrap the first index data
-              const firstIndexDev = dataLocation.loc["data"][0];
-              if (selectDev.length === 0) {
-                // set code and name as device state
-                setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
+                // Scrap the first index data
+                const firstIndexDev = dataLocation.loc["data"][0];
+                if (selectDev.length === 0) {
+                  // check if user dont bring parameters
+                  if (param2.length === 0) {
+                    // set code and name as device state
+                    setSelectDev([
+                      firstIndexDev["code"],
+                      firstIndexDev["name"],
+                    ]);
+                  } else {
+                    // user bring params2, set the default selectDev to param2
+                    var params2 = JSON.parse(param2);
+
+                    // set code and name as device state from param2
+                    setSelectDev([params2[0], params2[1]]);
+                  }
+                }
+
+                setOnLoading(true);
+                setChannel("Validating data..");
+              } else {
+                setOnLoading(false);
+                setSignal(false);
+                setChannel("Failed to load resource");
               }
-
-              setOnLoading(true);
-              setChannel("Validating data..");
-            } else {
-              setOnLoading(false);
-              setSignal(false);
-              setChannel("Failed to load resource");
-            }
-          });
+            });
+          }
         }
         // If site response is not OK
         else {
@@ -514,7 +568,11 @@ export default function Current() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectLoc.length === null ? "pointer-events-none" : null
+                  selectLoc.length === null ||
+                  param1.length !== 0 ||
+                  param2.length !== 0
+                    ? "pointer-events-none"
+                    : null
                 }`}
               >
                 <button
@@ -581,7 +639,10 @@ export default function Current() {
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectDev.length === null || !showDev
+                  selectDev.length === null ||
+                  !showDev ||
+                  param1.length !== 0 ||
+                  param2.length !== 0
                     ? "pointer-events-none"
                     : null
                 }`}
@@ -641,28 +702,38 @@ export default function Current() {
             {/* End Select Device */}
           </div>
           {/* Reset Button */}
-          <button
-            type="button"
-            disabled={selectDev.length === 0 ? true : false}
-            className="py-[7px] px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-teal-500"
-            onClick={handleResetButton.bind(null)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="shrink-0 size-3.5 hidden md:block"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-              />
-            </svg>
-            Reset
-          </button>
+          {param1.length !== 0 || param2.length !== 0 ? (
+            <>
+              <button
+                type="button"
+                disabled={
+                  selectDev.length === 0 ||
+                  param1.length === 0 ||
+                  param2.length === 0
+                    ? true
+                    : false
+                }
+                className="py-[7px] px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-rose-600 dark:bg-rose-700 text-white hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-rose-500"
+                onClick={handleResetButton.bind(null)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="shrink-0 size-3.5 hidden md:block"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
+                  />
+                </svg>
+                Exit Detail Mode
+              </button>
+            </>
+          ) : null}
           {/* End Reset Button */}
         </div>
       </div>
@@ -671,7 +742,13 @@ export default function Current() {
       {/* Current gauge list */}
       <>
         {/* Current R */}
-        <div className="flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div
+          className={`${
+            param1.length === 0 || param2.length === 0
+              ? "flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700"
+              : "flex flex-col mt-2 mb-4 bg-white border border-gray-300 md:mt-0 rounded-xl dark:bg-neutral-900 dark:border-neutral-800"
+          }`}
+        >
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -699,7 +776,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`r-input${index}`}
@@ -746,7 +823,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`r-output${index}`}
@@ -843,7 +920,13 @@ export default function Current() {
           </div>
         </div>
         {/* Current S */}
-        <div className="flex flex-col mb-4 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div
+          className={`${
+            param1.length === 0 || param2.length === 0
+              ? "flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700"
+              : "flex flex-col mt-2 mb-4 bg-white border border-gray-300 md:mt-0 rounded-xl dark:bg-neutral-900 dark:border-neutral-800"
+          }`}
+        >
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -869,7 +952,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`s-input${index}`}
@@ -916,7 +999,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`s-output${index}`}
@@ -1013,7 +1096,13 @@ export default function Current() {
           </div>
         </div>
         {/* Current T */}
-        <div className="flex flex-col mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div
+          className={`${
+            param1.length === 0 || param2.length === 0
+              ? "flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700"
+              : "flex flex-col mt-2 mb-4 bg-white border border-gray-300 md:mt-0 rounded-xl dark:bg-neutral-900 dark:border-neutral-800"
+          }`}
+        >
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -1039,7 +1128,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`t-input${index}`}
@@ -1086,7 +1175,7 @@ export default function Current() {
                   <div className="w-full h-full md:w-1/2">
                     {data !== undefined ? (
                       data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
+                        if (signal) {
                           return (
                             <RadialDynamicGauge
                               key={`t-output${index}`}
