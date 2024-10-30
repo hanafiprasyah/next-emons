@@ -18,7 +18,7 @@ import {
   ImageExport,
 } from "@syncfusion/ej2-react-circulargauge";
 
-const Default = ({ id, key, alt, title, value }) => {
+const Default = ({ id, key, alt, title, value, isThreePhase }) => {
   var gaugeInstance;
 
   function rnExportInputHandler() {
@@ -45,136 +45,128 @@ const Default = ({ id, key, alt, title, value }) => {
         } hover:dark:shadow-lg focus:dark:shadow-lg`}
       >
         <div className="relative group">
-          <>
-            {/* Gauge Device */}
-            <div className="flex flex-col items-center justify-center h-72">
-              <CircularGaugeComponent
-                id={id}
-                key={key}
-                animationDuration={500}
-                alt={alt}
-                allowImageExport={true}
-                ref={(g) => (gaugeInstance = g)}
-                margin={{
-                  left: 100,
-                  right: 100,
-                  top: 100,
-                  bottom: 100,
-                }}
-                background="transparent"
-                tooltip={{
-                  type: ["Pointer"],
-                  enable: true,
-                  enableAnimation: true,
-                  annotationSettings: {
-                    template: "<div>CircularGauge</div>",
-                  },
-                  rangeSettings: { fill: "blue" },
-                }}
+          {isThreePhase === 0 ? (
+            <div className="flex justify-center my-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="text-gray-200 size-4 lg:size-5 opacity-60"
               >
-                <Inject services={[Annotations, GaugeTooltip, ImageExport]} />
-                <AxesDirective>
-                  <AxisDirective
-                    minimum={0}
-                    maximum={100}
-                    hideIntersectingLabel={false}
-                    labelStyle={{
-                      hiddenLabel: "None",
-                      position: "Outside",
-                      format: `{value}%`,
-                      offset: 0,
-                      font: {
-                        color: "white",
-                        size: "12px",
-                        fontWeight: "Normal",
-                      },
-                    }}
-                    startAngle={20}
-                    endAngle={340}
-                    direction="ClockWise"
-                    radius="100%"
-                    majorTicks={{
-                      interval: 10,
-                      color: "#00379e",
-                      height: 10,
-                      width: 3,
-                      position: "Inside",
-                      offset: 0,
-                    }}
-                    minorTicks={{
-                      interval: 2,
-                      color: "#fff",
-                      height: 4,
-                      width: 1,
-                      position: "Inside",
-                      offset: 5,
-                    }}
-                    lineStyle={{
-                      width: 0,
-                      color: "",
-                    }}
-                  >
-                    <RangesDirective>
-                      {/* Green */}
-                      <RangeDirective
-                        color="#1bd155"
-                        start={0}
-                        end={20}
-                        radius="74%"
-                        // roundedCornerRadius={4}
-                      ></RangeDirective>
-                      {/* Yellow */}
-                      <RangeDirective
-                        color="#e8e833"
-                        start={20}
-                        end={70}
-                        radius="74%"
-                        // roundedCornerRadius={4}
-                      ></RangeDirective>
-                      {/* Red */}
-                      <RangeDirective
-                        color="#e84a35"
-                        start={70}
-                        end={100}
-                        radius="74%"
-                        // roundedCornerRadius={4}
-                      ></RangeDirective>
-                    </RangesDirective>
-                    <PointersDirective>
-                      <PointerDirective
-                        value={value}
-                        animation={{ enable: true, duration: 500 }}
-                        radius="60%"
-                        markerHeight={6}
-                        markerWidth={4}
-                        pointerWidth={4}
-                        linearGradient={{
-                          startValue: "0%",
-                          endValue: "100%",
-                          colorStop: [
-                            {
-                              color: "#fff",
-                              offset: "0%",
-                              opacity: 0.5,
-                            },
-                            {
-                              color: "#fff",
-                              offset: "80%",
-                              opacity: 0.5,
-                            },
-                          ],
-                        }}
-                        cap={{
-                          radius: 6,
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M11.412 15.655 9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457 3 3m5.457 5.457 7.086 7.086m0 0L21 21"
+                />
+              </svg>
+            </div>
+          ) : (
+            <>
+              {/* Gauge Device */}
+              <div className="flex flex-col items-center justify-center h-72">
+                <CircularGaugeComponent
+                  id={id}
+                  key={key}
+                  animationDuration={500}
+                  alt={alt}
+                  allowImageExport={true}
+                  ref={(g) => (gaugeInstance = g)}
+                  margin={{
+                    left: 100,
+                    right: 100,
+                    top: 100,
+                    bottom: 100,
+                  }}
+                  background="transparent"
+                  tooltip={{
+                    type: ["Pointer"],
+                    enable: true,
+                    enableAnimation: true,
+                    annotationSettings: {
+                      template: "<div>CircularGauge</div>",
+                    },
+                    rangeSettings: { fill: "blue" },
+                  }}
+                >
+                  <Inject services={[Annotations, GaugeTooltip, ImageExport]} />
+                  <AxesDirective>
+                    <AxisDirective
+                      minimum={0}
+                      maximum={100}
+                      hideIntersectingLabel={false}
+                      labelStyle={{
+                        hiddenLabel: "None",
+                        position: "Outside",
+                        format: `{value}%`,
+                        offset: 0,
+                        font: {
                           color: "white",
-                          border: {
-                            color: "#fff",
-                            width: 0,
-                          },
-                        }}
-                        needleTail={{
-                          length: "20%",
-                          linearGradient: {
+                          size: "12px",
+                          fontWeight: "Normal",
+                        },
+                      }}
+                      startAngle={20}
+                      endAngle={340}
+                      direction="ClockWise"
+                      radius="100%"
+                      majorTicks={{
+                        interval: 10,
+                        color: "#00379e",
+                        height: 10,
+                        width: 3,
+                        position: "Inside",
+                        offset: 0,
+                      }}
+                      minorTicks={{
+                        interval: 2,
+                        color: "#fff",
+                        height: 4,
+                        width: 1,
+                        position: "Inside",
+                        offset: 5,
+                      }}
+                      lineStyle={{
+                        width: 0,
+                        color: "",
+                      }}
+                    >
+                      <RangesDirective>
+                        {/* Green */}
+                        <RangeDirective
+                          color="#1bd155"
+                          start={0}
+                          end={20}
+                          radius="74%"
+                          // roundedCornerRadius={4}
+                        ></RangeDirective>
+                        {/* Yellow */}
+                        <RangeDirective
+                          color="#e8e833"
+                          start={20}
+                          end={70}
+                          radius="74%"
+                          // roundedCornerRadius={4}
+                        ></RangeDirective>
+                        {/* Red */}
+                        <RangeDirective
+                          color="#e84a35"
+                          start={70}
+                          end={100}
+                          radius="74%"
+                          // roundedCornerRadius={4}
+                        ></RangeDirective>
+                      </RangesDirective>
+                      <PointersDirective>
+                        <PointerDirective
+                          value={value}
+                          animation={{ enable: true, duration: 500 }}
+                          radius="60%"
+                          markerHeight={6}
+                          markerWidth={4}
+                          pointerWidth={4}
+                          linearGradient={{
                             startValue: "0%",
                             endValue: "100%",
                             colorStop: [
@@ -185,87 +177,116 @@ const Default = ({ id, key, alt, title, value }) => {
                               },
                               {
                                 color: "#fff",
-                                offset: "60%",
+                                offset: "80%",
                                 opacity: 0.5,
                               },
                             ],
-                          },
-                        }}
-                      ></PointerDirective>
-                    </PointersDirective>
-                    <AnnotationsDirective>
-                      <AnnotationDirective
-                        angle={0}
-                        radius={value >= 40 && value <= 60 ? "30%" : "-30%"}
-                        zIndex="1"
-                        textStyle={{ size: "10px" }}
-                        content={`<div><div><span> ${value}%</span></div></div>`}
-                      />
-                    </AnnotationsDirective>
-                  </AxisDirective>
-                </AxesDirective>
-              </CircularGaugeComponent>
-            </div>
-            {/* End Gauge Device */}
-
-            {/* More Dropdown */}
-            <div className="absolute top-3 end-3 group-hover:opacity-100 lg:opacity-0">
-              {/* Pulse show when mobile view */}
-              <div className="inline-flex md:hidden p-0 lg:p-0.5 me-2 border border-gray-200 rounded-full dark:border-neutral-700">
-                <span className="relative flex w-3 h-3">
-                  <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
-                  <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
-                </span>
+                          }}
+                          cap={{
+                            radius: 6,
+                            color: "white",
+                            border: {
+                              color: "#fff",
+                              width: 0,
+                            },
+                          }}
+                          needleTail={{
+                            length: "20%",
+                            linearGradient: {
+                              startValue: "0%",
+                              endValue: "100%",
+                              colorStop: [
+                                {
+                                  color: "#fff",
+                                  offset: "0%",
+                                  opacity: 0.5,
+                                },
+                                {
+                                  color: "#fff",
+                                  offset: "60%",
+                                  opacity: 0.5,
+                                },
+                              ],
+                            },
+                          }}
+                        ></PointerDirective>
+                      </PointersDirective>
+                      <AnnotationsDirective>
+                        <AnnotationDirective
+                          angle={0}
+                          radius={value >= 40 && value <= 60 ? "30%" : "-30%"}
+                          zIndex="1"
+                          textStyle={{ size: "10px" }}
+                          content={`<div><div><span> ${value}%</span></div></div>`}
+                        />
+                      </AnnotationsDirective>
+                    </AxisDirective>
+                  </AxesDirective>
+                </CircularGaugeComponent>
               </div>
-              <div className="p-0.5 sm:p-1 inline-flex items-center bg-white border border-gray-200 lg:shadow rounded-lg dark:bg-neutral-800 dark:border-neutral-700">
-                {/* Share Icon */}
-                <div className="inline-block hs-tooltip">
-                  <button
-                    type="button"
-                    className="hs-tooltip-toggle size-[25px] lg:size-[30px] inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                    onClick={() => handleExportClick(title)}
-                  >
-                    <svg
-                      className="shrink-0 size-3 lg:size-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={24}
-                      height={24}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx={18} cy={5} r={3} />
-                      <circle cx={6} cy={12} r={3} />
-                      <circle cx={18} cy={19} r={3} />
-                      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
-                      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-                    </svg>
-                  </button>
-                  <span
-                    className="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 inline-block absolute invisible z-20 py-1.5 px-2.5 bg-gray-900 text-xs text-white rounded-lg dark:bg-neutral-700"
-                    role="tooltip"
-                  >
-                    Share {alt} {title}
+              {/* End Gauge Device */}
+
+              {/* More Dropdown */}
+              <div className="absolute top-3 end-3 group-hover:opacity-100 lg:opacity-0">
+                {/* Pulse show when mobile view */}
+                <div className="inline-flex md:hidden p-0 lg:p-0.5 me-2 border border-gray-200 rounded-full dark:border-neutral-700">
+                  <span className="relative flex w-3 h-3">
+                    <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
+                    <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
                   </span>
                 </div>
-                {/* End Share Icon */}
+                <div className="p-0.5 sm:p-1 inline-flex items-center bg-white border border-gray-200 lg:shadow rounded-lg dark:bg-neutral-800 dark:border-neutral-700">
+                  {/* Share Icon */}
+                  <div className="inline-block hs-tooltip">
+                    <button
+                      type="button"
+                      className="hs-tooltip-toggle size-[25px] lg:size-[30px] inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
+                      onClick={() => handleExportClick(title)}
+                    >
+                      <svg
+                        className="shrink-0 size-3 lg:size-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width={24}
+                        height={24}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx={18} cy={5} r={3} />
+                        <circle cx={6} cy={12} r={3} />
+                        <circle cx={18} cy={19} r={3} />
+                        <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+                        <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+                      </svg>
+                    </button>
+                    <span
+                      className="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 inline-block absolute invisible z-20 py-1.5 px-2.5 bg-gray-900 text-xs text-white rounded-lg dark:bg-neutral-700"
+                      role="tooltip"
+                    >
+                      Share {alt} {title}
+                    </span>
+                  </div>
+                  {/* End Share Icon */}
+                </div>
               </div>
-            </div>
-            {/* End More Dropdown */}
-          </>
+              {/* End More Dropdown */}
+            </>
+          )}
         </div>
 
         {/* Body */}
         <div className="flex items-center pb-3 gap-x-3">
           <div className="truncate grow">
             <p className="block text-sm font-semibold text-gray-800 truncate dark:text-neutral-200">
-              {title}
+              {isThreePhase === 0 ? "Single Phase Device" : title}
             </p>
             <p className="block px-2 text-xs text-gray-500 truncate lg:px-4 dark:text-neutral-500 text-wrap text-clip">
-              {alt}
+              {isThreePhase === 0
+                ? `This ${alt} ${title} gauge meter will not be displayed if the device used is Single Phase`
+                : alt}
             </p>
           </div>
         </div>
