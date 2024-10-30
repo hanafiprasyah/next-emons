@@ -18,7 +18,7 @@ import {
   ImageExport,
 } from "@syncfusion/ej2-react-circulargauge";
 
-const Default = ({ id, key, alt, title, value }) => {
+const Default = ({ id, key, alt, title, value, isThreePhase }) => {
   var gaugeInstance;
 
   function rnExportInputHandler() {
@@ -45,7 +45,7 @@ const Default = ({ id, key, alt, title, value }) => {
         } hover:dark:shadow-lg focus:dark:shadow-lg`}
       >
         <div className="relative group">
-          {value === 0 ? (
+          {isThreePhase === 0 ? (
             <div className="flex justify-center my-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -297,10 +297,10 @@ const Default = ({ id, key, alt, title, value }) => {
         <div className="flex items-center pb-3 gap-x-3">
           <div className="truncate grow">
             <p className="block text-sm font-semibold text-gray-800 truncate dark:text-neutral-200">
-              {value === 0 ? "Single Phase Device" : title}
+              {isThreePhase === 0 ? "Single Phase Device" : title}
             </p>
             <p className="block px-2 text-xs text-gray-500 truncate lg:px-4 dark:text-neutral-500 text-wrap text-clip">
-              {value === 0
+              {isThreePhase === 0
                 ? `This ${alt} ${title} gauge meter will not be displayed if the device used is Single Phase`
                 : alt}
             </p>
