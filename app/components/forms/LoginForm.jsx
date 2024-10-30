@@ -363,7 +363,6 @@ function LoginForm() {
             {/* <Link
             className="inline-flex items-center gap-x-1.5 text-xs text-gray-600 hover:text-gray-700 decoration-2 hover:underline focus:outline-none focus:underline dark:text-neutral-500 dark:hover:text-neutral-600"
             href={"/forgot-password"}
-            prefetch={true}
           >
             I forgot my password
           </Link> */}
