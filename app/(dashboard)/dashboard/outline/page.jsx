@@ -11,7 +11,7 @@ import {
 } from "../../../../public/icons";
 import Link from "next/link";
 import Image from "next/image";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import dynamic from "next/dynamic";
 
 const RealTimeVoltageInputSplineChart = dynamic(
@@ -68,10 +68,15 @@ function useMonitoring(localTenant, locationid, start_date) {
     });
   };
 
+  // Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
   const { data, isLoading, error } = useSWR(
-    localTenant !== "" && localTenant !== undefined && localTenant !== null
-      ? ["/api/monitoring/getmonitoring", localTenant, locationid, start_date]
-      : null,
+    ["/api/monitoring/getmonitoring", localTenant, locationid, start_date],
     ([url, localTenant, locationid, start_date]) =>
       fetchDataRealtime(url, localTenant, locationid, start_date),
     {
@@ -81,58 +86,75 @@ function useMonitoring(localTenant, locationid, start_date) {
         (start_date == "" && start_date == undefined)
           ? true
           : false,
-      refreshInterval: 1000,
-      focusThrottleInterval: 3000,
-      errorRetryInterval: 1000,
-      errorRetryCount: 10,
-      shouldRetryOnError: true,
-      keepPreviousData: true,
+      refreshInterval: 3000,
+      revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
         setChannel("Unstable network, please wait..");
       },
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/getmonitoring",
+            localTenant,
+            locationid,
+            start_date,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
     }
   );
 
-  if (data != undefined) {
-    if (data.message === "OK") {
-      if (data.monitoring["data"]["datavoltages"].length === 0) {
+  if (data?.message === "OK") {
+    if (
+      data?.monitoring["data"]["datacurrents"][0] === undefined ||
+      data?.monitoring["data"]["dataenergys"][0] === undefined ||
+      data?.monitoring["data"]["datagrounds"][0] === undefined ||
+      data?.monitoring["data"]["datathdis"][0] === undefined ||
+      data?.monitoring["data"]["dataThdvs"][0] === undefined ||
+      data?.monitoring["data"]["datavoltages"][0] === undefined ||
+      data?.monitoring["data"]["datafrequencys"][0] === undefined ||
+      data?.monitoring["data"]["dataPowerFactors"][0] === undefined
+    ) {
+      return {
+        monitoring: null,
+        isMonitoringError: error,
+        isMonitoringLoading: isLoading,
+      };
+    } else {
+      const currentDate = new Date();
+      const sendDate = data?.monitoring["data"]["datavoltages"][0].send_date;
+      // format the send_date value
+      const isoConvSendDate = new Date(sendDate);
+      // count the diff
+      const diffTime = currentDate - isoConvSendDate;
+      // set the minutes value
+      const minutes = Math.floor(diffTime / 60000);
+
+      // Set offline status if the diff time more than 5 minutes from NOW()
+      if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
         return {
           monitoring: null,
           isMonitoringError: error,
           isMonitoringLoading: isLoading,
         };
       } else {
-        const currentDate = new Date();
-        const sendDate = data.monitoring["data"]["datavoltages"][0].send_date;
-        // format the send_date value
-        const isoConvSendDate = new Date(sendDate);
-        // count the diff
-        const diffTime = currentDate - isoConvSendDate;
-        // set the minutes value
-        const minutes = Math.floor(diffTime / 60000);
-
-        // Set offline status if the diff time more than 5 minutes from NOW()
-        if (minutes >= 1) {
-          return {
-            monitoring: null,
-            isMonitoringError: error,
-            isMonitoringLoading: isLoading,
-          };
-        } else {
-          return {
-            monitoring: data,
-            isMonitoringError: error,
-            isMonitoringLoading: isLoading,
-          };
-        }
+        return {
+          monitoring: data,
+          isMonitoringError: error,
+          isMonitoringLoading: isLoading,
+        };
       }
-    } else {
-      return {
-        monitoring: null,
-        isMonitoringError: error,
-        isMonitoringLoading: isLoading,
-      };
     }
   } else {
     return {
