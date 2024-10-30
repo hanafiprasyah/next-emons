@@ -190,14 +190,17 @@ export default function Energy() {
         if (selectDev.length !== 0) {
           setSignal(true);
           // Check if data ground length is null
-          if (data.monitoring["data"]["dataenergys"][0] === null) {
+          if (
+            data.monitoring["data"]["dataenergys"][0] === undefined ||
+            data.monitoring["data"]["dataenergys"][0] === null
+          ) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
-            setChannel("Unreachable");
+            setChannel("Device unreachable");
           } else {
-            setSignal(true);
             // We will check the difference about last send_date from API and current date from NOW()
+            setSignal(true);
             const currentDate = new Date();
             const sendDate =
               data.monitoring["data"]["dataenergys"][0].send_date;
@@ -209,7 +212,7 @@ export default function Energy() {
             const minutes = Math.floor(diffTime / 60000);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= 1) {
+            if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
               setChannel("Device signal interference");
@@ -231,6 +234,8 @@ export default function Energy() {
       // If response message is not OK
       else {
         setSignal(false);
+        setOnLoading(false);
+        setChannel("Server error");
         if (process.env.NODE_ENV === "development") {
           console.log(
             "Error in fetchEnergyRealtime: Response Message is Not OK"
@@ -238,6 +243,9 @@ export default function Energy() {
         }
       }
     } catch (err) {
+      setSignal(false);
+      setOnLoading(false);
+      setChannel("Error while fetch data");
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchEnergyRealtime: ", err);
       }
@@ -255,21 +263,8 @@ export default function Energy() {
   // SWR
   const { data, isLoading, error } = useSWR(
     ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
-    async ([url, localTenant, locationid, start_date]) => {
-      try {
-        return await fetchEnergyRealtime(
-          url,
-          localTenant,
-          locationid,
-          start_date
-        );
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("Error SWR Fetch data: ", err);
-        }
-        throw err;
-      }
-    },
+    ([url, localTenant, locationid, start_date]) =>
+      fetchEnergyRealtime(url, localTenant, locationid, start_date),
     {
       isPaused: () =>
         selectDev.length === 0 ||
@@ -277,7 +272,7 @@ export default function Energy() {
         (hoursAgo == "" && hoursAgo == undefined)
           ? true
           : false,
-      refreshInterval: 3500,
+      refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -515,6 +510,7 @@ export default function Energy() {
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* Select Location */}
             <div className="relative inline-block">
+              <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
                   selectLoc.length === null ? "pointer-events-none" : null
@@ -581,7 +577,8 @@ export default function Energy() {
             {/* End Select Location */}
 
             {/* Select Device */}
-            <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
+            <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
+              <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
                   selectDev.length === null || !showDev
@@ -698,119 +695,113 @@ export default function Energy() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {signal ? (
-                      data.map((item, index) => {
-                        if (item.location_id === selectDev[0]) {
+                    {data !== undefined ? (
+                      data?.map((item, index) => {
+                        if (signal && item.location_id === selectDev[0]) {
                           return (
                             <DynamicCardEnergy
                               id={"energy-kwh-input"}
                               key={`kwh-input${index}`}
                               alt={"Input"}
                               title="KWH Input"
-                              valueR={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_r_input
-                                  : 0
-                              }
-                              valueS={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_s_input
-                                  : 0
-                              }
-                              valueT={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_t_input
-                                  : 0
-                              }
-                              valueTotal={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_total_input
-                                  : 0
-                              }
+                              valueR={!error ? item.kwh_r_input : 0}
+                              valueS={!error ? item.kwh_s_input : 0}
+                              valueT={!error ? item.kwh_t_input : 0}
+                              valueTotal={!error ? item.kwh_total_input : 0}
+                              isConnected={!error && data !== undefined}
                             />
                           );
                         }
-                        return null;
+                        return (
+                          <div key={`energy-kwh-input${index}`}>
+                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                              <svg
+                                className="shrink-0 size-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" x2="12" y1="2" y2="12"></line>
+                              </svg>
+                              Device is not connected
+                            </span>
+                          </div>
+                        );
                       })
                     ) : (
-                      <div id={"energy-kwh-input"}>
-                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                          <svg
-                            className="shrink-0 size-3"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" x2="12" y1="2" y2="12"></line>
-                          </svg>
-                          Device is not connected
-                        </span>
-                      </div>
+                      <DynamicCardEnergy
+                        id={"energy-kwh-input"}
+                        key={`kwh-input`}
+                        alt={"Input"}
+                        title="KWH Input"
+                        valueR={0}
+                        valueS={0}
+                        valueT={0}
+                        valueTotal={0}
+                        isConnected={false}
+                      />
                     )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {signal ? (
-                      data.map((item, index) => {
-                        if (item.location_id === selectDev[0]) {
+                    {data !== undefined ? (
+                      data?.map((item, index) => {
+                        if (signal && item.location_id === selectDev[0]) {
                           return (
                             <DynamicCardEnergy
                               id={"energy-kwh-output"}
                               key={`kwh-output${index}`}
                               alt={"Output"}
                               title="KWH Output"
-                              valueR={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_r_output
-                                  : 0
-                              }
-                              valueS={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_s_output
-                                  : 0
-                              }
-                              valueT={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_t_output
-                                  : 0
-                              }
-                              valueTotal={
-                                item.location_id === selectDev[0]
-                                  ? item.kwh_total_output
-                                  : 0
-                              }
+                              valueR={!error ? item.kwh_r_output : 0}
+                              valueS={!error ? item.kwh_s_output : 0}
+                              valueT={!error ? item.kwh_t_output : 0}
+                              valueTotal={!error ? item.kwh_total_output : 0}
+                              isConnected={!error && data !== undefined}
                             />
                           );
                         }
-                        return null;
+                        return (
+                          <div key={`energy-kwh-output${index}`}>
+                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                              <svg
+                                className="shrink-0 size-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" x2="12" y1="2" y2="12"></line>
+                              </svg>
+                              Device is not connected
+                            </span>
+                          </div>
+                        );
                       })
                     ) : (
-                      <div id={"energy-kwh-output"}>
-                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                          <svg
-                            className="shrink-0 size-3"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" x2="12" y1="2" y2="12"></line>
-                          </svg>
-                          Device is not connected
-                        </span>
-                      </div>
+                      <DynamicCardEnergy
+                        id={"energy-kwh-output"}
+                        key={`kwh-output${index}`}
+                        alt={"Output"}
+                        title="KWH Output"
+                        valueR={0}
+                        valueS={0}
+                        valueT={0}
+                        valueTotal={0}
+                        isConnected={false}
+                      />
                     )}
                   </div>
                 </>
@@ -891,119 +882,113 @@ export default function Energy() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {signal ? (
-                      data.map((item, index) => {
-                        if (item.location_id === selectDev[0]) {
+                    {data !== undefined ? (
+                      data?.map((item, index) => {
+                        if (signal && item.location_id === selectDev[0]) {
                           return (
                             <DynamicCardEnergy
                               id={"energy-kvarh-input"}
                               key={`kvarh-input${index}`}
                               alt={"Input"}
                               title="KVARH Input"
-                              valueR={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_r_input
-                                  : 0
-                              }
-                              valueS={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_s_input
-                                  : 0
-                              }
-                              valueT={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_t_input
-                                  : 0
-                              }
-                              valueTotal={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_total_input
-                                  : 0
-                              }
+                              valueR={!error ? item.kvarh_r_input : 0}
+                              valueS={!error ? item.kvarh_s_input : 0}
+                              valueT={!error ? item.kvarh_t_input : 0}
+                              valueTotal={!error ? item.kvarh_total_input : 0}
+                              isConnected={!error && data !== undefined}
                             />
                           );
                         }
-                        return null;
+                        return (
+                          <div key={`energy-kvarh-input${index}`}>
+                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                              <svg
+                                className="shrink-0 size-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" x2="12" y1="2" y2="12"></line>
+                              </svg>
+                              Device is not connected
+                            </span>
+                          </div>
+                        );
                       })
                     ) : (
-                      <div id={"energy-kvarh-input"}>
-                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                          <svg
-                            className="shrink-0 size-3"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" x2="12" y1="2" y2="12"></line>
-                          </svg>
-                          Device is not connected
-                        </span>
-                      </div>
+                      <DynamicCardEnergy
+                        id={"energy-kvarh-input"}
+                        key={`kvarh-input`}
+                        alt={"Input"}
+                        title="KVARH Input"
+                        valueR={0}
+                        valueS={0}
+                        valueT={0}
+                        valueTotal={0}
+                        isConnected={false}
+                      />
                     )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {signal ? (
-                      data.map((item, index) => {
-                        if (item.location_id === selectDev[0]) {
+                    {data !== undefined ? (
+                      data?.map((item, index) => {
+                        if (signal && item.location_id === selectDev[0]) {
                           return (
                             <DynamicCardEnergy
                               id={"energy-kvarh-output"}
                               key={`kvarh-output${index}`}
                               alt={"Output"}
                               title="KVARH Output"
-                              valueR={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_r_output
-                                  : 0
-                              }
-                              valueS={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_s_output
-                                  : 0
-                              }
-                              valueT={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_t_output
-                                  : 0
-                              }
-                              valueTotal={
-                                item.location_id === selectDev[0]
-                                  ? item.kvarh_total_output
-                                  : 0
-                              }
+                              valueR={!error ? item.kvarh_r_output : 0}
+                              valueS={!error ? item.kvarh_s_output : 0}
+                              valueT={!error ? item.kvarh_t_output : 0}
+                              valueTotal={!error ? item.kvarh_total_output : 0}
+                              isConnected={!error && data !== undefined}
                             />
                           );
                         }
-                        return null;
+                        return (
+                          <div key={`energy-kvarh-output${index}`}>
+                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                              <svg
+                                className="shrink-0 size-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" x2="12" y1="2" y2="12"></line>
+                              </svg>
+                              Device is not connected
+                            </span>
+                          </div>
+                        );
                       })
                     ) : (
-                      <div id={"energy-kvarh-output"}>
-                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                          <svg
-                            className="shrink-0 size-3"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" x2="12" y1="2" y2="12"></line>
-                          </svg>
-                          Device is not connected
-                        </span>
-                      </div>
+                      <DynamicCardEnergy
+                        id={"energy-kvarh-output"}
+                        key={`kvarh-output`}
+                        alt={"Output"}
+                        title="KVARH Output"
+                        valueR={0}
+                        valueS={0}
+                        valueT={0}
+                        valueTotal={0}
+                        isConnected={false}
+                      />
                     )}
                   </div>
                 </>

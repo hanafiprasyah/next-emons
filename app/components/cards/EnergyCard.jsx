@@ -25,11 +25,10 @@ const Default = ({
   valueS,
   valueT,
   valueTotal,
-  child,
+  isConnected,
 }) => {
   return (
     <>
-      {/* Sales Stats Card */}
       <div
         className={`flex flex-col bg-white border mx-2 my-2 border-gray-200 shadow-sm rounded-xl dark:bg-neutral-800 ${
           alt === "Input" ? "dark:border-rose-500" : "dark:border-emerald-500"
@@ -165,14 +164,16 @@ const Default = ({
           <div className="w-full">
             {/* Realtime Line Chart */}
             {id === "energy-kwh-input" || id === "energy-kwh-output" ? (
-              <div id="charts-kwh" key={key} className="w-full h-[140px]">
-                <EnergyKWHLinearChart
-                  id={id}
-                  name={key}
-                  chartType={id}
-                ></EnergyKWHLinearChart>
-              </div>
-            ) : (
+              isConnected ? (
+                <div id="charts-kwh" key={key} className="w-full h-[140px]">
+                  <EnergyKWHLinearChart
+                    id={id}
+                    name={key}
+                    chartType={id}
+                  ></EnergyKWHLinearChart>
+                </div>
+              ) : null
+            ) : isConnected ? (
               <div id="charts-kvarh" key={key} className="w-full h-[140px]">
                 <EnergyKVARHLinearChart
                   id={id}
@@ -180,12 +181,11 @@ const Default = ({
                   chartType={id}
                 ></EnergyKVARHLinearChart>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
         {/* End Footer */}
       </div>
-      {/* End Sales Stats Card */}
     </>
   );
 };
