@@ -37,35 +37,42 @@ function useMonitoring(localTenant, locationid, start_date) {
     locationid,
     start_date
   ) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: localTenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: localTenant,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: start_date ?? "2024-01-01 00:40:20",
-        end_date: "",
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error("500. An error occured.");
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: localTenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: localTenant,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date ?? "2024-01-01 00:40:20",
+          end_date: "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.statusText}`);
       }
 
-      const data = res.json();
+      const data = await response.json();
       return data;
-    });
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
   // Clear SWR Cache
@@ -76,14 +83,16 @@ function useMonitoring(localTenant, locationid, start_date) {
     });
 
   const { data, isLoading, error } = useSWR(
-    ["/api/monitoring/getmonitoring", localTenant, locationid, start_date],
+    localTenant !== "" && localTenant !== undefined && localTenant !== null
+      ? ["/api/monitoring/getmonitoring", localTenant, locationid, start_date]
+      : null,
     ([url, localTenant, locationid, start_date]) =>
       fetchDataRealtime(url, localTenant, locationid, start_date),
     {
       isPaused: () =>
-        (localTenant == "" && localTenant == undefined) ||
+        (localTenant === "" && localTenant === undefined) ||
         (locationid === null && locationid === undefined) ||
-        (start_date == "" && start_date == undefined)
+        (start_date === "" && start_date === undefined)
           ? true
           : false,
       refreshInterval: 3000,
