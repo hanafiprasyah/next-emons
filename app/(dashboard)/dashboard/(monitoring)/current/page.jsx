@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import PrelineScript from "@/components/PrelineScript";
 import Link from "next/link";
@@ -26,8 +26,14 @@ export default function Current() {
   // Parameter from direct map access
   const router = useRouter();
   const searchParams = useSearchParams();
-  const param1 = searchParams.get("param1") ?? [];
-  const param2 = searchParams.get("param2") ?? [];
+  const param1 = useMemo(
+    () => searchParams.get("param1") || "",
+    [searchParams]
+  );
+  const param2 = useMemo(
+    () => searchParams.get("param2") || "",
+    [searchParams]
+  );
   // console.log(`${param1} | ${param2}`);
 
   // Dates
@@ -238,7 +244,7 @@ export default function Current() {
             const minutes = Math.floor(diffTime / 60000);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
               setChannel("Device signal interference");
@@ -328,6 +334,22 @@ export default function Current() {
     }
   );
 
+  // Helper function to parse JSON safely
+  const parseJSON = (str, fallback) => {
+    if (!str) {
+      // If str is null, undefined, or an empty string, return the fallback value
+      console.warn("Received empty or null input, returning fallback.");
+      return fallback;
+    }
+    try {
+      console.warn("trying to parse str:");
+      return JSON.parse(str);
+    } catch (error) {
+      console.error("JSON Parsing Error:", error);
+      return fallback;
+    }
+  };
+
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
     const dateIns = new Date();
@@ -372,122 +394,125 @@ export default function Current() {
     // }
   }, []);
 
-  // TODO: Get default site and location
+  // TODO: Get default site
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
 
-    // Check if currentUser length is not null
-    if (currentUser) {
-      // save local tenant value to state
-      setLocalTenant(`${currentUser.toString()}`);
-
-      // TODO: fetch the site data
-      fetchSite(
-        currentUser,
-        0,
-        "",
-        "",
-        "",
-        "",
-        "2023-01-01 00:00:00",
-        "2024-12-30 23:59:00"
-      ).then((dataSite) => {
-        // if (process.env.NODE_ENV === "development") {
-        //   console.log(dataSite.site["data"]);
-        // }
-
-        // If site response is OK
-        if (dataSite.message == "OK") {
-          setDataLoc(dataSite.site["data"]);
-
-          // Scrap the first index data
-          const firstIndexSite = dataSite.site["data"][0];
-          if (selectLoc.length === 0) {
-            // check if user dont bring parameters
-            if (param1.length === 0) {
-              // set code and name as location state
-              setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-              // set device state to null in order to refresh the device list
-              // when user move to another site
-              setSelectDev([]);
-            } else {
-              // user bring params, set the default selectLoc to param1
-              var params1 = JSON.parse(param1);
-
-              // set code and name as location state from param1
-              setSelectLoc([params1[0], params1[1]]);
-              // set device state to null in order to refresh the device list
-              // when user move to another site
-              setSelectDev([]);
-            }
-          }
-
-          if (selectLoc.length !== 0) {
-            // TODO: fetch the device (location)
-            fetchDevice(
-              currentUser,
-              0,
-              "",
-              "",
-              "",
-              param1.length !== 0 && param2.length !== 0
-                ? selectLoc[0]
-                : JSON.stringify(selectLoc[0]),
-              "2023-01-01 00:00:00",
-              "2024-12-30 23:59:00"
-            ).then((dataLocation) => {
-              // if (process.env.NODE_ENV === "development") {
-              //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-              // }
-
-              // device location response is OK
-              if (dataLocation.message == "OK") {
-                setDataDev(dataLocation.loc["data"]);
-
-                // Scrap the first index data
-                const firstIndexDev = dataLocation.loc["data"][0];
-                if (selectDev.length === 0) {
-                  // check if user dont bring parameters
-                  if (param2.length === 0) {
-                    // set code and name as device state
-                    setSelectDev([
-                      firstIndexDev["code"],
-                      firstIndexDev["name"],
-                    ]);
-                  } else {
-                    // user bring params2, set the default selectDev to param2
-                    var params2 = JSON.parse(param2);
-
-                    // set code and name as device state from param2
-                    setSelectDev([params2[0], params2[1]]);
-                  }
-                }
-
-                setOnLoading(true);
-                setChannel("Validating data..");
-              } else {
-                setOnLoading(false);
-                setSignal(false);
-                setChannel("Failed to load resource");
-              }
-            });
-          }
-        }
-        // If site response is not OK
-        else {
-          setOnLoading(false);
-          setSignal(false);
-          setChannel("Unreachable");
-        }
-      });
-    }
     // If tenant local storage is undefined or null
-    else {
+    if (!currentUser) {
       // set local tenant state to null
       setLocalTenant("");
+      return;
     }
-  }, [selectLoc, selectDev]);
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    // TODO: fetch the site data
+    fetchSite(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      "",
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    ).then((dataSite) => {
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log(dataSite.site["data"]);
+      // }
+
+      // If site response is not OK
+      if (dataSite.message !== "OK") {
+        setOnLoading(false);
+        setSignal(false);
+        setChannel("Unreachable");
+        return;
+      }
+
+      // If site response is OK
+      const siteData = dataSite.site["data"] || [];
+      setDataLoc(siteData);
+
+      // Scrap the first index data
+      const firstIndexSite = siteData[0];
+
+      if (firstIndexSite) {
+        const parsedParam1 = parseJSON(param1);
+
+        // Check and Set initial selectLoc if none provided by user
+
+        setSelectLoc(
+          parsedParam1 === undefined
+            ? [firstIndexSite["code"], firstIndexSite["name"]]
+            : parsedParam1
+        );
+        // set device state to null in order to refresh the device list
+        // when user move to another site
+        setSelectDev([]);
+      }
+    });
+  }, [param1]);
+
+  // TODO: GET default device
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+    if (!currentUser || selectLoc.length === 0) return;
+
+    // TODO: fetch the device (location) based on selected location/site
+    fetchDevice(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      param2.length === 0 ? JSON.stringify(selectLoc[0]) : selectLoc[0],
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    )
+      .then((dataLocation) => {
+        // if (process.env.NODE_ENV === "development") {
+        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
+        // }
+
+        // response is not OK
+        if (!dataLocation || dataLocation.message !== "OK") {
+          setOnLoading(false);
+          setSignal(false);
+          setChannel("Failed to load resource");
+          return;
+        }
+
+        const deviceData = dataLocation.loc["data"] || [];
+
+        // device location response is OK
+        setDataDev(deviceData);
+
+        // Scrap the first index data
+        const firstIndexDev = deviceData[0];
+
+        // Set initial selectDev if none provided by user
+        if (firstIndexDev && selectLoc.length !== 0) {
+          const parsedParam2 = parseJSON(param2);
+
+          setSelectDev(
+            parsedParam2 === undefined
+              ? [firstIndexDev["code"], firstIndexDev["name"]]
+              : parsedParam2
+          );
+        }
+
+        setOnLoading(true);
+        setChannel("Validating data..");
+      })
+      .catch((error) => {
+        setOnLoading(false);
+        setSignal(false);
+        setChannel("Failed to load resource");
+      });
+  }, [param2, selectLoc]);
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
