@@ -554,7 +554,7 @@ const Marker = ({
                         className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
-                            : "select-none cursor-not-allowed"
+                            : "select-none cursor-not-allowed pointer-events-none"
                         } dark:hover:bg-sky-300/20`}
                         aria-label="Navigate to detail"
                         title="Navigate to detail"
@@ -615,7 +615,7 @@ const Marker = ({
                         className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
-                            : "select-none cursor-not-allowed"
+                            : "select-none cursor-not-allowed pointer-events-none"
                         } dark:hover:bg-sky-300/20`}
                         aria-label="Navigate to detail"
                         title="Navigate to detail"
@@ -699,7 +699,7 @@ const Marker = ({
                         className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
-                            : "select-none cursor-not-allowed"
+                            : "select-none cursor-not-allowed pointer-events-none"
                         } dark:hover:bg-sky-300/20`}
                         aria-label="Navigate to detail"
                         title="Navigate to detail"
