@@ -24,6 +24,7 @@ export default function Thdi() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -39,6 +40,17 @@ export default function Thdi() {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultThdiValues = {
+    thdi_r_Input: 0,
+    thdi_s_Input: 0,
+    thdi_t_Input: 0,
+    thdi_r_output: 0,
+    thdi_s_output: 0,
+    thdi_t_output: 0,
+  };
+  const [lastDataThdi, setLastDataThdi] = useState(defaultThdiValues); // default to 220 if data is null/undefined
 
   // Handle slow loading on SWR
   const [isSlowLoad, setSlowLoad] = useState(false);
@@ -204,27 +216,44 @@ export default function Thdi() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
-            const currentDate = new Date();
-            const sendDate = data.monitoring["data"]["datathdis"][0].send_date;
 
+            const currentDate = new Date();
+            const sendDate = data?.monitoring["data"]["datathdis"][0].send_date;
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
             // count the diff
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["datathdis"];
             }
+            return data.monitoring["data"]["datathdis"];
           }
         }
         // if device list is null?
@@ -455,6 +484,86 @@ export default function Thdi() {
         setChannel("Failed to load resource");
       });
   }, [selectLoc]);
+
+  // TODO: Update each thdi in lastDataThdi if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataThdi((prev) => {
+        const newData = {
+          thdi_r_Input:
+            data[0].thdi_r_Input != null
+              ? data[0].thdi_r_Input
+              : prev.thdi_r_Input,
+          thdi_s_Input:
+            data[0].thdi_s_Input != null
+              ? data[0].thdi_s_Input
+              : prev.thdi_s_Input,
+          thdi_t_Input:
+            data[0].thdi_t_Input != null
+              ? data[0].thdi_t_Input
+              : prev.thdi_t_Input,
+          thdi_r_output:
+            data[0].thdi_r_output != null
+              ? data[0].thdi_r_output
+              : prev.thdi_r_output,
+          thdi_s_output:
+            data[0].thdi_s_output != null
+              ? data[0].thdi_s_output
+              : prev.thdi_s_output,
+          thdi_t_output:
+            data[0].thdi_t_output != null
+              ? data[0].thdi_t_output
+              : prev.thdi_t_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set thdi values based on valid data or fallback to last known values
+  const thdiValues = {
+    thdi_r_Input:
+      data && data[0]?.thdi_r_Input != null
+        ? data[0].thdi_r_Input
+        : lastDataThdi.thdi_r_Input,
+    thdi_s_Input:
+      data && data[0]?.thdi_s_Input != null
+        ? data[0].thdi_s_Input
+        : lastDataThdi.thdi_s_Input,
+    thdi_t_Input:
+      data && data[0]?.thdi_t_Input != null
+        ? data[0].thdi_t_Input
+        : lastDataThdi.thdi_t_Input,
+    thdi_r_output:
+      data && data[0]?.thdi_r_output != null
+        ? data[0].thdi_r_output
+        : lastDataThdi.thdi_r_output,
+    thdi_s_output:
+      data && data[0]?.thdi_s_output != null
+        ? data[0].thdi_s_output
+        : lastDataThdi.thdi_s_output,
+    thdi_t_output:
+      data && data[0]?.thdi_t_output != null
+        ? data[0].thdi_t_output
+        : lastDataThdi.thdi_t_output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -769,98 +878,86 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`r-input${index}`}
-                              id={"thdi-r-input"}
-                              alt={"R"}
-                              title="Input"
-                              value={!error ? item.thdi_r_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiRInput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`r-input${index}`}
+                            id={"thdi-r-input"}
+                            alt={"R"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_r_Input
+                                : thdiValues.thdi_r_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`r-input`}
-                        id={"thdi-r-input"}
-                        alt={"R"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiRInput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`r-output${index}`}
-                              id={"thdi-r-output"}
-                              alt={"R"}
-                              title="Output"
-                              value={!error ? item.thdi_r_output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiROutput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`r-output${index}`}
+                            id={"thdi-r-output"}
+                            alt={"R"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_r_output
+                                : thdiValues.thdi_r_output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`r-output`}
-                        id={"thdi-r-output"}
-                        alt={"R"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiROutput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -899,7 +996,9 @@ export default function Thdi() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -908,7 +1007,11 @@ export default function Thdi() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -939,98 +1042,86 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`s-input${index}`}
-                              id={"thdi-s-input"}
-                              alt={"S"}
-                              title="Input"
-                              value={!error ? item.thdi_s_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiSInput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`s-input${index}`}
+                            id={"thdi-s-input"}
+                            alt={"S"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_s_Input
+                                : thdiValues.thdi_s_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`s-input`}
-                        id={"thdi-s-input"}
-                        alt={"S"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiSInput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`s-output${index}`}
-                              id={"thdi-s-output"}
-                              alt={"S"}
-                              title="Output"
-                              value={!error ? item.thdi_s_output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiSOutput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`s-output${index}`}
+                            id={"thdi-s-output"}
+                            alt={"S"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_s_output
+                                : thdiValues.thdi_s_output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`s-output`}
-                        id={"thdi-s-output"}
-                        alt={"S"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiSOutput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1069,7 +1160,9 @@ export default function Thdi() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1078,7 +1171,11 @@ export default function Thdi() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1109,98 +1206,86 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`t-input${index}`}
-                              id={"thdi-t-input"}
-                              alt={"T"}
-                              title="Input"
-                              value={!error ? item.thdi_t_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiTInput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`t-input${index}`}
+                            id={"thdi-t-input"}
+                            alt={"T"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_t_Input
+                                : thdiValues.thdi_t_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`t-input`}
-                        id={"thdi-t-input"}
-                        alt={"T"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiTInput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`t-output${index}`}
-                              id={"thdi-t-output"}
-                              alt={"T"}
-                              title="Output"
-                              value={!error ? item.thdi_t_output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`thdiTOutput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`t-output${index}`}
+                            id={"thdi-t-output"}
+                            alt={"T"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.thdi_t_output
+                                : thdiValues.thdi_t_output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`t-output`}
-                        id={"thdi-t-output"}
-                        alt={"T"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`thdiTOutput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1239,7 +1324,9 @@ export default function Thdi() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1248,7 +1335,11 @@ export default function Thdi() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
