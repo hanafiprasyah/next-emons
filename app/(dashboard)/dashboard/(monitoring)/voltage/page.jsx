@@ -23,7 +23,7 @@ export default function Voltage() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
-  // Parameter from direct map access
+  // Handle parameter from direct map access
   const router = useRouter();
   const searchParams = useSearchParams();
   const param1 = useMemo(
@@ -37,6 +37,7 @@ export default function Voltage() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -52,6 +53,23 @@ export default function Voltage() {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultVoltageValues = {
+    v_rs_input: 220,
+    v_st_input: 220,
+    v_rt_input: 220,
+    v_rn_input: 220,
+    v_sn_input: 220,
+    v_tn_input: 220,
+    v_rs_output: 220,
+    v_st_output: 220,
+    v_rt_output: 220,
+    v_rn_output: 220,
+    v_sn_output: 220,
+    v_tn_output: 220,
+  };
+  const [lastDataVoltage, setLastDataVoltage] = useState(defaultVoltageValues); // default to 220 if data is null/undefined
 
   /**
    * Used to conditioning the device dropdown pointer event
@@ -231,28 +249,46 @@ export default function Voltage() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
+
             const currentDate = new Date();
             const sendDate =
-              data.monitoring["data"]["datavoltages"][0].send_date;
-
+              data?.monitoring["data"]["datavoltages"][0].send_date;
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
             // count the diff
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
             if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["datavoltages"];
             }
+
+            return data.monitoring["data"]["datavoltages"];
           }
         }
         // if device list is null?
@@ -307,9 +343,6 @@ export default function Voltage() {
       refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
@@ -512,6 +545,122 @@ export default function Voltage() {
         setChannel("Failed to load resource");
       });
   }, [param2, selectLoc]);
+
+  // TODO: Update each voltage in lastDataVoltage if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataVoltage((prev) => {
+        const newData = {
+          v_rs_input:
+            data[0].v_rs_input != null ? data[0].v_rs_input : prev.v_rs_input,
+          v_st_input:
+            data[0].v_st_input != null ? data[0].v_st_input : prev.v_st_input,
+          v_rt_input:
+            data[0].v_rt_input != null ? data[0].v_rt_input : prev.v_rt_input,
+          v_rn_input:
+            data[0].v_rn_input != null ? data[0].v_rn_input : prev.v_rn_input,
+          v_sn_input:
+            data[0].v_sn_input != null ? data[0].v_sn_input : prev.v_sn_input,
+          v_tn_input:
+            data[0].v_tn_input != null ? data[0].v_tn_input : prev.v_tn_input,
+          v_rs_output:
+            data[0].v_rs_output != null
+              ? data[0].v_rs_output
+              : prev.v_rs_output,
+          v_st_output:
+            data[0].v_st_output != null
+              ? data[0].v_st_output
+              : prev.v_st_output,
+          v_rt_output:
+            data[0].v_rt_output != null
+              ? data[0].v_rt_output
+              : prev.v_rt_output,
+          v_rn_output:
+            data[0].v_rn_output != null
+              ? data[0].v_rn_output
+              : prev.v_rn_output,
+          v_sn_output:
+            data[0].v_sn_output != null
+              ? data[0].v_sn_output
+              : prev.v_sn_output,
+          v_tn_output:
+            data[0].v_tn_output != null
+              ? data[0].v_tn_output
+              : prev.v_tn_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set voltage values based on valid data or fallback to last known values
+  const voltageValues = {
+    v_rs_input:
+      data && data[0]?.v_rs_input != null
+        ? data[0].v_rs_input
+        : lastDataVoltage.v_rs_input,
+    v_st_input:
+      data && data[0]?.v_st_input != null
+        ? data[0].v_st_input
+        : lastDataVoltage.v_st_input,
+    v_rt_input:
+      data && data[0]?.v_rt_input != null
+        ? data[0].v_rt_input
+        : lastDataVoltage.v_rt_input,
+    v_rn_input:
+      data && data[0]?.v_rn_input != null
+        ? data[0].v_rn_input
+        : lastDataVoltage.v_rn_input,
+    v_sn_input:
+      data && data[0]?.v_sn_input != null
+        ? data[0].v_sn_input
+        : lastDataVoltage.v_sn_input,
+    v_tn_input:
+      data && data[0]?.v_tn_input != null
+        ? data[0].v_tn_input
+        : lastDataVoltage.v_tn_input,
+    v_rs_output:
+      data && data[0]?.v_rs_output != null
+        ? data[0].v_rs_output
+        : lastDataVoltage.v_rs_output,
+    v_st_output:
+      data && data[0]?.v_st_output != null
+        ? data[0].v_st_output
+        : lastDataVoltage.v_st_output,
+    v_rt_output:
+      data && data[0]?.v_rt_output != null
+        ? data[0].v_rt_output
+        : lastDataVoltage.v_rt_output,
+    v_rn_output:
+      data && data[0]?.v_rn_output != null
+        ? data[0].v_rn_output
+        : lastDataVoltage.v_rn_output,
+    v_sn_output:
+      data && data[0]?.v_sn_output != null
+        ? data[0].v_sn_output
+        : lastDataVoltage.v_sn_output,
+    v_tn_output:
+      data && data[0]?.v_tn_output != null
+        ? data[0].v_tn_output
+        : lastDataVoltage.v_tn_output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -800,102 +949,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rn-input"}
-                              key={`rn-input${index}`}
-                              alt={"R-N"}
-                              title="Input"
-                              value={!error ? item.v_rn_input : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-rn-input"}
+                            key={`rn-input${index}`}
+                            alt={"R-N"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rn_input
+                                : voltageValues.v_rn_input
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rn-input"}
-                        key={`rn-input`}
-                        alt={"R-N"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`rn-output${index}`}
-                              id={"voltage-rn-output"}
-                              alt={"R-N"}
-                              title="Output"
-                              value={!error ? item.v_rn_output : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`rn-output${index}`}
+                            id={"voltage-rn-output"}
+                            alt={"R-N"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rn_output
+                                : voltageValues.v_rn_output
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rn-output"}
-                        key={`rn-output`}
-                        alt={"R-N"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -934,7 +1069,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -943,7 +1080,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -981,102 +1122,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-sn-input"}
-                              key={`sn-input${index}`}
-                              alt={"S-N"}
-                              title="Input"
-                              value={!error ? item.v_sn_input : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-sn-input"}
+                            key={`sn-input${index}`}
+                            alt={"S-N"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_sn_input
+                                : voltageValues.v_sn_input
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-sn-input"}
-                        key={`sn-input`}
-                        alt={"S-N"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-sn-output"}
-                              key={`sn-output${index}`}
-                              alt={"S-N"}
-                              title="Output"
-                              value={!error ? item.v_sn_output : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-sn-output"}
+                            key={`sn-output${index}`}
+                            alt={"S-N"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_sn_output
+                                : voltageValues.v_sn_output
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-sn-output"}
-                        key={`sn-output`}
-                        alt={"S-N"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1115,7 +1242,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1124,7 +1253,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1162,102 +1295,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-tn-input"}
-                              key={`tn-input${index}`}
-                              alt={"T-N"}
-                              title="Input"
-                              value={!error ? item.v_tn_input : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-tn-input"}
+                            key={`tn-input${index}`}
+                            alt={"T-N"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_tn_input
+                                : voltageValues.v_tn_input
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-tn-input"}
-                        key={`tn-input`}
-                        alt={"T-N"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-tn-output"}
-                              key={`tn-output${index}`}
-                              alt={"T-N"}
-                              title="Output"
-                              value={!error ? item.v_tn_output : 0}
-                              isThreePhase={1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-tn-output"}
+                            key={`tn-output${index}`}
+                            alt={"T-N"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_tn_output
+                                : voltageValues.v_tn_output
+                            }
+                            isThreePhase={1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-tn-output"}
-                        key={`tn-output`}
-                        alt={"T-N"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1296,7 +1415,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1305,7 +1426,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1346,102 +1471,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rs-input"}
-                              key={`rs-input${index}`}
-                              alt={"R-S"}
-                              title="Input"
-                              value={!error ? item.v_rs_input : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-rs-input"}
+                            key={`rs-input${index}`}
+                            alt={"R-S"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rs_input
+                                : voltageValues.v_rs_input
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rs-input"}
-                        key={`rs-input`}
-                        alt={"R-S"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rs-output"}
-                              key={`rs-output${index}`}
-                              alt={"R-S"}
-                              title="Output"
-                              value={!error ? item.v_rs_output : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-rs-output"}
+                            key={`rs-output${index}`}
+                            alt={"R-S"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rs_output
+                                : voltageValues.v_rs_output
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rs-output"}
-                        key={`rs-output`}
-                        alt={"R-S"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1480,7 +1591,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1489,7 +1602,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1527,102 +1644,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-st-input"}
-                              key={`st-input${index}`}
-                              alt={"S-T"}
-                              title="Input"
-                              value={!error ? item.v_st_input : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-st-input"}
+                            key={`st-input${index}`}
+                            alt={"S-T"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_st_input
+                                : voltageValues.v_st_input
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-st-input"}
-                        key={`st-input`}
-                        alt={"S-T"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-st-output"}
-                              key={`st-output${index}`}
-                              alt={"S-T"}
-                              title="Output"
-                              value={!error ? item.v_st_output : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-st-output"}
+                            key={`st-output${index}`}
+                            alt={"S-T"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_st_output
+                                : voltageValues.v_st_output
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-st-output"}
-                        key={`st-output`}
-                        alt={"S-T"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1661,7 +1764,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1670,7 +1775,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1708,102 +1817,88 @@ export default function Voltage() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rt-input"}
-                              key={`rt-input${index}`}
-                              alt={"R-T"}
-                              title="Input"
-                              value={!error ? item.v_rt_input : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-rt-input"}
+                            key={`rt-input${index}`}
+                            alt={"R-T"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rt_input
+                                : voltageValues.v_rt_input
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rt-input"}
-                        key={`rt-input`}
-                        alt={"R-T"}
-                        title="Input"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"voltage-rt-output"}
-                              key={`rt-output${index}`}
-                              alt={"R-T"}
-                              title="Output"
-                              value={!error ? item.v_rt_output : 0}
-                              isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={index}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"voltage-rt-output"}
+                            key={`rt-output${index}`}
+                            alt={"R-T"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.v_rt_output
+                                : voltageValues.v_rt_output
+                            }
+                            isThreePhase={selectDev[0] === 102 ? 0 : 1}
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"voltage-rt-output"}
-                        key={`rt-output`}
-                        alt={"R-T"}
-                        title="Output"
-                        value={!error ? 220 : 0}
-                        isThreePhase={selectDev[0] === 102 ? 0 : 1}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={index}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1842,7 +1937,9 @@ export default function Voltage() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1851,7 +1948,11 @@ export default function Voltage() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
