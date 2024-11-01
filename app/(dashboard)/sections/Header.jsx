@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import MonitoringPicture from "../../../public/images/user-profile.png";
 import AccountDropdown from "@/components/AccountDropdown";
-// import NotificationDropdown from "@/components/NotificationDropdown";
+import NotificationDropdown from "@/components/NotificationDropdown";
 
 export default function DashboardHeader() {
   const getTitle = (pathname) => {
     switch (pathname) {
       case "/dashboard/":
-        return "Dashboard with Maps";
+        return "Map Dashboard";
       case "/dashboard/outline/":
-        return "Dashboard with Outline";
+        return "Outline Dashboard";
       case "/dashboard/voltage/":
         return "Voltage";
       case "/dashboard/current/":
@@ -85,11 +85,7 @@ export default function DashboardHeader() {
         <div className="flex items-center justify-between w-full ps-4 xl:col-span-2 gap-x-2">
           <div className="flex items-center">
             <span>{title}</span>
-            {/**
-             * Notification deployed for the next update (v2),
-             * so now, it will be hidden for a several times
-             */}
-            {/* Notification */}
+
             {/* <div className="hs-dropdown [--auto-close:inside] relative inline-flex">
               <div className="hs-tooltip [--placement:bottom] inline-block">
                 <button
@@ -132,33 +128,70 @@ export default function DashboardHeader() {
             </div> */}
           </div>
 
-          {/* Divider */}
-          {/* <div className="border-e border-gray-200 w-px h-6 mx-1.5 dark:border-neutral-700"></div> */}
+          <div className="flex items-center justify-end gap-x-8">
+            {/**
+             * Notification deployed for the next update (v2),
+             * so now, it will be hidden for a several times
+             */}
+            {/* Notification */}
+            <div className="hs-dropdown [--auto-close:inside] pt-2 relative inline-flex">
+              <div className="hs-tooltip [--placement:bottom] inline-block">
+                <button
+                  id="hs-pro-dnnd"
+                  type="button"
+                  className="w-5 h-5 hs-tooltip-toggle bg-blue-600/0 relative size-[38px] inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent text-gray-500 disabled:opacity-50 disabled:pointer-events-none focus:outline-none dark:text-neutral-400"
+                >
+                  {/* Ping effect */}
+                  <span className="absolute inset-0 bg-red-600 rounded-full opacity-50 animate-ping"></span>
 
-          <div className="h-[38px] ">
-            {/* Account Dropdown */}
-            <div className="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
-              <button
-                id="hs-pro-dnad"
-                type="button"
-                className="inline-flex items-center flex-shrink-0 rounded-full gap-x-3 text-start focus:outline-none"
-              >
-                {/* This image is shown as Circlet Avatar and clickable */}
-                {/* Set the user image from API */}
-                <Image
-                  priority={true}
-                  width={40}
-                  height={40}
-                  className="flex-shrink-0 rounded-full aspect-auto"
-                  src={MonitoringPicture}
-                  alt="EMONS | Electrical Monitoring System"
-                />
-              </button>
+                  {/* SVG Icon */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6 text-red-300 size-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <NotificationDropdown />
+            </div>
 
-              {/**
-               * Import from /root/app/components/
-               */}
-              <AccountDropdown />
+            {/* Divider */}
+            {/* <div className="border-e border-gray-200 w-px h-6 mx-1.5 dark:border-neutral-700"></div> */}
+
+            <div className="h-[38px] ">
+              {/* Account Dropdown */}
+              <div className="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
+                <button
+                  id="hs-pro-dnad"
+                  type="button"
+                  className="inline-flex items-center flex-shrink-0 rounded-full gap-x-3 text-start focus:outline-none"
+                >
+                  {/* This image is shown as Circlet Avatar and clickable */}
+                  {/* Set the user image from API */}
+                  <Image
+                    priority={true}
+                    width={40}
+                    height={40}
+                    className="flex-shrink-0 rounded-full aspect-auto"
+                    src={MonitoringPicture}
+                    alt="EMONS | Electrical Monitoring System"
+                  />
+                </button>
+
+                {/**
+                 * Import from /root/app/components/
+                 */}
+                <AccountDropdown />
+              </div>
             </div>
           </div>
         </div>

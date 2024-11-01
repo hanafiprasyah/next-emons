@@ -12,23 +12,24 @@ function InfoNotification() {
     <li className="relative flex w-full p-5 group gap-x-5 text-start">
       <div className="relative flex-shrink-0">
         <span className="flex flex-shrink-0 justify-center items-center size-[38px] bg-white border border-gray-200 text-gray-500 text-sm font-semibold rounded-full shadow-sm dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
-          P
+          T
         </span>
       </div>
       <div className="grow">
         <p className="text-xs text-gray-500 dark:text-neutral-500">
-          5 Jan 2023
+          31 Oktober 2024
         </p>
 
-        <span className="block text-sm font-medium text-gray-800 dark:text-neutral-300">
-          We’re updating our Privacy Policy as of 10th January 2023.content
+        <span className="block text-xs font-medium text-gray-800 dark:text-neutral-300">
+          🚨 <strong>Under Voltage detected!</strong> Location: RSUD RASIDIN
+          PADANG - Ruang ICU Lt 3!
         </span>
         <p>
           <Link
-            className="inline-flex items-center text-sm font-medium text-blue-600 gap-x-1 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
-            href="#"
+            className="inline-flex items-center text-xs font-medium text-blue-600 gap-x-1 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
+            href="tg://resolve?domain=EmonssBot"
           >
-            Learn more
+            Open telegram
             <svg
               className="flex-shrink-0 transition ease-in-out size-4 group-hover:translate-x-1"
               xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +48,7 @@ function InfoNotification() {
         </p>
       </div>
 
-      <div>
+      {/* <div>
         <div className="sm:group-hover:opacity-100 sm:opacity-0 sm:absolute sm:top-5 sm:end-5">
           <div className="inline-block p-0.5 bg-white border border-gray-200 rounded-lg shadow-sm transition ease-out dark:bg-neutral-800 dark:border-neutral-700">
             <div className="flex items-center">
@@ -126,7 +127,7 @@ function InfoNotification() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </li>
   );
 }

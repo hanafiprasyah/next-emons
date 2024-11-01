@@ -19,22 +19,23 @@ export default function AccountDropdown() {
     setLoading(true);
 
     try {
+      setLoading(true);
+
       const response = await fetch("/api/logout/logout-user", {
         method: "POST",
       });
 
       if (response.ok) {
         // Clear storage if response OK
-        setLoading(false);
         // TODO: Clear all localStorage key
         window.localStorage.clear();
         router.refresh();
       }
     } catch (error) {
       setLoading(false);
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log("Error when trying to sign out the user:" + error);
-      // }
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error when trying to sign out the user:" + error);
+      }
       throw new Error(`${error}`);
     }
   };
@@ -82,7 +83,7 @@ export default function AccountDropdown() {
         {/* Activity */}
         <div className="p-1">
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 my-1.5 mx-1.5 text-sm text-gray-800 transition duration-200 ease-in-out rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
             onClick={handleDisableClick.bind(null)}
           >
@@ -103,7 +104,7 @@ export default function AccountDropdown() {
             Devices
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 my-1.5 mx-1.5 text-sm text-gray-800 transition duration-200 ease-in-out rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
             onClick={handleDisableClick.bind(null)}
           >
@@ -129,7 +130,7 @@ export default function AccountDropdown() {
             Locations
           </Link>
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 my-1.5 mx-1.5 text-sm text-gray-800 transition duration-200 ease-in-out rounded-lg cursor-not-allowed gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
             href=""
             onClick={handleDisableClick.bind(null)}
           >
@@ -152,13 +153,13 @@ export default function AccountDropdown() {
           </Link>
         </div>
         {/* Action */}
-        <div className="p-1 border-t px-2 py-1.5 border-gray-200 dark:border-neutral-800">
+        <div className="p-1 border-t px-2 py-1.5 my-1.5 mx-1.5 border-gray-200 dark:border-neutral-800">
           <Link
-            className="flex items-center px-3 py-2 text-sm text-gray-800 rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
+            className="flex items-center px-3 py-2 text-sm text-gray-800 transition duration-200 ease-in-out rounded-lg gap-x-3 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-300 dark:hover:bg-red-800 dark:focus:bg-neutral-800"
             href={""}
             onClick={handleLogout}
           >
-            {loading ? "Credential disposal.." : "Sign out"}
+            {loading ? "See you again.." : "Sign out"}
           </Link>
         </div>
       </>
