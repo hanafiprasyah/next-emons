@@ -23,7 +23,7 @@ export default function Current() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
-  // Parameter from direct map access
+  // Handle parameter from direct map access
   const router = useRouter();
   const searchParams = useSearchParams();
   const param1 = useMemo(
@@ -38,6 +38,7 @@ export default function Current() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -53,6 +54,17 @@ export default function Current() {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultCurrentValues = {
+    i_r_Input: 10,
+    i_r_Output: 10,
+    i_s_Input: 10,
+    i_s_Output: 10,
+    i_t_Input: 10,
+    i_t_Output: 10,
+  };
+  const [lastDataCurrent, setLastDataCurrent] = useState(defaultCurrentValues); // default to 220 if data is null/undefined
 
   /**
    * Used to conditioning the device dropdown pointer event
@@ -232,9 +244,10 @@ export default function Current() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
+
             const currentDate = new Date();
             const sendDate =
-              data.monitoring["data"]["datacurrents"][0].send_date;
+              data?.monitoring["data"]["datacurrents"][0].send_date;
 
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
@@ -242,18 +255,36 @@ export default function Current() {
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
             if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["datacurrents"];
             }
+
+            return data.monitoring["data"]["datacurrents"];
           }
         }
         // if device list is null?
@@ -308,9 +339,6 @@ export default function Current() {
       refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
@@ -513,6 +541,74 @@ export default function Current() {
         setChannel("Failed to load resource");
       });
   }, [param2, selectLoc]);
+
+  // TODO: Update each current in lastDataCurrent if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataCurrent((prev) => {
+        const newData = {
+          i_r_Input:
+            data[0].i_r_Input != null ? data[0].i_r_Input : prev.i_r_Input,
+          i_r_Output:
+            data[0].i_r_Output != null ? data[0].i_r_Output : prev.i_r_Output,
+          i_s_Input:
+            data[0].i_s_Input != null ? data[0].i_s_Input : prev.i_s_Input,
+          i_s_Output:
+            data[0].i_s_Output != null ? data[0].i_s_Output : prev.i_s_Output,
+          i_t_Input:
+            data[0].i_t_Input != null ? data[0].i_t_Input : prev.i_t_Input,
+          i_t_Output:
+            data[0].i_t_Output != null ? data[0].i_t_Output : prev.i_t_Output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set current values based on valid data or fallback to last known values
+  const currentValues = {
+    i_r_Input:
+      data && data[0]?.i_r_Input != null
+        ? data[0].i_r_Input
+        : lastDataCurrent.i_r_Input,
+    i_r_Output:
+      data && data[0]?.i_r_Output != null
+        ? data[0].i_r_Output
+        : lastDataCurrent.i_r_Output,
+    i_s_Input:
+      data && data[0]?.i_s_Input != null
+        ? data[0].i_s_Input
+        : lastDataCurrent.i_s_Input,
+    i_s_Output:
+      data && data[0]?.i_s_Output != null
+        ? data[0].i_s_Output
+        : lastDataCurrent.i_s_Output,
+    i_t_Input:
+      data && data[0]?.i_t_Input != null
+        ? data[0].i_t_Input
+        : lastDataCurrent.i_t_Input,
+    i_t_Output:
+      data && data[0]?.i_t_Output != null
+        ? data[0].i_t_Output
+        : lastDataCurrent.i_t_Output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -799,98 +895,86 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`r-input${index}`}
-                              id={"current-r-input"}
-                              alt={"R"}
-                              title="Input"
-                              value={!error ? item.i_r_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-r-input${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`r-input${index}`}
+                            id={"current-r-input"}
+                            alt={"R"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.i_r_Input
+                                : currentValues.i_r_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`r-input`}
-                        id={"current-r-input"}
-                        alt={"R"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-r-input${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`r-output${index}`}
-                              id={"current-r-output"}
-                              alt={"R"}
-                              title="Output"
-                              value={!error ? item.i_r_Output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-r-output${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`r-output${index}`}
+                            id={"current-r-output"}
+                            alt={"R"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.i_r_Output
+                                : currentValues.i_r_Output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`r-output`}
-                        id={"current-r-output"}
-                        alt={"R"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-r-output${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -929,7 +1013,9 @@ export default function Current() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -938,7 +1024,11 @@ export default function Current() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -975,98 +1065,86 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`s-input${index}`}
-                              id={"current-s-input"}
-                              alt={"S"}
-                              title="Input"
-                              value={!error ? item.i_s_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-s-input${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`s-input${index}`}
+                            id={"current-s-input"}
+                            alt={"S"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.i_s_Input
+                                : currentValues.i_s_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`s-input`}
-                        id={"current-s-input"}
-                        alt={"S"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-s-input${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`s-output${index}`}
-                              id={"current-s-output"}
-                              alt={"S"}
-                              title="Output"
-                              value={!error ? item.i_s_Output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-s-output${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`s-output${index}`}
+                            id={"current-s-output"}
+                            alt={"S"}
+                            title="Output"
+                            value={
+                              !error & (data !== undefined)
+                                ? item.i_s_Output
+                                : currentValues.i_s_Output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`s-output`}
-                        id={"current-s-output"}
-                        alt={"S"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-s-output${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1105,7 +1183,9 @@ export default function Current() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1114,7 +1194,11 @@ export default function Current() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -1151,98 +1235,86 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`t-input${index}`}
-                              id={"current-t-input"}
-                              alt={"T"}
-                              title="Input"
-                              value={!error ? item.i_t_Input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-t-input${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`t-input${index}`}
+                            id={"current-t-input"}
+                            alt={"T"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.i_t_Input
+                                : currentValues.i_t_Input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`t-input`}
-                        id={"current-t-input"}
-                        alt={"T"}
-                        title="Input"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-t-input${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              key={`t-output${index}`}
-                              id={"current-t-output"}
-                              alt={"T"}
-                              title="Output"
-                              value={!error ? item.i_t_Output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`current-t-output${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            key={`t-output${index}`}
+                            id={"current-t-output"}
+                            alt={"T"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.i_t_Output
+                                : currentValues.i_t_Output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        key={`t-output`}
-                        id={"current-t-output"}
-                        alt={"T"}
-                        title="Output"
-                        value={!error ? 10 : 0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`current-t-output${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1281,7 +1353,9 @@ export default function Current() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1290,7 +1364,11 @@ export default function Current() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
