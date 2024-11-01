@@ -394,7 +394,6 @@ export default function Grounding() {
         console.error("JSON Parsing Error:", error);
       }
 
-      throw error;
       return fallback;
     }
   };

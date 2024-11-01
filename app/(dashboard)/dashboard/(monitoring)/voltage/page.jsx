@@ -386,14 +386,23 @@ export default function Voltage() {
   const parseJSON = (str, fallback) => {
     if (!str) {
       // If str is null, undefined, or an empty string, return the fallback value
-      console.warn("Received empty or null input, returning fallback.");
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Received empty or null input, returning fallback.");
+      }
+
       return fallback;
     }
     try {
-      console.warn("trying to parse str:");
+      if (process.env.NODE_ENV === "development") {
+        console.warn("trying to parse str:");
+      }
+
       return JSON.parse(str);
     } catch (error) {
-      console.error("JSON Parsing Error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("JSON Parsing Error:", error);
+      }
+
       return fallback;
     }
   };
