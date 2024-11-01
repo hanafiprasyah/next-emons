@@ -24,6 +24,7 @@ export default function Frequency() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -42,6 +43,15 @@ export default function Frequency() {
 
   // Handle slow loading on SWR
   const [isSlowLoad, setSlowLoad] = useState(false);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultFrequencyValue = {
+    frequency_input: 50,
+    frequency_output: 50,
+  };
+  const [lastDataFrequency, setLastDataFrequency] = useState(
+    defaultFrequencyValue
+  ); // default to 220 if data is null/undefined
 
   /**
    * Used to conditioning the device dropdown pointer event
@@ -209,28 +219,45 @@ export default function Frequency() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
+
             const currentDate = new Date();
             const sendDate =
-              data.monitoring["data"]["datafrequencys"][0].send_date;
-
+              data?.monitoring["data"]["datafrequencys"][0].send_date;
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
             // count the diff
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["datafrequencys"];
             }
+            return data.monitoring["data"]["datafrequencys"];
           }
         }
         // if device list is null?
@@ -463,6 +490,54 @@ export default function Frequency() {
         setChannel("Failed to load resource");
       });
   }, [selectLoc]);
+
+  // TODO: Update each frequency in lastDataFrequency if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataFrequency((prev) => {
+        const newData = {
+          frequency_input:
+            data[0].frequency_input != null
+              ? data[0].frequency_input
+              : prev.frequency_input,
+          frequency_output:
+            data[0].frequency_output != null
+              ? data[0].frequency_output
+              : prev.frequency_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set frequency values based on valid data or fallback to last known values
+  const frequencyValues = {
+    frequency_input:
+      data && data[0]?.frequency_input != null
+        ? data[0].frequency_input
+        : lastDataFrequency.frequency_input,
+    frequency_output:
+      data && data[0]?.frequency_output != null
+        ? data[0].frequency_output
+        : lastDataFrequency.frequency_output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -773,98 +848,86 @@ export default function Frequency() {
             {!onLoading ? (
               <>
                 <div className="w-full h-full md:w-1/2">
-                  {data !== undefined ? (
-                    data?.map((item, index) => {
-                      if (signal && item.location_id === selectDev[0]) {
-                        return (
-                          <RadialDynamicGauge
-                            id={"frequency-input"}
-                            key={"frequency-input"}
-                            alt={"Frequency"}
-                            title="Input"
-                            value={!error ? item.frequency_input : 0}
-                          />
-                        );
-                      }
+                  {data?.map((item, index) => {
+                    if (!error) {
                       return (
-                        <div key={`freqInput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
+                        <RadialDynamicGauge
+                          id={"frequency-input"}
+                          key={"frequency-input"}
+                          alt={"Frequency"}
+                          title="Input"
+                          value={
+                            !error && data !== undefined
+                              ? item.frequency_input
+                              : frequencyValues.frequency_input
+                          }
+                        />
                       );
-                    })
-                  ) : (
-                    <RadialDynamicGauge
-                      id={"frequency-input"}
-                      key={"frequency-input"}
-                      alt={"Frequency"}
-                      title="Input"
-                      value={!error ? 50 : 0}
-                    />
-                  )}
+                    }
+                    return (
+                      <div key={`freqInput${index}`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="w-full h-full md:w-1/2">
-                  {data !== undefined ? (
-                    data?.map((item, index) => {
-                      if (signal && item.location_id === selectDev[0]) {
-                        return (
-                          <RadialDynamicGauge
-                            id={"frequency-output"}
-                            key={"frequency-output"}
-                            alt={"Frequency"}
-                            title="Output"
-                            value={!error ? item.frequency_output : 0}
-                          />
-                        );
-                      }
+                  {data?.map((item, index) => {
+                    if (!error) {
                       return (
-                        <div key={"freqOutput"}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
+                        <RadialDynamicGauge
+                          id={"frequency-output"}
+                          key={"frequency-output"}
+                          alt={"Frequency"}
+                          title="Output"
+                          value={
+                            !error && data !== undefined
+                              ? item.frequency_output
+                              : frequencyValues.frequency_output
+                          }
+                        />
                       );
-                    })
-                  ) : (
-                    <RadialDynamicGauge
-                      id={"frequency-output"}
-                      key={"frequency-output"}
-                      alt={"Frequency"}
-                      title="Output"
-                      value={!error ? 50 : 0}
-                    />
-                  )}
+                    }
+                    return (
+                      <div key={"freqOutput"}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             ) : (
@@ -903,7 +966,9 @@ export default function Frequency() {
           <div>
             <label
               htmlFor="hs-pro-dupccn1"
-              className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+              className={`relative block w-auto px-3 py-2 ${
+                channel === "Lost connection" ? "text-xs" : "text-sm"
+              } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
             >
               <span
                 className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -912,7 +977,11 @@ export default function Frequency() {
                     : "dark:text-gray-500"
                 }`}
               >
-                {channel}
+                {`${
+                  channel === "Lost connection"
+                    ? `${channel} on ${lastTimeUpdate}`
+                    : channel
+                }`}
               </span>
             </label>
           </div>
