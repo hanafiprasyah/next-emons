@@ -4,7 +4,10 @@ import DangerNotification from "@/components/notifications/Danger";
 import InfoNotification from "@/components/notifications/Info";
 import Link from "next/link";
 
-export default function NotificationDropdown() {
+export default function NotificationDropdown({ notifications, onMarkAsRead }) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("Notification data from Header: ", notifications);
+  }
   /**
    * Currently this notification dropdown only have on Dialog Segment
    * We will release Archived Notification segment soon after v1
@@ -21,7 +24,7 @@ export default function NotificationDropdown() {
         <nav className="flex gap-x-1" aria-label="Tabs" role="tablist">
           <button
             type="button"
-            className="hs-tab-active:after:bg-gray-800 hs-tab-active:text-gray-800 px-2.5 py-1.5 mb-2 relative inline-flex justify-center items-center gap-x-2  hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-sm rounded-lg disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 after:absolute after:-bottom-2 after:inset-x-2.5 after:z-10 after:h-0.5 after:pointer-events-none dark:hs-tab-active:text-neutral-200 dark:hs-tab-active:after:bg-neutral-400 dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 active "
+            className="hs-tab-active:after:bg-gray-800 duration-200 ease-in-out pointer-events-none transition hs-tab-active:text-gray-800 px-2.5 py-1.5 mb-2 relative inline-flex justify-center items-center gap-x-2  hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-sm rounded-lg disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 after:absolute after:-bottom-2 after:inset-x-2.5 after:z-10 after:h-0.5 after:pointer-events-none dark:hs-tab-active:text-neutral-200 dark:hs-tab-active:after:bg-neutral-400 dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 active "
             id="hs-pro-tabs-dnn-item-all"
             data-hs-tab="#hs-pro-tabs-dnn-all"
             aria-controls="hs-pro-tabs-dnn-all"
@@ -81,21 +84,30 @@ export default function NotificationDropdown() {
         {/* Notification List */}
         <div className="h-[280px] overflow-y-auto overflow-hidden [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
           <ul className="divide-y divide-gray-200 dark:divide-neutral-800">
-            <>
-              <InfoNotification />
-            </>
+            {notifications.length === 0 ? (
+              <div className="w-full px-2 py-2 text-sm text-center text-neutral-400">
+                No new notifications
+              </div>
+            ) : (
+              <>
+                {notifications.map((notification, index) => {
+                  <InfoNotification notification={notification} key={index} />;
+                })}
+              </>
+            )}
           </ul>
         </div>
 
         {/* Notification Footer */}
-        {/* <div className="text-center border-t border-gray-200 dark:border-neutral-800">
+        <div className="text-center border-t border-gray-200 dark:border-neutral-800">
           <Link
-            className="flex items-center justify-center p-4 text-sm font-medium text-gray-500 gap-x-2 sm:rounded-b-lg hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-400 dark:hover:text-neutral-300 dark:focus:text-neutral-300"
+            className="flex items-center justify-center p-4 text-sm font-medium text-gray-500 transition duration-200 ease-in-out gap-x-2 sm:rounded-b-lg hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-400 dark:hover:text-neutral-300 dark:focus:text-neutral-300"
             href=""
+            onClick={notifications.length > 3 ? onMarkAsRead : null}
           >
             Mark all as read
           </Link>
-        </div> */}
+        </div>
       </div>
 
       {/* Archived Notification List (SOON) */}

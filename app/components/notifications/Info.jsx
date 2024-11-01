@@ -7,27 +7,51 @@
 import Link from "next/link";
 import React from "react";
 
-function InfoNotification() {
+function InfoNotification({ notification }) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("Notification list from component Info: ", notification);
+  }
+
+  // Helper function to format date in Indonesian with 24-hour format
+  const formatDateIndonesian = (dateString) => {
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date(dateString));
+  };
+
+  const handleTelegramLinkClick = (e) => {
+    e.preventDefault(); // Prevent default link behavior
+    window.location.href = "tg://resolve?domain=EmonssBot"; // Open Telegram app
+  };
+
   return (
     <li className="relative flex w-full p-5 group gap-x-5 text-start">
       <div className="relative flex-shrink-0">
         <span className="flex flex-shrink-0 justify-center items-center size-[38px] bg-white border border-gray-200 text-gray-500 text-sm font-semibold rounded-full shadow-sm dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
-          T
+          !!
         </span>
       </div>
       <div className="grow">
         <p className="text-xs text-gray-500 dark:text-neutral-500">
-          31 Oktober 2024
+          {formatDateIndonesian(notification.send_date)}
         </p>
 
         <span className="block text-xs font-medium text-gray-800 dark:text-neutral-300">
-          🚨 <strong>Under Voltage detected!</strong> Location: RSUD RASIDIN
-          PADANG - Ruang ICU Lt 3!
+          🚨 <strong>{notification.status} detected!</strong> Location:{" "}
+          {notification.location_id}
         </span>
         <p>
           <Link
             className="inline-flex items-center text-xs font-medium text-blue-600 gap-x-1 decoration-2 hover:underline focus:outline-none focus:underline dark:text-blue-400 dark:hover:text-blue-500"
-            href="tg://resolve?domain=EmonssBot"
+            href=""
+            onClick={handleTelegramLinkClick.bind(null)}
+            aria-label="Go to telegram"
+            title="EMONS Telegram"
           >
             Open telegram
             <svg

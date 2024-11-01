@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import MonitoringPicture from "../../../public/images/user-profile.png";
 import AccountDropdown from "@/components/AccountDropdown";
 import NotificationDropdown from "@/components/NotificationDropdown";
+import useSWR from "swr";
 
 export default function DashboardHeader() {
   const getTitle = (pathname) => {
@@ -43,6 +44,121 @@ export default function DashboardHeader() {
 
   const path = usePathname();
   const title = getTitle(path);
+
+  // State to control notification
+  const [notifications, setNotifications] = useState([]);
+
+  // Fetch function to call the API with the payload
+  const fetchDeviceData = async (locationid) => {
+    try {
+      const response = await fetch("/api/monitoring/getmonitoring", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: "alif",
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: "alif",
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: "2024-01-01 00:00:00",
+          end_date: "",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch data");
+
+      return response.json();
+    } catch (err) {
+      throw new Error("Interval server error", err);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error to try fetchDeviceData to get alarm value: ", err);
+      }
+    }
+  };
+
+  // Array of device codes
+  const deviceCodes = [102, 106];
+
+  // Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
+  // Use SWR to fetch all device data in parallel
+  const { data, error } = useSWR(
+    "multiple-devices", // Unique key for the SWR fetch
+    () => Promise.all(deviceCodes.map((code) => fetchDeviceData(code))), // Parallel fetches with payloads
+    {
+      isPaused: () => (deviceCodes.length === 0 ? true : false),
+      refreshInterval: 3000, // Poll every 10 seconds for updates
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (JSON.stringify(key) === JSON.stringify(["multiple-devices"]))
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  useEffect(() => {
+    if (data) {
+      // Safely extract data with optional chaining and default values
+      const newAlarms = data.flatMap(
+        (deviceData) => deviceData?.monitoring?.data?.dataalarms || []
+      );
+
+      // Only proceed if `newAlarms` has data
+      if (newAlarms.length > 0) {
+        const uniqueAlarms = newAlarms.filter((newAlarm) => {
+          return !notifications.some(
+            (existingAlarm) =>
+              existingAlarm.id_name === newAlarm.id_name &&
+              existingAlarm.value === newAlarm.value &&
+              existingAlarm.send_date === newAlarm.send_date
+          );
+        });
+
+        // Only add new, unique notifications to state
+        if (uniqueAlarms.length > 0) {
+          setNotifications((prevNotifications) => [
+            ...prevNotifications,
+            ...uniqueAlarms,
+          ]);
+        }
+
+        // setNotifications((prevNotifications) => [
+        //   ...prevNotifications,
+        //   ...newAlarms,
+        // ]);
+      }
+    }
+  }, [data, notifications]);
+
+  const handleMarkAsRead = () => {
+    setNotifications([]);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("User reset notifications");
+    }
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex flex-wrap justify-start bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
@@ -85,47 +201,6 @@ export default function DashboardHeader() {
         <div className="flex items-center justify-between w-full ps-4 xl:col-span-2 gap-x-2">
           <div className="flex items-center">
             <span>{title}</span>
-
-            {/* <div className="hs-dropdown [--auto-close:inside] relative inline-flex">
-              <div className="hs-tooltip [--placement:bottom] inline-block">
-                <button
-                  id="hs-pro-dnnd"
-                  type="button"
-                  className="hs-tooltip-toggle relative size-[38px] inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                >
-                  <svg
-                    className="flex-shrink-0 size-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                  </svg>
-                  <span className="flex absolute top-0 end-0 z-10 -mt-1.5 -me-1.5">
-                    <span className="absolute inline-flex bg-red-400 rounded-full opacity-75 animate-ping size-full dark:bg-red-600"></span>
-                    <span className="relative min-w-[18px] min-h-[18px] inline-flex justify-center items-center text-[10px] bg-red-500 text-white rounded-full px-1">
-                      1
-                    </span>
-                  </span>
-                </button>
-                <span
-                  className="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 inline-block absolute invisible z-20 py-1.5 px-2.5 bg-gray-900 text-xs text-white rounded-lg dark:bg-neutral-700"
-                  role="tooltip"
-                >
-                  Notifications
-                </span>
-              </div>
-
-              // Dynamic import from /root/app/components/
-              <NotificationDropdown />
-            </div> */}
           </div>
 
           <div className="flex items-center justify-end gap-x-8">
@@ -134,35 +209,55 @@ export default function DashboardHeader() {
              * so now, it will be hidden for a several times
              */}
             {/* Notification */}
-            <div className="hs-dropdown [--auto-close:inside] pt-2 relative inline-flex">
-              <div className="hs-tooltip [--placement:bottom] inline-block">
-                <button
-                  id="hs-pro-dnnd"
-                  type="button"
-                  className="w-5 h-5 hs-tooltip-toggle bg-blue-600/0 relative size-[38px] inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent text-gray-500 disabled:opacity-50 disabled:pointer-events-none focus:outline-none dark:text-neutral-400"
-                >
-                  {/* Ping effect */}
-                  <span className="absolute inset-0 bg-red-600 rounded-full opacity-50 animate-ping"></span>
-
-                  {/* SVG Icon */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-6 h-6 text-red-300 size-4"
+            {!error ? (
+              <div
+                className={`hs-dropdown [--auto-close:inside] pt-2 relative inline-flex`}
+              >
+                <div className="hs-tooltip [--placement:bottom] inline-block">
+                  <button
+                    id="hs-pro-dnnd"
+                    type="button"
+                    className={`${
+                      !error && notifications
+                        ? ""
+                        : "cursor-not-allowed select-none pointer-events-none"
+                    } cursor-pointer w-5 h-5 hs-tooltip-toggle bg-blue-600/0 relative size-[38px] inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent text-gray-500 disabled:opacity-50 disabled:pointer-events-none focus:outline-none dark:text-neutral-400`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"
-                    />
-                  </svg>
-                </button>
+                    {/* Ping effect */}
+                    <span className="absolute inset-0 bg-red-600 rounded-full opacity-50 animate-ping"></span>
+
+                    {/* SVG Icon */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-6 h-6 text-red-300 size-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"
+                      />
+                    </svg>
+
+                    {/* Notification badge */}
+                    {notifications.length >= 0 && (
+                      <span className="absolute -top-3 -right-4 bg-red-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                        {notifications.length > 99
+                          ? "99+"
+                          : `${notifications.length}`}
+                      </span>
+                    )}
+                  </button>
+                </div>
+                <NotificationDropdown
+                  notifications={notifications}
+                  onMarkAsRead={handleMarkAsRead}
+                />
               </div>
-              <NotificationDropdown />
-            </div>
+            ) : null}
 
             {/* Divider */}
             {/* <div className="border-e border-gray-200 w-px h-6 mx-1.5 dark:border-neutral-700"></div> */}
