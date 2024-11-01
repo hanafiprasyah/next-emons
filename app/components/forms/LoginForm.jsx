@@ -21,6 +21,7 @@ function substringUsername(input) {
 }
 
 function LoginForm() {
+  const [mobileStyle, setMobileStyle] = useState({});
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -200,12 +201,37 @@ function LoginForm() {
     }
   }
 
+  // TODO: Handle responsive style
+  useEffect(() => {
+    // Define the mobile screen width limit (e.g., 768px)
+    const isMobile = window.innerWidth <= 768;
+
+    // Apply font size style if on mobile
+    if (isMobile) {
+      setMobileStyle({ fontSize: "16px" });
+    }
+
+    // Optional: Listen for window resize to update if screen size changes
+    const handleResize = () => {
+      setMobileStyle(window.innerWidth <= 768 ? { fontSize: "16px" } : {});
+    };
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup the resize event listener
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // TODO: Check user credentials
   useEffect(() => {
     if (isLoggedIn) {
       router.replace("/dashboard/");
     }
+
+    router.replace("/login");
+    router.refresh();
   }, [router, isLoggedIn]);
 
+  // TODO:Direct to login after tenant check
   useEffect(() => {
     const storedLocalValue = localStorage.getItem("userName");
 
@@ -226,7 +252,7 @@ function LoginForm() {
       <form onSubmit={handleSubmit}>
         {/* If they had an error, show the message */}
         {errors ? (
-          <div className="mb-4 md:mt-2 md:mb-6">
+          <div className="mb-4 transition-opacity duration-300 ease-in-out opacity-0 animate-fade-in md:mt-2 md:mb-6">
             <div
               className="p-4 text-sm text-yellow-800 border border-yellow-200 rounded-lg bg-yellow-50 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500"
               role="alert"
@@ -257,7 +283,7 @@ function LoginForm() {
                     id="hs-with-description-label"
                     className="text-sm font-semibold"
                   >
-                    Oops! Something happen..
+                    Oops! Something happened..
                   </h3>
                   <div className="mt-1 text-sm text-yellow-700">{errors}</div>
                 </div>
@@ -265,6 +291,8 @@ function LoginForm() {
             </div>
           </div>
         ) : null}
+
+        {/* MAIN FORM */}
         <div className="space-y-6">
           {/* Username */}
           <div>
@@ -281,9 +309,10 @@ function LoginForm() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               name="username"
-              className="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-neutral-600"
+              className="py-2.5 px-3 block w-full duration-300 transition-all ease-in-out border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 hover:shadow-md disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-blue-600/60 ripple-pulse"
               placeholder="Your active username"
               autoComplete="off"
+              style={mobileStyle}
             />
           </div>
 
@@ -298,23 +327,24 @@ function LoginForm() {
               </label>
             </div>
 
-            <div className="relative">
+            <div className="relative mb-4">
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 name="password"
-                className="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-neutral-600"
+                className="py-2.5 px-3 block w-full duration-300 transition-all ease-in-out border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 hover:shadow-md disabled:opacity-50 disabled:pointer-events-none dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:placeholder:text-white/60 dark:focus:ring-blue-600/60 ripple-pulse"
                 placeholder="Your strength password"
                 autoComplete="off"
+                style={mobileStyle}
               />
               <button
                 type="button"
                 data-hs-toggle-password='{
                       "target": "#password"
                     }'
-                className="absolute inset-y-0 z-20 flex items-center px-3 text-gray-400 cursor-pointer end-0 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-neutral-600 dark:focus:text-blue-500"
+                className="absolute inset-y-0 z-20 flex items-center px-3 text-gray-400 transition duration-200 ease-in-out cursor-pointer end-0 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-neutral-600 dark:focus:text-blue-500"
               >
                 <svg
                   className="flex-shrink-0 size-4"
@@ -373,9 +403,18 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="py-2.5 px-3 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-neutral-600"
+              className="py-2.5 duration-200 ease-in-out transition px-3 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg  bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none shadow-lg"
             >
-              {loading ? "Credential checked.." : "Login"}
+              {loading && (
+                <div
+                  className="animate-spin inline-block size-3 border-[1px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              )}
+              <span>{loading ? "Credential checked.." : "Submit"}</span>
             </button>
           ) : (
             <div
@@ -385,7 +424,7 @@ function LoginForm() {
               <div className="flex items-center p-4">
                 <div className="inline-flex items-center justify-center w-full">
                   <div
-                    className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full"
+                    className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                     role="status"
                     aria-label="loading"
                   >
@@ -398,21 +437,6 @@ function LoginForm() {
               </div>
             </div>
           )}
-
-          {/* Set loader */}
-          {loading ? (
-            <div className="flex items-center justify-center duration-200 ease-in-out">
-              <div className="inline-flex text-center">
-                <div
-                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
-                  role="status"
-                  aria-label="loading"
-                >
-                  <span className="sr-only">Loading...</span>
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
       </form>
       <PrelineScript />

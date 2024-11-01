@@ -21,7 +21,7 @@ function Footer() {
           <p className="text-gray-500 dark:text-neutral-500">
             We are part of the{" "}
             <Link
-              className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
+              className="font-semibold text-blue-600 transition-all duration-200 ease-in-out hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
               href="https://wise.co.id/"
               rel="noopener noreferrer"
               target="_blank"

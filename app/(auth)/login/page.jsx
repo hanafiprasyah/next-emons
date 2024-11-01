@@ -11,62 +11,42 @@ import Loader from "@/loading";
 export default function Login() {
   return (
     <main id="auth-page">
-      <div className="flex min-h-full">
-        <div className="hidden select-none min-h-screen lg:w-[400px] xl:w-[430px] lg:flex flex-col justify-between p-6 bg-neutral-200">
-          <div className="flex items-center justify-between">
-            <div className="flex-none inline-block text-xl font-semibold rounded-md focus:outline-none focus:opacity-80">
-              {/* EMONS Logo */}
-              <Image
-                priority={true}
-                className="h-auto w-36"
-                src={EmonsLogo}
-                alt="EMONS | Electrical Monitoring System"
-                quality={75}
-                width={36}
-                height={36}
-              />
-            </div>
-          </div>
+      <div className="flex min-h-full bg-black/85">
+        {/* Video Background */}
+        <video
+          className="absolute top-0 left-0 object-cover w-full h-full -z-10 scale-x-[-1]"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onError={(e) => {
+            if (process.env.NODE_ENV === "development") {
+              console.error("Error loading video:", e);
+            }
+            throw e;
+          }}
+        >
+          <source src="/videos/background3a1.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
 
-          <div>
-            <span className="text-2xl font-medium text-gray-800">
-              The simplest way to monitor your electrical system
-            </span>
-
-            <Suspense fallback={<Loader />}>
-              <Image
-                priority={true}
-                className="block w-auto antialiased"
-                src={SideImage}
-                alt="EMONS | Electrical Monitoring System"
-                quality={50}
-                width={36}
-                height={36}
-              />
-            </Suspense>
-          </div>
-
-          <div className="flex justify-center gap-x-8">
-            <div className="text-xs text-gray-500 dark:text-neutral-500 text-wrap">
-              <p>© EMONS. 2024</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-5 grow">
-          <div className="h-full min-h-screen sm:w-[448px] flex flex-col justify-center mx-auto space-y-5 select-none">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-800 sm:text-2xl dark:text-neutral-200">
-                Log in to your EMONS Account
+        <div className="w-full px-5 grow">
+          <div className="h-full min-h-screen sm:w-[448px] flex flex-col justify-center mx-auto space-y-5 select-none z-50">
+            {/* Glass Container */}
+            <div className="p-6 text-white shadow-xl lg:p-12 bg-white/10 backdrop-blur-md rounded-xl">
+              <h1 className="text-xl font-semibold text-gray-800 transition-opacity duration-300 ease-in-out sm:text-2xl dark:text-neutral-200 animate-fade-in">
+                Electrical Monitoring System
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-neutral-500">
-                Provide your registered username!
+              <p className="mt-1 mb-8 text-sm text-gray-500 transition-opacity duration-300 ease-in-out dark:text-neutral-500 text-wrap animate-fade-in">
+                The simplest way to monitor your electrical system
               </p>
-            </div>
 
-            <Suspense fallback={<Loader />}>
-              <LoginForm />
-            </Suspense>
+              {/* End of Glass Container */}
+              <Suspense fallback={<Loader />}>
+                <LoginForm />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>
