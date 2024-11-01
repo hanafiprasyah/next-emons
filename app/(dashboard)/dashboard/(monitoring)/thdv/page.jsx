@@ -273,9 +273,6 @@ export default function Thdv() {
       refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
@@ -343,93 +340,109 @@ export default function Thdv() {
     // }
   }, []);
 
-  // TODO: Get default site and location
+  // TODO: Get default site
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
 
-    // Check if currentUser length is not null
-    if (currentUser) {
-      // save local tenant value to state
-      setLocalTenant(`${currentUser.toString()}`);
-
-      // TODO: fetch the site data
-      fetchSite(
-        currentUser,
-        0,
-        "",
-        "",
-        "",
-        "",
-        "2023-01-01 00:00:00",
-        "2024-12-30 23:59:00"
-      ).then((dataSite) => {
-        // if (process.env.NODE_ENV === "development") {
-        //   console.log(dataSite.site["data"]);
-        // }
-
-        // If site response is OK
-        if (dataSite.message == "OK") {
-          setDataLoc(dataSite.site["data"]);
-
-          // Scrap the first index data
-          const firstIndexSite = dataSite.site["data"][0];
-          if (selectLoc.length === 0) {
-            // set code and name as location state
-            setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-            // set device state to null in order to refresh the device list
-            // when user move to another site
-            setSelectDev([]);
-          }
-
-          // TODO: fetch the device (location)
-          fetchDevice(
-            currentUser,
-            0,
-            "",
-            "",
-            "",
-            selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
-            "2023-01-01 00:00:00",
-            "2024-12-30 23:59:00"
-          ).then((dataLocation) => {
-            // if (process.env.NODE_ENV === "development") {
-            //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-            // }
-
-            // device location response is OK
-            if (dataLocation.message == "OK") {
-              setDataDev(dataLocation.loc["data"]);
-
-              // Scrap the first index data
-              const firstIndexDev = dataLocation.loc["data"][0];
-              if (selectDev.length === 0) {
-                // set code and name as device state
-                setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
-              }
-
-              setOnLoading(true);
-              setChannel("Validating data..");
-            } else {
-              setSignal(false);
-              setChannel("Failed to load resource");
-            }
-          });
-        }
-        // If site response is not OK
-        else {
-          setOnLoading(false);
-          setSignal(false);
-          setChannel("Unreachable");
-        }
-      });
-    }
     // If tenant local storage is undefined or null
-    else {
+    if (!currentUser) {
       // set local tenant state to null
       setLocalTenant("");
+      return;
     }
-  }, [selectLoc, selectDev]);
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    // TODO: fetch the site data
+    fetchSite(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      "",
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    ).then((dataSite) => {
+      // if (process.env.NODE_ENV === "development") {
+      //   console.log(dataSite.site["data"]);
+      // }
+
+      // If site response is not OK
+      if (dataSite.message !== "OK") {
+        setOnLoading(false);
+        setSignal(false);
+        setChannel("Unreachable");
+        return;
+      }
+
+      // If site response is OK
+      const siteData = dataSite.site["data"] || [];
+      setDataLoc(siteData);
+
+      // Scrap the first index data
+      const firstIndexSite = siteData[0];
+      if (firstIndexSite) {
+        // set code and name as location state
+        setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
+        // set device state to null in order to refresh the device list
+        // when user move to another site
+        setSelectDev([]);
+      }
+    });
+  }, []);
+
+  // TODO: Get default device
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+    if (!currentUser || selectLoc.length === 0) return;
+
+    // TODO: fetch the device (location) based on selected location/site
+    fetchDevice(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    )
+      .then((dataLocation) => {
+        // if (process.env.NODE_ENV === "development") {
+        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
+        // }
+
+        // response is not OK
+        if (!dataLocation || dataLocation.message !== "OK") {
+          setOnLoading(false);
+          setSignal(false);
+          setChannel("Failed to load resource");
+          return;
+        }
+
+        // device location response is OK
+        const deviceData = dataLocation.loc["data"] || [];
+        setDataDev(deviceData);
+
+        // Scrap the first index data
+        const firstIndexDev = deviceData[0];
+        if (selectLoc.length !== 0 && firstIndexDev) {
+          // set code and name as device state
+          setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
+        }
+
+        setOnLoading(true);
+        setChannel("Validating data..");
+      })
+      .catch((error) => {
+        setOnLoading(false);
+        setSignal(false);
+        setChannel("Failed to load resource");
+      });
+  }, [selectLoc]);
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
