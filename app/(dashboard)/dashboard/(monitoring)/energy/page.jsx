@@ -24,6 +24,7 @@ export default function Energy() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -39,6 +40,27 @@ export default function Energy() {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultEnergyValues = {
+    kwh_r_input: 220,
+    kwh_s_input: 220,
+    kwh_t_input: 220,
+    kwh_total_input: 220,
+    kwh_r_output: 220,
+    kwh_s_output: 220,
+    kwh_t_output: 220,
+    kwh_total_output: 220,
+    kvarh_r_input: 220,
+    kvarh_s_input: 220,
+    kvarh_t_input: 220,
+    kvarh_total_input: 220,
+    kvarh_r_output: 220,
+    kvarh_s_output: 220,
+    kvarh_t_output: 220,
+    kvarh_total_output: 220,
+  };
+  const [lastDataEnergy, setLastDataEnergy] = useState(defaultEnergyValues); // default to 220 if data is null/undefined
 
   // Handle slow loading on SWR
   const [isSlowLoad, setSlowLoad] = useState(false);
@@ -204,27 +226,45 @@ export default function Energy() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
+
             const currentDate = new Date();
             const sendDate =
-              data.monitoring["data"]["dataenergys"][0].send_date;
+              data?.monitoring["data"]["dataenergys"][0].send_date;
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
             // count the diff
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["dataenergys"];
             }
+            return data.monitoring["data"]["dataenergys"];
           }
         }
         // if device list is null?
@@ -457,6 +497,166 @@ export default function Energy() {
         setChannel("Failed to load resource");
       });
   }, [selectLoc]);
+
+  // TODO: Update each energy in lastDataEnergy if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataEnergy((prev) => {
+        const newData = {
+          kwh_r_input:
+            data[0].kwh_r_input != null
+              ? data[0].kwh_r_input
+              : prev.kwh_r_input,
+          kwh_s_input:
+            data[0].kwh_s_input != null
+              ? data[0].kwh_s_input
+              : prev.kwh_s_input,
+          kwh_t_input:
+            data[0].kwh_t_input != null
+              ? data[0].kwh_t_input
+              : prev.kwh_t_input,
+          kwh_total_input:
+            data[0].kwh_total_input != null
+              ? data[0].kwh_total_input
+              : prev.kwh_total_input,
+          kwh_r_output:
+            data[0].kwh_r_output != null
+              ? data[0].kwh_r_output
+              : prev.kwh_r_output,
+          kwh_s_output:
+            data[0].kwh_s_output != null
+              ? data[0].kwh_s_output
+              : prev.kwh_s_output,
+          kwh_t_output:
+            data[0].kwh_t_output != null
+              ? data[0].kwh_t_output
+              : prev.kwh_t_output,
+          kwh_total_output:
+            data[0].kwh_total_output != null
+              ? data[0].kwh_total_output
+              : prev.kwh_total_output,
+          kvarh_r_input:
+            data[0].kvarh_r_input != null
+              ? data[0].kvarh_r_input
+              : prev.kvarh_r_input,
+          kvarh_s_input:
+            data[0].kvarh_s_input != null
+              ? data[0].kvarh_s_input
+              : prev.kvarh_s_input,
+          kvarh_t_input:
+            data[0].kvarh_t_input != null
+              ? data[0].kvarh_t_input
+              : prev.kvarh_t_input,
+          kvarh_total_input:
+            data[0].kvarh_total_input != null
+              ? data[0].kvarh_total_input
+              : prev.kvarh_total_input,
+          kvarh_r_output:
+            data[0].kvarh_r_output != null
+              ? data[0].kvarh_r_output
+              : prev.kvarh_r_output,
+          kvarh_s_output:
+            data[0].kvarh_s_output != null
+              ? data[0].kvarh_s_output
+              : prev.kvarh_s_output,
+          kvarh_t_output:
+            data[0].kvarh_t_output != null
+              ? data[0].kvarh_t_output
+              : prev.kvarh_t_output,
+          kvarh_total_output:
+            data[0].kvarh_total_output != null
+              ? data[0].kvarh_total_output
+              : prev.kvarh_total_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set energy values based on valid data or fallback to last known values
+  const energyValues = {
+    kwh_r_input:
+      data && data[0]?.kwh_r_input != null
+        ? data[0].kwh_r_input
+        : lastDataEnergy.kwh_r_input,
+    kwh_s_input:
+      data && data[0]?.kwh_s_input != null
+        ? data[0].kwh_s_input
+        : lastDataEnergy.kwh_s_input,
+    kwh_t_input:
+      data && data[0]?.kwh_t_input != null
+        ? data[0].kwh_t_input
+        : lastDataEnergy.kwh_t_input,
+    kwh_total_input:
+      data && data[0]?.kwh_total_input != null
+        ? data[0].kwh_total_input
+        : lastDataEnergy.kwh_total_input,
+    kwh_r_output:
+      data && data[0]?.kwh_r_output != null
+        ? data[0].kwh_r_output
+        : lastDataEnergy.kwh_r_output,
+    kwh_s_output:
+      data && data[0]?.kwh_s_output != null
+        ? data[0].kwh_s_output
+        : lastDataEnergy.kwh_s_output,
+    kwh_t_output:
+      data && data[0]?.kwh_t_output != null
+        ? data[0].kwh_t_output
+        : lastDataEnergy.kwh_t_output,
+    kwh_total_output:
+      data && data[0]?.kwh_total_output != null
+        ? data[0].kwh_total_output
+        : lastDataEnergy.kwh_total_output,
+    kvarh_r_input:
+      data && data[0]?.kvarh_r_input != null
+        ? data[0].kvarh_r_input
+        : lastDataEnergy.kvarh_r_input,
+    kvarh_s_input:
+      data && data[0]?.kvarh_s_input != null
+        ? data[0].kvarh_s_input
+        : lastDataEnergy.kvarh_s_input,
+    kvarh_t_input:
+      data && data[0]?.kvarh_t_input != null
+        ? data[0].kvarh_t_input
+        : lastDataEnergy.kvarh_t_input,
+    kvarh_total_input:
+      data && data[0]?.kvarh_total_input != null
+        ? data[0].kvarh_total_input
+        : lastDataEnergy.kvarh_total_input,
+    kvarh_r_output:
+      data && data[0]?.kvarh_r_output != null
+        ? data[0].kvarh_r_output
+        : lastDataEnergy.kvarh_r_output,
+    kvarh_s_output:
+      data && data[0]?.kvarh_s_output != null
+        ? data[0].kvarh_s_output
+        : lastDataEnergy.kvarh_s_output,
+    kvarh_t_output:
+      data && data[0]?.kvarh_t_output != null
+        ? data[0].kvarh_t_output
+        : lastDataEnergy.kvarh_t_output,
+    kvarh_total_output:
+      data && data[0]?.kvarh_total_output != null
+        ? data[0].kvarh_total_output
+        : lastDataEnergy.kvarh_total_output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -772,114 +972,118 @@ export default function Energy() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <DynamicCardEnergy
-                              id={"energy-kwh-input"}
-                              key={`kwh-input${index}`}
-                              alt={"Input"}
-                              title="KWH Input"
-                              valueR={!error ? item.kwh_r_input : 0}
-                              valueS={!error ? item.kwh_s_input : 0}
-                              valueT={!error ? item.kwh_t_input : 0}
-                              valueTotal={!error ? item.kwh_total_input : 0}
-                              isConnected={!error && data !== undefined}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`energy-kwh-input${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <DynamicCardEnergy
+                            id={"energy-kwh-input"}
+                            key={`kwh-input${index}`}
+                            alt={"Input"}
+                            title="KWH Input"
+                            valueR={
+                              !error && data !== undefined
+                                ? item.kwh_r_input
+                                : energyValues.kwh_r_input
+                            }
+                            valueS={
+                              !error && data !== undefined
+                                ? item.kwh_s_input
+                                : energyValues.kwh_s_input
+                            }
+                            valueT={
+                              !error && data !== undefined
+                                ? item.kwh_t_input
+                                : energyValues.kwh_t_input
+                            }
+                            valueTotal={
+                              !error && data !== undefined
+                                ? item.kwh_total_input
+                                : energyValues.kwh_total_input
+                            }
+                            isConnected={!error && data !== undefined}
+                          />
                         );
-                      })
-                    ) : (
-                      <DynamicCardEnergy
-                        id={"energy-kwh-input"}
-                        key={`kwh-input`}
-                        alt={"Input"}
-                        title="KWH Input"
-                        valueR={0}
-                        valueS={0}
-                        valueT={0}
-                        valueTotal={0}
-                        isConnected={false}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`energy-kwh-input${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <DynamicCardEnergy
-                              id={"energy-kwh-output"}
-                              key={`kwh-output${index}`}
-                              alt={"Output"}
-                              title="KWH Output"
-                              valueR={!error ? item.kwh_r_output : 0}
-                              valueS={!error ? item.kwh_s_output : 0}
-                              valueT={!error ? item.kwh_t_output : 0}
-                              valueTotal={!error ? item.kwh_total_output : 0}
-                              isConnected={!error && data !== undefined}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`energy-kwh-output${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <DynamicCardEnergy
+                            id={"energy-kwh-output"}
+                            key={`kwh-output${index}`}
+                            alt={"Output"}
+                            title="KWH Output"
+                            valueR={
+                              !error && data !== undefined
+                                ? item.kwh_r_output
+                                : energyValues.kwh_r_output
+                            }
+                            valueS={
+                              !error && data !== undefined
+                                ? item.kwh_s_output
+                                : energyValues.kwh_s_output
+                            }
+                            valueT={
+                              !error && data !== undefined
+                                ? item.kwh_t_output
+                                : energyValues.kwh_t_output
+                            }
+                            valueTotal={
+                              !error && data !== undefined
+                                ? item.kwh_total_output
+                                : energyValues.kwh_total_output
+                            }
+                            isConnected={!error && data !== undefined}
+                          />
                         );
-                      })
-                    ) : (
-                      <DynamicCardEnergy
-                        id={"energy-kwh-output"}
-                        key={`kwh-output${index}`}
-                        alt={"Output"}
-                        title="KWH Output"
-                        valueR={0}
-                        valueS={0}
-                        valueT={0}
-                        valueTotal={0}
-                        isConnected={false}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`energy-kwh-output${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -918,7 +1122,9 @@ export default function Energy() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -927,7 +1133,11 @@ export default function Energy() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
@@ -959,114 +1169,118 @@ export default function Energy() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <DynamicCardEnergy
-                              id={"energy-kvarh-input"}
-                              key={`kvarh-input${index}`}
-                              alt={"Input"}
-                              title="KVARH Input"
-                              valueR={!error ? item.kvarh_r_input : 0}
-                              valueS={!error ? item.kvarh_s_input : 0}
-                              valueT={!error ? item.kvarh_t_input : 0}
-                              valueTotal={!error ? item.kvarh_total_input : 0}
-                              isConnected={!error && data !== undefined}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`energy-kvarh-input${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <DynamicCardEnergy
+                            id={"energy-kvarh-input"}
+                            key={`kvarh-input${index}`}
+                            alt={"Input"}
+                            title="KVARH Input"
+                            valueR={
+                              !error && data !== undefined
+                                ? item.kvarh_r_input
+                                : energyValues.kvarh_r_input
+                            }
+                            valueS={
+                              !error && data !== undefined
+                                ? item.kvarh_s_input
+                                : energyValues.kvarh_s_input
+                            }
+                            valueT={
+                              !error && data !== undefined
+                                ? item.kvarh_t_input
+                                : energyValues.kvarh_t_input
+                            }
+                            valueTotal={
+                              !error && data !== undefined
+                                ? item.kvarh_total_input
+                                : energyValues.kvarh_total_input
+                            }
+                            isConnected={!error && data !== undefined}
+                          />
                         );
-                      })
-                    ) : (
-                      <DynamicCardEnergy
-                        id={"energy-kvarh-input"}
-                        key={`kvarh-input`}
-                        alt={"Input"}
-                        title="KVARH Input"
-                        valueR={0}
-                        valueS={0}
-                        valueT={0}
-                        valueTotal={0}
-                        isConnected={false}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`energy-kvarh-input${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal && item.location_id === selectDev[0]) {
-                          return (
-                            <DynamicCardEnergy
-                              id={"energy-kvarh-output"}
-                              key={`kvarh-output${index}`}
-                              alt={"Output"}
-                              title="KVARH Output"
-                              valueR={!error ? item.kvarh_r_output : 0}
-                              valueS={!error ? item.kvarh_s_output : 0}
-                              valueT={!error ? item.kvarh_t_output : 0}
-                              valueTotal={!error ? item.kvarh_total_output : 0}
-                              isConnected={!error && data !== undefined}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`energy-kvarh-output${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <DynamicCardEnergy
+                            id={"energy-kvarh-output"}
+                            key={`kvarh-output${index}`}
+                            alt={"Output"}
+                            title="KVARH Output"
+                            valueR={
+                              !error && data !== undefined
+                                ? item.kvarh_r_output
+                                : energyValues.kvarh_r_output
+                            }
+                            valueS={
+                              !error && data !== undefined
+                                ? item.kvarh_s_output
+                                : energyValues.kvarh_s_output
+                            }
+                            valueT={
+                              !error && data !== undefined
+                                ? item.kvarh_t_output
+                                : energyValues.kvarh_t_output
+                            }
+                            valueTotal={
+                              !error && data !== undefined
+                                ? item.kvarh_total_output
+                                : energyValues.kvarh_total_output
+                            }
+                            isConnected={!error && data !== undefined}
+                          />
                         );
-                      })
-                    ) : (
-                      <DynamicCardEnergy
-                        id={"energy-kvarh-output"}
-                        key={`kvarh-output`}
-                        alt={"Output"}
-                        title="KVARH Output"
-                        valueR={0}
-                        valueS={0}
-                        valueT={0}
-                        valueTotal={0}
-                        isConnected={false}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`energy-kvarh-output${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -1105,7 +1319,9 @@ export default function Energy() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -1114,7 +1330,11 @@ export default function Energy() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
