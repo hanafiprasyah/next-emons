@@ -23,7 +23,7 @@ export default function Grounding() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
-  // Parameter from direct map access
+  // Handle parameter from direct map access
   const router = useRouter();
   const searchParams = useSearchParams();
   const param1 = useMemo(
@@ -38,6 +38,7 @@ export default function Grounding() {
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -53,6 +54,13 @@ export default function Grounding() {
   const [dataDev, setDataDev] = useState([]);
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultGroundValues = {
+    voltage_input: 0,
+    voltage_output: 0,
+  };
+  const [lastDataGround, setLastDataGround] = useState(defaultGroundValues); // default to 220 if data is null/undefined
 
   /**
    * Used to conditioning the device dropdown pointer event
@@ -232,9 +240,10 @@ export default function Grounding() {
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
+
             const currentDate = new Date();
             const sendDate =
-              data.monitoring["data"]["datagrounds"][0].send_date;
+              data?.monitoring["data"]["datagrounds"][0].send_date;
 
             // format the send_date value
             const isoConvSendDate = new Date(sendDate);
@@ -242,18 +251,35 @@ export default function Grounding() {
             const diffTime = currentDate - isoConvSendDate;
             // set the minutes value
             const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
 
             // Set offline status if the diff time more than 5 minutes from NOW()
             if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
               setOnLoading(false);
               setSignal(false);
-              setChannel("Device signal interference");
+              setChannel("Lost connection");
             } else {
               setSignal(true);
               setChannel("Stable");
               setOnLoading(false);
-              return data.monitoring["data"]["datagrounds"];
             }
+            return data.monitoring["data"]["datagrounds"];
           }
         }
         // if device list is null?
@@ -308,9 +334,6 @@ export default function Grounding() {
       refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
@@ -523,6 +546,54 @@ export default function Grounding() {
         setChannel("Failed to load resource");
       });
   }, [param2, selectLoc]);
+
+  // TODO: Update each ground in lastDataGround if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      setLastDataGround((prev) => {
+        const newData = {
+          voltage_input:
+            data[0].voltage_input != null
+              ? data[0].voltage_input
+              : prev.voltage_input,
+          voltage_output:
+            data[0].voltage_output != null
+              ? data[0].voltage_output
+              : prev.voltage_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous State:", prev);
+          console.log("New Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // TODO: Set ground values based on valid data or fallback to last known values
+  const groundValues = {
+    voltage_input:
+      data && data[0]?.voltage_input != null
+        ? data[0].voltage_input
+        : lastDataGround.voltage_input,
+    voltage_output:
+      data && data[0]?.voltage_output != null
+        ? data[0].voltage_output
+        : lastDataGround.voltage_output,
+  };
 
   // If SWR Realtime connection error then show this widget below
   if (error) {
@@ -804,98 +875,86 @@ export default function Grounding() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"ground-input"}
-                              key={"ground-input"}
-                              alt={"Ground"}
-                              title="Input"
-                              value={!error ? item.voltage_input : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`groundInput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"ground-input"}
+                            key={"ground-input"}
+                            alt={"Ground"}
+                            title="Input"
+                            value={
+                              !error && data !== undefined
+                                ? item.voltage_input
+                                : groundValues.voltage_input
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"ground-input"}
-                        key={"ground-input"}
-                        alt={"Ground"}
-                        title="Input"
-                        value={0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`groundInput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data !== undefined ? (
-                      data?.map((item, index) => {
-                        if (signal) {
-                          return (
-                            <RadialDynamicGauge
-                              id={"ground-output"}
-                              key={"ground-output"}
-                              alt={"Ground"}
-                              title="Output"
-                              value={!error ? item.voltage_output : 0}
-                            />
-                          );
-                        }
+                    {data?.map((item, index) => {
+                      if (!error) {
                         return (
-                          <div key={`groundOutput${index}`}>
-                            <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                              <svg
-                                className="shrink-0 size-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                                <line x1="12" x2="12" y1="2" y2="12"></line>
-                              </svg>
-                              Device is not connected
-                            </span>
-                          </div>
+                          <RadialDynamicGauge
+                            id={"ground-output"}
+                            key={"ground-output"}
+                            alt={"Ground"}
+                            title="Output"
+                            value={
+                              !error && data !== undefined
+                                ? item.voltage_output
+                                : groundValues.voltage_output
+                            }
+                          />
                         );
-                      })
-                    ) : (
-                      <RadialDynamicGauge
-                        id={"ground-output"}
-                        key={"ground-output"}
-                        alt={"Ground"}
-                        title="Output"
-                        value={0}
-                      />
-                    )}
+                      }
+                      return (
+                        <div key={`groundOutput${index}`}>
+                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                            <svg
+                              className="shrink-0 size-3"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                              <line x1="12" x2="12" y1="2" y2="12"></line>
+                            </svg>
+                            Device is not connected
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
@@ -934,7 +993,9 @@ export default function Grounding() {
             <div>
               <label
                 htmlFor="hs-pro-dupccn1"
-                className="relative block w-auto px-3 py-2 text-sm font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none"
+                className={`relative block w-auto px-3 py-2 ${
+                  channel === "Lost connection" ? "text-xs" : "text-sm"
+                } font-medium text-center rounded-lg cursor-default sm:text-start focus:outline-none`}
               >
                 <span
                   className={`relative z-10 text-gray-800 peer-checked:hidden ${
@@ -943,7 +1004,11 @@ export default function Grounding() {
                       : "dark:text-gray-500"
                   }`}
                 >
-                  {channel}
+                  {`${
+                    channel === "Lost connection"
+                      ? `${channel} on ${lastTimeUpdate}`
+                      : channel
+                  }`}
                 </span>
               </label>
             </div>
