@@ -40,6 +40,9 @@ export default function Thdv() {
   const [selectDev, setSelectDev] = useState([]);
   // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
 
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
+
   /**
    * Used to conditioning the device dropdown pointer event
    * if location === [] (null), then disable the device dropdown
@@ -273,7 +276,16 @@ export default function Thdv() {
       refreshInterval: 3000,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
-      onError: (err) => clearSWRCache(),
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
         if (error.status === 404) return;
@@ -514,6 +526,59 @@ export default function Thdv() {
 
   return (
     <div id="thdv-template" className="grid grid-cols-1 gap-0 mt-2">
+      {/* Alert on slow loading */}
+      {isSlowLoad ? (
+        <>
+          <div
+            id="hs-pro-shchal"
+            className="mb-5 p-4 sm:ps-16 relative overflow-hidden bg-gradient-to-r from-orange-100 via-purple-200 via-70% to-indigo-200 rounded-lg dark:from-orange-800 dark:via-purple-800 dark:to-indigo-800"
+            role="alert"
+            tabIndex={-1}
+            aria-labelledby="hs-pro-shchal-label"
+          >
+            <div className="flex items-center gap-x-3">
+              <div className="absolute hidden sm:block -bottom-4 -start-6">
+                <span className="text-7xl">🎁</span>
+              </div>
+              <div className="grow">
+                <h4
+                  id="hs-pro-shchal-label"
+                  className="font-medium text-orange-700 dark:text-white"
+                >
+                  Choose your free gift
+                </h4>
+                <p className="mt-1 text-xs text-gray-800 dark:text-neutral-200">
+                  When you spend $30. Use code SUMMER.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center text-xs text-gray-800 border border-transparent rounded-full size-7 gap-x-1 hover:bg-indigo-300 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-indigo-300 dark:text-purple-300 dark:hover:bg-indigo-700 dark:focus:bg-indigo-700"
+                data-hs-remove-element="#hs-pro-shchal"
+              >
+                <svg
+                  className="shrink-0 size-3.5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+                <span className="sr-only">Remove</span>
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
+      {/* End Alert on slow loading */}
+
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">
         <div className="-ms-[5px] flex justify-between items-center gap-1 sm:gap-2">
