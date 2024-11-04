@@ -5,9 +5,6 @@ import InfoNotification from "@/components/notifications/Info";
 import Link from "next/link";
 
 export default function NotificationDropdown({ notifications, onMarkAsRead }) {
-  if (process.env.NODE_ENV === "development") {
-    console.log("Notification data from Header: ", notifications);
-  }
   /**
    * Currently this notification dropdown only have on Dialog Segment
    * We will release Archived Notification segment soon after v1
