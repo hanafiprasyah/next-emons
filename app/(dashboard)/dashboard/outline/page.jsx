@@ -14,165 +14,24 @@ import Image from "next/image";
 import useSWR, { mutate } from "swr";
 import dynamic from "next/dynamic";
 
+const DynamicAlert = dynamic(
+  () => import("@/components/alerts/SlowConnectionAlert"),
+  { ssr: false }
+);
+
 const RealTimeVoltageInputSplineChart = dynamic(
   () => import("@/components/charts/line/VoltageInputChart"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 
 const RealTimeVoltageOutputSplineChart = dynamic(
   () => import("@/components/charts/line/VoltageOutputChart"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
-
-// TODO: Fetch monitoring data with SWR isolated
-function useMonitoring(localTenant, locationid, start_date) {
-  // Function to fetch the data API [REALTIME]
-  const fetchDataRealtime = async (
-    url,
-    localTenant,
-    locationid,
-    start_date
-  ) => {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: localTenant,
-          token: process.env.AUTH_TOKEN,
-        },
-        body: JSON.stringify({
-          tenant: localTenant,
-          locationid: locationid,
-          lane: "",
-          status: "",
-          value: "",
-          side: "",
-          start_date: start_date ?? "2024-01-01 00:40:20",
-          end_date: "",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchRealtime: ", err);
-      }
-      throw err;
-    }
-  };
-
-  // Clear SWR Cache
-  const clearSWRCache = () =>
-    mutate(() => true, undefined, {
-      revalidate: false,
-      rollbackOnError: true,
-    });
-
-  const { data, isLoading, error } = useSWR(
-    localTenant !== "" && localTenant !== undefined && localTenant !== null
-      ? ["/api/monitoring/getmonitoring", localTenant, locationid, start_date]
-      : null,
-    ([url, localTenant, locationid, start_date]) =>
-      fetchDataRealtime(url, localTenant, locationid, start_date),
-    {
-      isPaused: () =>
-        (localTenant === "" && localTenant === undefined) ||
-        (locationid === null && locationid === undefined) ||
-        (start_date === "" && start_date === undefined)
-          ? true
-          : false,
-      refreshInterval: 3000,
-      revalidateOnFocus: false,
-      loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
-      onError: (err) => clearSWRCache(),
-      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-        // TODO: Never retry on 404
-        if (error.status === 404) return;
-        // TODO: Disable retry for spesific key
-        if (
-          JSON.stringify(key) ===
-          JSON.stringify([
-            "/api/monitoring/getmonitoring",
-            localTenant,
-            locationid,
-            start_date,
-          ])
-        )
-          return;
-        // TODO: Only 10 times retry
-        if (retryCount > 10) return;
-        // TODO: Retry interval
-        setTimeout(() => revalidate({ retryCount }), 5000);
-      },
-    }
-  );
-
-  if (data?.message === "OK") {
-    if (
-      data?.monitoring["data"]["datacurrents"][0] === undefined ||
-      data?.monitoring["data"]["dataenergys"][0] === undefined ||
-      data?.monitoring["data"]["datagrounds"][0] === undefined ||
-      data?.monitoring["data"]["datathdis"][0] === undefined ||
-      data?.monitoring["data"]["dataThdvs"][0] === undefined ||
-      data?.monitoring["data"]["datavoltages"][0] === undefined ||
-      data?.monitoring["data"]["datafrequencys"][0] === undefined ||
-      data?.monitoring["data"]["dataPowerFactors"][0] === undefined
-    ) {
-      return {
-        monitoring: null,
-        isMonitoringError: error,
-        isMonitoringLoading: isLoading,
-      };
-    } else {
-      const currentDate = new Date();
-      const sendDate = data?.monitoring["data"]["datavoltages"][0].send_date;
-      // format the send_date value
-      const isoConvSendDate = new Date(sendDate);
-      // count the diff
-      const diffTime = currentDate - isoConvSendDate;
-      // set the minutes value
-      const minutes = Math.floor(diffTime / 60000);
-
-      // Set offline status if the diff time more than 5 minutes from NOW()
-      if (minutes >= process.env.MAX_LAST_TRIGGER_MINUTE) {
-        return {
-          monitoring: null,
-          isMonitoringError: error,
-          isMonitoringLoading: isLoading,
-        };
-      } else {
-        return {
-          monitoring: data,
-          isMonitoringError: error,
-          isMonitoringLoading: isLoading,
-        };
-      }
-    }
-  } else {
-    return {
-      monitoring: null,
-      isMonitoringError: error,
-      isMonitoringLoading: isLoading,
-    };
-  }
-}
 
 export default function DashboardOutline() {
   /**
@@ -182,8 +41,8 @@ export default function DashboardOutline() {
   const [localTenant, setLocalTenant] = useState("");
 
   // Dates
-  const [currentDate, setCurrentDate] = useState("");
   const [hoursAgo, setHoursAgo] = useState("");
+  const [lastTimeUpdate, setLastTimeUpdate] = useState("");
 
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
@@ -204,16 +63,105 @@ export default function DashboardOutline() {
    */
   const [showDev, isShowDev] = useState(true);
 
+  // Temporary memory to handle null/undefined value from Rest API
+  const defaultVoltageValues = {
+    v_rs_input: 220,
+    v_st_input: 220,
+    v_rt_input: 220,
+    v_rn_input: 220,
+    v_sn_input: 220,
+    v_tn_input: 220,
+    v_rs_output: 220,
+    v_st_output: 220,
+    v_rt_output: 220,
+    v_rn_output: 220,
+    v_sn_output: 220,
+    v_tn_output: 220,
+  };
+
+  const defaultCurrentValues = {
+    i_r_Input: 0,
+    i_r_Output: 0,
+    i_s_Input: 0,
+    i_s_Output: 0,
+    i_t_Input: 0,
+    i_t_Output: 0,
+  };
+
+  const defaultGroundValues = {
+    voltage_input: 0,
+    voltage_output: 0,
+  };
+
+  const defaultFrequencyValue = {
+    frequency_input: 50,
+    frequency_output: 50,
+  };
+
+  const defaultEnergyValues = {
+    kwh_r_input: 1,
+    kwh_s_input: 1,
+    kwh_t_input: 1,
+    kwh_total_input: 1,
+    kwh_r_output: 1,
+    kwh_s_output: 1,
+    kwh_t_output: 1,
+    kwh_total_output: 1,
+    kvarh_r_input: 1,
+    kvarh_s_input: 1,
+    kvarh_t_input: 1,
+    kvarh_total_input: 1,
+    kvarh_r_output: 1,
+    kvarh_s_output: 1,
+    kvarh_t_output: 1,
+    kvarh_total_output: 1,
+  };
+
+  const defaultPFValues = {
+    cosphi_input: 1,
+    cosphi_output: 1,
+  };
+
+  const defaultThdvValues = {
+    thdv_rs_Input: 0,
+    thdv_rs_Input: 0,
+    thdv_rt_Input: 0,
+    thdv_rn_Input: 0,
+    thdv_sn_Input: 0,
+    thdv_tn_Input: 0,
+    thdv_rs_output: 0,
+    thdv_st_output: 0,
+    thdv_rt_output: 0,
+    thdv_rn_output: 0,
+    thdv_sn_output: 0,
+    thdv_tn_output: 0,
+  };
+
+  const defaultThdiValues = {
+    thdi_r_Input: 0,
+    thdi_s_Input: 0,
+    thdi_t_Input: 0,
+    thdi_r_output: 0,
+    thdi_s_output: 0,
+    thdi_t_output: 0,
+  };
+
+  const [lastDataGround, setLastDataGround] = useState(defaultGroundValues);
+  const [lastDataCurrent, setLastDataCurrent] = useState(defaultCurrentValues);
+  const [lastDataVoltage, setLastDataVoltage] = useState(defaultVoltageValues);
+  const [lastDataFrequency, setLastDataFrequency] = useState(
+    defaultFrequencyValue
+  );
+  const [lastDataEnergy, setLastDataEnergy] = useState(defaultEnergyValues);
+  const [lastDataPF, setLastDataPF] = useState(defaultPFValues);
+  const [lastDataThdv, setLastDataThdv] = useState(defaultThdvValues);
+  const [lastDataThdi, setLastDataThdi] = useState(defaultThdiValues);
+
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
+
   // Used to set date time
   const [dateState, setDateState] = useState(new Date());
-
-  // Used to control value of monitoring
-  const { monitoring, isMonitoringError, isMonitoringLoading } = useMonitoring(
-    localTenant,
-    selectDev[0],
-    hoursAgo
-  );
-
   /**
    * END OF STATE COLLECTION
    */
@@ -221,6 +169,7 @@ export default function DashboardOutline() {
   // Scripts
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
+    setSignal(false);
     setSelectLoc([code, name]);
     isShowDev(true);
     setSelectDev([]);
@@ -228,12 +177,14 @@ export default function DashboardOutline() {
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
+    setSignal(false);
     setSelectDev([code, name]);
   };
 
   const handleDisableClick = (e) => {
     e.preventDefault();
   };
+
   // End of Scripts
 
   // Function to fetch the /tool/dataside API
@@ -310,6 +261,187 @@ export default function DashboardOutline() {
     return response.json();
   };
 
+  // Function to fetch the data API [REALTIME]
+  const fetchDataRealtime = async (
+    url,
+    localTenant,
+    locationid,
+    start_date
+  ) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: localTenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: localTenant,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        setSignal(true);
+
+        // Check if device list is not null
+        if (selectDev.length !== 0) {
+          setSignal(true);
+          // Check if data ground length is null
+          if (
+            data?.monitoring["data"]["datavoltages"][0] === undefined ||
+            data?.monitoring["data"]["datacurrents"][0] === undefined ||
+            data?.monitoring["data"]["datagrounds"][0] === undefined ||
+            data?.monitoring["data"]["datafrequencys"][0] === undefined ||
+            data?.monitoring["data"]["dataenergys"][0] === undefined ||
+            data?.monitoring["data"]["dataPowerFactors"][0] === undefined ||
+            data?.monitoring["data"]["dataThdvs"][0] === undefined ||
+            data?.monitoring["data"]["datathdis"][0] === undefined
+          ) {
+            // Give signal to offline, and set channel to unreachable
+            setSignal(false);
+          } else {
+            // We will check the difference about last send_date from API and current date from NOW()
+            setSignal(true);
+
+            const currentDate = new Date();
+            const sendDate =
+              data?.monitoring["data"]["datavoltages"][0].send_date ||
+              data?.monitoring["data"]["datacurrents"][0].send_date ||
+              data?.monitoring["data"]["datagrounds"][0].send_date ||
+              data?.monitoring["data"]["datafrequencys"][0].send_date ||
+              data?.monitoring["data"]["dataenergys"][0].send_date ||
+              data?.monitoring["data"]["dataPowerFactors"][0].send_date ||
+              data?.monitoring["data"]["dataThdvs"][0].send_date ||
+              data?.monitoring["data"]["datathdis"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+              setSignal(false);
+            } else {
+              setSignal(true);
+            }
+
+            return data;
+          }
+        } // if device list is null?
+        else {
+          setSignal(false);
+        }
+      }
+      // If response message is not OK
+      else {
+        setSignal(false);
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "Error in fetchVoltageRealtime: Response Message is Not OK"
+          );
+        }
+      }
+    } catch (err) {
+      setSignal(false);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchRealtime: ", err);
+      }
+      throw err;
+    }
+  };
+
+  // Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
+  // SWR
+  const { data, isLoading, error } = useSWR(
+    ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
+    ([url, localTenant, locationid, start_date]) =>
+      fetchDataRealtime(url, localTenant, locationid, start_date),
+    {
+      isPaused: () =>
+        selectLoc.length === 0 ||
+        selectDev.length === 0 ||
+        (localTenant == "" && localTenant == undefined) ||
+        (hoursAgo == "" && hoursAgo == undefined)
+          ? true
+          : false,
+      refreshInterval: 3000,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/getmonitoring",
+            localTenant,
+            locationid,
+            start_date,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
     const dateIns = new Date();
@@ -341,7 +473,6 @@ export default function DashboardOutline() {
     // const diffTime = dateIns - isoConvDate;
     // const minutes = Math.floor((diffTime % 3600000) / 60000);
     if (getFormatedCurrentDate.startsWith("202")) {
-      setCurrentDate(getFormatedCurrentDate);
       setHoursAgo(getHoursAgo);
     }
     // if (process.env.NODE_ENV === "development") {
@@ -354,13 +485,20 @@ export default function DashboardOutline() {
     // }
   }, []);
 
-  // TODO: Get default site and location
+  // TODO: Get default site
   useEffect(() => {
     // Get local tenant item
     const currentUser = localStorage.getItem("tenant");
-    if (localStorage.length != 0) {
-      setLocalTenant(`${currentUser.toString()}`);
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
     }
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
 
     // TODO: fetch the site data
     fetchSite(
@@ -377,52 +515,813 @@ export default function DashboardOutline() {
       //   console.log(dataSite.site["data"]);
       // }
 
-      if (dataSite.message == "OK") {
-        setDataLoc(dataSite.site["data"]);
-
-        const firstIndexSite = dataSite.site["data"][0];
-        if (selectLoc.length === 0) {
-          setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-          setSelectDev([]);
-        }
-
-        if (selectLoc.length != 0) {
-          // TODO: fetch the device (location)
-          fetchDevice(
-            currentUser,
-            0,
-            "",
-            "",
-            "",
-            selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
-            "2023-01-01 00:00:00",
-            "2024-12-30 23:59:00"
-          ).then((dataLocation) => {
-            // if (process.env.NODE_ENV === "development") {
-            //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-            // }
-
-            if (dataLocation.message == "OK") {
-              setDataDev(dataLocation.loc["data"]);
-
-              const firstIndexDev = dataLocation.loc["data"][0];
-              if (selectDev.length === 0) {
-                setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
-                setSignal(true);
-              }
-            } else {
-              setSignal(false);
-            }
-          });
-        }
-      } else {
+      // If site response is not OK
+      if (dataSite.message !== "OK") {
         setSignal(false);
+
+        return;
+      }
+
+      // If site response is OK
+      const siteData = dataSite.site["data"] || [];
+      setDataLoc(siteData);
+
+      // Scrap the first index data
+      const firstIndexSite = siteData[0];
+      if (firstIndexSite) {
+        // set code and name as location state
+        setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
+        // set device state to null in order to refresh the device list
+        // when user move to another site
+        setSelectDev([]);
       }
     });
-  }, [selectLoc, selectDev]);
+  }, []);
+
+  // TODO: Get default device
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+    if (!currentUser || selectLoc.length === 0) return;
+
+    // TODO: fetch the device (location) based on selected location/site
+    fetchDevice(
+      currentUser,
+      0,
+      "",
+      "",
+      "",
+      selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
+      "2023-01-01 00:00:00",
+      "2024-12-30 23:59:00"
+    )
+      .then((dataLocation) => {
+        // if (process.env.NODE_ENV === "development") {
+        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
+        // }
+
+        // response is not OK
+        if (!dataLocation || dataLocation.message !== "OK") {
+          setSignal(false);
+
+          return;
+        }
+
+        // device location response is OK
+        const deviceData = dataLocation.loc["data"] || [];
+        setDataDev(deviceData);
+
+        // Scrap the first index data
+        const firstIndexDev = deviceData[0];
+        if (selectLoc.length !== 0 && firstIndexDev) {
+          // set code and name as device state
+          setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
+        }
+      })
+      .catch((error) => {
+        setSignal(false);
+      });
+  }, [selectLoc]);
+
+  // TODO: Update each monitoring in lastData state if data is valid
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Effect triggered with data:", data);
+    }
+
+    if (data) {
+      // Voltage set
+      setLastDataVoltage((prev) => {
+        const newData = {
+          v_rs_input:
+            data.monitoring["data"]["datavoltages"][0].v_rs_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rs_input
+              : prev.v_rs_input,
+          v_st_input:
+            data.monitoring["data"]["datavoltages"][0].v_st_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_st_input
+              : prev.v_st_input,
+          v_rt_input:
+            data.monitoring["data"]["datavoltages"][0].v_rt_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rt_input
+              : prev.v_rt_input,
+          v_rn_input:
+            data.monitoring["data"]["datavoltages"][0].v_rn_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rn_input
+              : prev.v_rn_input,
+          v_sn_input:
+            data.monitoring["data"]["datavoltages"][0].v_sn_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_sn_input
+              : prev.v_sn_input,
+          v_tn_input:
+            data.monitoring["data"]["datavoltages"][0].v_tn_input != null
+              ? data.monitoring["data"]["datavoltages"][0].v_tn_input
+              : prev.v_tn_input,
+          v_rs_output:
+            data.monitoring["data"]["datavoltages"][0].v_rs_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rs_output
+              : prev.v_rs_output,
+          v_st_output:
+            data.monitoring["data"]["datavoltages"][0].v_st_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_st_output
+              : prev.v_st_output,
+          v_rt_output:
+            data.monitoring["data"]["datavoltages"][0].v_rt_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rt_output
+              : prev.v_rt_output,
+          v_rn_output:
+            data.monitoring["data"]["datavoltages"][0].v_rn_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_rn_output
+              : prev.v_rn_output,
+          v_sn_output:
+            data.monitoring["data"]["datavoltages"][0].v_sn_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_sn_output
+              : prev.v_sn_output,
+          v_tn_output:
+            data.monitoring["data"]["datavoltages"][0].v_tn_output != null
+              ? data.monitoring["data"]["datavoltages"][0].v_tn_output
+              : prev.v_tn_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous voltage State:", prev);
+          console.log("New voltage Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      // Current set
+      setLastDataCurrent((prev) => {
+        const newData = {
+          i_r_Input:
+            data.monitoring["data"]["datacurrents"][0].i_r_Input != null
+              ? data.monitoring["data"]["datacurrents"][0].i_r_Input
+              : prev.i_r_Input,
+          i_r_Output:
+            data.monitoring["data"]["datacurrents"][0].i_r_Output != null
+              ? data.monitoring["data"]["datacurrents"][0].i_r_Output
+              : prev.i_r_Output,
+          i_s_Input:
+            data.monitoring["data"]["datacurrents"][0].i_s_Input != null
+              ? data.monitoring["data"]["datacurrents"][0].i_s_Input
+              : prev.i_s_Input,
+          i_s_Output:
+            data.monitoring["data"]["datacurrents"][0].i_s_Output != null
+              ? data.monitoring["data"]["datacurrents"][0].i_s_Output
+              : prev.i_s_Output,
+          i_t_Input:
+            data.monitoring["data"]["datacurrents"][0].i_t_Input != null
+              ? data.monitoring["data"]["datacurrents"][0].i_t_Input
+              : prev.i_t_Input,
+          i_t_Output:
+            data.monitoring["data"]["datacurrents"][0].i_t_Output != null
+              ? data.monitoring["data"]["datacurrents"][0].i_t_Output
+              : prev.i_t_Output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous current State:", prev);
+          console.log("New current Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      // Ground set
+      setLastDataGround((prev) => {
+        const newData = {
+          voltage_input:
+            data.monitoring["data"]["datagrounds"][0].voltage_input != null
+              ? data.monitoring["data"]["datagrounds"][0].voltage_input
+              : prev.voltage_input,
+          voltage_output:
+            data.monitoring["data"]["datagrounds"][0].voltage_output != null
+              ? data.monitoring["data"]["datagrounds"][0].voltage_output
+              : prev.voltage_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous ground State:", prev);
+          console.log("New ground Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      // Frequency set
+      setLastDataFrequency((prev) => {
+        const newData = {
+          frequency_input:
+            data.monitoring["data"]["datafrequencys"][0].frequency_input != null
+              ? data.monitoring["data"]["datafrequencys"][0].frequency_input
+              : prev.frequency_input,
+          frequency_output:
+            data.monitoring["data"]["datafrequencys"][0].frequency_output !=
+            null
+              ? data.monitoring["data"]["datafrequencys"][0].frequency_output
+              : prev.frequency_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous freq State:", prev);
+          console.log("New freq Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      // Energy set
+      setLastDataEnergy((prev) => {
+        const newData = {
+          kwh_r_input:
+            data.monitoring["data"]["dataenergys"][0].kwh_r_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_r_input
+              : prev.kwh_r_input,
+          kwh_s_input:
+            data.monitoring["data"]["dataenergys"][0].kwh_s_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_s_input
+              : prev.kwh_s_input,
+          kwh_t_input:
+            data.monitoring["data"]["dataenergys"][0].kwh_t_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_t_input
+              : prev.kwh_t_input,
+          kwh_total_input:
+            data.monitoring["data"]["dataenergys"][0].kwh_total_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_total_input
+              : prev.kwh_total_input,
+          kwh_r_output:
+            data.monitoring["data"]["dataenergys"][0].kwh_r_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_r_output
+              : prev.kwh_r_output,
+          kwh_s_output:
+            data.monitoring["data"]["dataenergys"][0].kwh_s_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_s_output
+              : prev.kwh_s_output,
+          kwh_t_output:
+            data.monitoring["data"]["dataenergys"][0].kwh_t_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_t_output
+              : prev.kwh_t_output,
+          kwh_total_output:
+            data.monitoring["data"]["dataenergys"][0].kwh_total_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kwh_total_output
+              : prev.kwh_total_output,
+          kvarh_r_input:
+            data.monitoring["data"]["dataenergys"][0].kvarh_r_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_r_input
+              : prev.kvarh_r_input,
+          kvarh_s_input:
+            data.monitoring["data"]["dataenergys"][0].kvarh_s_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_s_input
+              : prev.kvarh_s_input,
+          kvarh_t_input:
+            data.monitoring["data"]["dataenergys"][0].kvarh_t_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_t_input
+              : prev.kvarh_t_input,
+          kvarh_total_input:
+            data.monitoring["data"]["dataenergys"][0].kvarh_total_input != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_total_input
+              : prev.kvarh_total_input,
+          kvarh_r_output:
+            data.monitoring["data"]["dataenergys"][0].kvarh_r_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_r_output
+              : prev.kvarh_r_output,
+          kvarh_s_output:
+            data.monitoring["data"]["dataenergys"][0].kvarh_s_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_s_output
+              : prev.kvarh_s_output,
+          kvarh_t_output:
+            data.monitoring["data"]["dataenergys"][0].kvarh_t_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_t_output
+              : prev.kvarh_t_output,
+          kvarh_total_output:
+            data.monitoring["data"]["dataenergys"][0].kvarh_total_output != null
+              ? data.monitoring["data"]["dataenergys"][0].kvarh_total_output
+              : prev.kvarh_total_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous energy State:", prev);
+          console.log("New energy Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      // Power factor set
+      setLastDataPF((prev) => {
+        const newData = {
+          cosphi_input:
+            data.monitoring["data"]["dataPowerFactors"][0].cosphi_input != null
+              ? data.monitoring["data"]["dataPowerFactors"][0].cosphi_input
+              : prev.cosphi_input,
+          cosphi_output:
+            data.monitoring["data"]["dataPowerFactors"][0].cosphi_output != null
+              ? data.monitoring["data"]["dataPowerFactors"][0].cosphi_output
+              : prev.cosphi_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous pf State:", prev);
+          console.log("New pf Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      setLastDataThdv((prev) => {
+        const newData = {
+          thdv_rs_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rs_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rs_Input
+              : prev.thdv_rs_Input,
+          thdv_st_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_st_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_st_Input
+              : prev.thdv_st_Input,
+          thdv_rt_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rt_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rt_Input
+              : prev.thdv_rt_Input,
+          thdv_rn_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rn_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rn_Input
+              : prev.thdv_rn_Input,
+          thdv_sn_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_sn_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_sn_Input
+              : prev.thdv_sn_Input,
+          thdv_tn_Input:
+            data.monitoring["data"]["dataThdvs"][0].thdv_tn_Input != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_tn_Input
+              : prev.thdv_tn_Input,
+          thdv_rs_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rs_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rs_output
+              : prev.thdv_rs_output,
+          thdv_st_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_st_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_st_output
+              : prev.thdv_st_output,
+          thdv_rt_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rt_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rt_output
+              : prev.thdv_rt_output,
+          thdv_rn_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_rn_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_rn_output
+              : prev.thdv_rn_output,
+          thdv_sn_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_sn_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_sn_output
+              : prev.thdv_sn_output,
+          thdv_tn_output:
+            data.monitoring["data"]["dataThdvs"][0].thdv_tn_output != null
+              ? data.monitoring["data"]["dataThdvs"][0].thdv_tn_output
+              : prev.thdv_tn_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous thdv State:", prev);
+          console.log("New thdv Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+
+      setLastDataThdi((prev) => {
+        const newData = {
+          thdi_r_Input:
+            data.monitoring["data"]["datathdis"][0].thdi_r_Input != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_r_Input
+              : prev.thdi_r_Input,
+          thdi_s_Input:
+            data.monitoring["data"]["datathdis"][0].thdi_s_Input != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_s_Input
+              : prev.thdi_s_Input,
+          thdi_t_Input:
+            data.monitoring["data"]["datathdis"][0].thdi_t_Input != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_t_Input
+              : prev.thdi_t_Input,
+          thdi_r_output:
+            data.monitoring["data"]["datathdis"][0].thdi_r_output != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_r_output
+              : prev.thdi_r_output,
+          thdi_s_output:
+            data.monitoring["data"]["datathdis"][0].thdi_s_output != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_s_output
+              : prev.thdi_s_output,
+          thdi_t_output:
+            data.monitoring["data"]["datathdis"][0].thdi_t_output != null
+              ? data.monitoring["data"]["datathdis"][0].thdi_t_output
+              : prev.thdi_t_output,
+        };
+
+        // Log previous and new data for comparison
+        if (process.env.NODE_ENV === "development") {
+          console.log("Previous thdi State:", prev);
+          console.log("New thdi Data:", newData);
+        }
+
+        // Ensure we are not setting the state to the same value
+        if (JSON.stringify(prev) !== JSON.stringify(newData)) {
+          return newData;
+        }
+
+        // Return previous state if nothing has changed
+        return prev;
+      });
+    }
+  }, [data]);
+
+  // monitoring["data"]["datathdis"]
+
+  // TODO: Set monitoring values based on valid data or fallback to last known values
+  const voltageValues = {
+    v_rs_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rs_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rs_input
+        : lastDataVoltage.v_rs_input,
+    v_st_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_st_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_st_input
+        : lastDataVoltage.v_st_input,
+    v_rt_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rt_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rt_input
+        : lastDataVoltage.v_rt_input,
+    v_rn_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rn_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rn_input
+        : lastDataVoltage.v_rn_input,
+    v_sn_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_sn_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_sn_input
+        : lastDataVoltage.v_sn_input,
+    v_tn_input:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_tn_input != null
+        ? data.monitoring["data"]["datavoltages"][0].v_tn_input
+        : lastDataVoltage.v_tn_input,
+    v_rs_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rs_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rs_output
+        : lastDataVoltage.v_rs_output,
+    v_st_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_st_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_st_output
+        : lastDataVoltage.v_st_output,
+    v_rt_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rt_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rt_output
+        : lastDataVoltage.v_rt_output,
+    v_rn_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_rn_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_rn_output
+        : lastDataVoltage.v_rn_output,
+    v_sn_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_sn_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_sn_output
+        : lastDataVoltage.v_sn_output,
+    v_tn_output:
+      data && data.monitoring["data"]["datavoltages"][0]?.v_tn_output != null
+        ? data.monitoring["data"]["datavoltages"][0].v_tn_output
+        : lastDataVoltage.v_tn_output,
+  };
+
+  const currentValues = {
+    i_r_Input:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_r_Input != null
+        ? data.monitoring["data"]["datacurrents"][0].i_r_Input
+        : lastDataCurrent.i_r_Input,
+    i_r_Output:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_r_Output != null
+        ? data.monitoring["data"]["datacurrents"][0].i_r_Output
+        : lastDataCurrent.i_r_Output,
+    i_s_Input:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_s_Input != null
+        ? data.monitoring["data"]["datacurrents"][0].i_s_Input
+        : lastDataCurrent.i_s_Input,
+    i_s_Output:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_s_Output != null
+        ? data.monitoring["data"]["datacurrents"][0].i_s_Output
+        : lastDataCurrent.i_s_Output,
+    i_t_Input:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_t_Input != null
+        ? data.monitoring["data"]["datacurrents"][0].i_t_Input
+        : lastDataCurrent.i_t_Input,
+    i_t_Output:
+      data && data.monitoring["data"]["datacurrents"][0]?.i_t_Output != null
+        ? data.monitoring["data"]["datacurrents"][0].i_t_Output
+        : lastDataCurrent.i_t_Output,
+  };
+
+  const groundValues = {
+    voltage_input:
+      data && data.monitoring["data"]["datagrounds"][0]?.voltage_input != null
+        ? data.monitoring["data"]["datagrounds"][0].voltage_input
+        : lastDataGround.voltage_input,
+    voltage_output:
+      data && data.monitoring["data"]["datagrounds"][0]?.voltage_output != null
+        ? data.monitoring["data"]["datagrounds"][0].voltage_output
+        : lastDataGround.voltage_output,
+  };
+
+  const frequencyValues = {
+    frequency_input:
+      data &&
+      data.monitoring["data"]["datafrequencys"][0]?.frequency_input != null
+        ? data.monitoring["data"]["datafrequencys"][0].frequency_input
+        : lastDataFrequency.frequency_input,
+    frequency_output:
+      data &&
+      data.monitoring["data"]["datafrequencys"][0]?.frequency_output != null
+        ? data.monitoring["data"]["datafrequencys"][0].frequency_output
+        : lastDataFrequency.frequency_output,
+  };
+
+  const energyValues = {
+    kwh_r_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_r_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_r_input
+        : lastDataEnergy.kwh_r_input,
+    kwh_s_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_s_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_s_input
+        : lastDataEnergy.kwh_s_input,
+    kwh_t_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_t_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_t_input
+        : lastDataEnergy.kwh_t_input,
+    kwh_total_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_total_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_total_input
+        : lastDataEnergy.kwh_total_input,
+    kwh_r_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_r_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_r_output
+        : lastDataEnergy.kwh_r_output,
+    kwh_s_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_s_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_s_output
+        : lastDataEnergy.kwh_s_output,
+    kwh_t_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kwh_t_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_t_output
+        : lastDataEnergy.kwh_t_output,
+    kwh_total_output:
+      data &&
+      data.monitoring["data"]["dataenergys"][0]?.kwh_total_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kwh_total_output
+        : lastDataEnergy.kwh_total_output,
+    kvarh_r_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_r_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_r_input
+        : lastDataEnergy.kvarh_r_input,
+    kvarh_s_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_s_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_s_input
+        : lastDataEnergy.kvarh_s_input,
+    kvarh_t_input:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_t_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_t_input
+        : lastDataEnergy.kvarh_t_input,
+    kvarh_total_input:
+      data &&
+      data.monitoring["data"]["dataenergys"][0]?.kvarh_total_input != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_total_input
+        : lastDataEnergy.kvarh_total_input,
+    kvarh_r_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_r_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_r_output
+        : lastDataEnergy.kvarh_r_output,
+    kvarh_s_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_s_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_s_output
+        : lastDataEnergy.kvarh_s_output,
+    kvarh_t_output:
+      data && data.monitoring["data"]["dataenergys"][0]?.kvarh_t_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_t_output
+        : lastDataEnergy.kvarh_t_output,
+    kvarh_total_output:
+      data &&
+      data.monitoring["data"]["dataenergys"][0]?.kvarh_total_output != null
+        ? data.monitoring["data"]["dataenergys"][0].kvarh_total_output
+        : lastDataEnergy.kvarh_total_output,
+  };
+
+  const pfValues = {
+    cosphi_input:
+      data &&
+      data.monitoring["data"]["dataPowerFactors"][0]?.cosphi_input != null
+        ? data.monitoring["data"]["dataPowerFactors"][0].cosphi_input
+        : lastDataPF.cosphi_input,
+    cosphi_output:
+      data &&
+      data.monitoring["data"]["dataPowerFactors"][0]?.cosphi_output != null
+        ? data.monitoring["data"]["dataPowerFactors"][0].cosphi_output
+        : lastDataPF.cosphi_output,
+  };
+
+  const thdvValues = {
+    thdv_rs_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rs_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rs_Input
+        : lastDataThdv.thdv_rs_Input,
+    thdv_st_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_st_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_st_Input
+        : lastDataThdv.thdv_st_Input,
+    thdv_rt_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rt_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rt_Input
+        : lastDataThdv.thdv_rt_Input,
+    thdv_rn_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rn_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rn_Input
+        : lastDataThdv.thdv_rn_Input,
+    thdv_sn_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_sn_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_sn_Input
+        : lastDataThdv.thdv_sn_Input,
+    thdv_tn_Input:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_tn_Input != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_tn_Input
+        : lastDataThdv.thdv_tn_Input,
+    thdv_rs_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rs_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rs_output
+        : lastDataThdv.thdv_rs_output,
+    thdv_st_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_st_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_st_output
+        : lastDataThdv.thdv_st_output,
+    thdv_rt_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rt_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rt_output
+        : lastDataThdv.thdv_rt_output,
+    thdv_rn_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_rn_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_rn_output
+        : lastDataThdv.thdv_rn_output,
+    thdv_sn_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_sn_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_sn_output
+        : lastDataThdv.thdv_sn_output,
+    thdv_tn_output:
+      data && data.monitoring["data"]["dataThdvs"][0]?.thdv_tn_output != null
+        ? data.monitoring["data"]["dataThdvs"][0].thdv_tn_output
+        : lastDataThdv.thdv_tn_output,
+  };
+
+  const thdiValues = {
+    thdi_r_Input:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_r_Input != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_r_Input
+        : lastDataThdi.thdi_r_Input,
+    thdi_s_Input:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_s_Input != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_s_Input
+        : lastDataThdi.thdi_s_Input,
+    thdi_t_Input:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_t_Input != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_t_Input
+        : lastDataThdi.thdi_t_Input,
+    thdi_r_output:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_r_output != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_r_output
+        : lastDataThdi.thdi_r_output,
+    thdi_s_output:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_s_output != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_s_output
+        : lastDataThdi.thdi_s_output,
+    thdi_t_output:
+      data && data.monitoring["data"]["datathdis"][0]?.thdi_t_output != null
+        ? data.monitoring["data"]["datathdis"][0].thdi_t_output
+        : lastDataThdi.thdi_t_output,
+  };
+
+  // If SWR Realtime connection error then show this widget below
+  if (error) {
+    return (
+      <div className="p-2 space-y-5 text-center sm:p-5 sm:pb-0">
+        {/* Content */}
+        <div className="max-w-md mx-auto space-y-3">
+          <Image
+            priority={true}
+            width={500}
+            height={500}
+            className="max-w-xs mx-auto dark:hidden"
+            src={ErrorImage}
+            alt="EMONS | Electrical Monitoring System"
+          />
+          <Image
+            priority={true}
+            width={500}
+            height={500}
+            className="hidden max-w-xs mx-auto dark:block"
+            src={ErrorImage}
+            alt="EMONS | Electrical Monitoring System"
+          />
+          {/* Header Text */}
+          <span className="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-gradient-to-tl from-red-100 to-rose-200 text-red-800 dark:from-red-900 dark:to-rose-950 dark:text-white">
+            <svg
+              className="shrink-0 size-3.5 text-white dark:from-white dark:to-rose-950 dark:text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              color="#000000"
+              fill="none"
+            >
+              <path
+                d="M17 15V17M17.009 19H17M22 17C22 19.7614 19.7614 22 17 22C14.2386 22 12 19.7614 12 17C12 14.2386 14.2386 12 17 12C19.7614 12 22 14.2386 22 17Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M14.384 9.43749C13.7591 8.85581 12.9211 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 12.9211 8.85581 13.7591 9.43749 14.384"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M9.78 20.436C9.33442 19.9904 9.18844 19.8566 8.90573 19.7389C8.62149 19.6204 8.3257 19.6161 7.69171 19.6161C6.1838 19.6161 5.32083 19.6161 4.85239 19.1476C4.38394 18.6792 4.38394 17.8162 4.38394 16.3083C4.38394 15.6777 4.37981 15.3817 4.26299 15.0987C4.14573 14.8147 3.93965 14.6022 3.49166 14.1541C2.92759 13.59 2 12.8859 2 12C2 11.114 2.92756 10.4099 3.49166 9.84585C3.93756 9.39996 4.14378 9.18799 4.26137 8.90515C4.37951 8.62098 4.38394 8.32526 4.38394 7.69171C4.38394 6.1838 4.38394 5.32083 4.85239 4.85239C5.32083 4.38394 6.1838 4.38394 7.69171 4.38394C8.32091 4.38394 8.61661 4.38 8.89929 4.26379C9.18454 4.14652 9.39688 3.94064 9.84585 3.49166C10.4099 2.92756 11.2104 2 12 2C12.7896 2 13.59 2.92759 14.1541 3.49167C14.6029 3.94037 14.8155 4.14637 15.1001 4.26355C15.3827 4.37992 15.6787 4.38394 16.3083 4.38394C17.8162 4.38394 18.6792 4.38394 19.1476 4.85239C19.6161 5.32083 19.6161 6.1838 19.6161 7.69171C19.6161 8.32383 19.6202 8.6196 19.7378 8.90321C19.8555 9.18695 19.9891 9.3211 20.436 9.768"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            Internal Server Error!
+          </span>
+          {/* Paragraph */}
+          <h1 className="text-xl font-semibold tracking-tight text-gray-800 dark:text-neutral-200">
+            An unexpected error occurred on our server.
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-neutral-500">
+            We cannot provide you with the latest data at this time, please wait
+            a moment.
+          </p>
+        </div>
+        {/* End Content */}
+      </div>
+    );
+  }
 
   return (
     <div id="outline-template" className="max-w-full h-fit">
+      {/* Alert on slow loading */}
+      {isSlowLoad ? <DynamicAlert /> : null}
+      {/* End Alert on slow loading */}
+
       {/* Page Heading */}
       <div className="grid items-center grid-cols-1 px-2 py-2 mx-2 mt-2 mb-4 align-middle border rounded-lg bg-neutral-900 border-neutral-800 md:grid-cols-2 justify-evenly gap-x-4">
         {/* Greetings */}
@@ -472,23 +1371,14 @@ export default function DashboardOutline() {
                       <div className="grow">
                         <span className="block text-sm text-gray-800 dark:text-neutral-200">
                           {signal
-                            ? `You are now connected to ${localTenant}`
-                            : `Waiting for connection..`}
+                            ? `You are now connected`
+                            : `Not connected to ${localTenant}`}
                         </span>
                         <p className="mt-1 text-xs text-gray-500 dark:text-neutral-500">
                           Last data update:
                         </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-neutral-200">
-                          {dateState.toLocaleString("id-ID", {
-                            timeZone: "Asia/Jakarta",
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                            hourCycle: "h24",
-                          })}
+                          {lastTimeUpdate ?? "Loading.."}
                         </p>
                       </div>
                       {/* <svg
@@ -714,20 +1604,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rn_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rn_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rn_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RN Input */}
@@ -753,20 +1655,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_sn_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_sn_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_sn_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_SN Input */}
@@ -792,20 +1706,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_tn_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_tn_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_tn_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_TN Input */}
@@ -831,20 +1757,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rs_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rs_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rs_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RS Input */}
@@ -870,20 +1808,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_st_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_st_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_st_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_ST Input */}
@@ -909,20 +1859,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rt_input}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rt_input
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rt_input}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RT Input */}
@@ -933,34 +1895,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageInputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1015,20 +1949,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rn_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rn_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rn_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RN Output */}
@@ -1054,20 +2000,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_sn_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_sn_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_sn_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_SN Output */}
@@ -1093,20 +2051,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_tn_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_tn_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_tn_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_TN Output */}
@@ -1132,20 +2102,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rs_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rs_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rs_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RS Output */}
@@ -1171,20 +2153,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_st_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_st_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_st_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_ST Output */}
@@ -1210,20 +2204,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages ===
-                              undefined ||
-                            monitoring.monitoring["data"].datavoltages
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datavoltages[0]
-                              .v_rt_output}{" "}
-                        V
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datavoltages ===
+                                undefined ||
+                              data?.monitoring["data"].datavoltages.length === 0
+                            ? voltageValues.v_rt_output
+                            : data?.monitoring["data"].datavoltages[0]
+                                .v_rt_output}{" "}
+                          V
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End V_RT Output */}
@@ -1234,34 +2240,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1310,20 +2288,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_r_Input}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_r_Input
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_r_Input}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End R Input */}
@@ -1349,20 +2339,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_s_Input}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_s_Input
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_s_Input}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End S Input */}
@@ -1388,20 +2390,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_t_Input}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_t_Input
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_t_Input}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End T Input */}
@@ -1412,34 +2426,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1488,20 +2474,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_r_Output}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_r_Output
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_r_Output}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End R Output */}
@@ -1527,20 +2525,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_s_Output}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_s_Output
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_s_Output}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End S Output */}
@@ -1566,20 +2576,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents ===
-                              undefined ||
-                            monitoring.monitoring["data"].datacurrents
-                              .length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datacurrents[0]
-                              .i_t_Output}{" "}
-                        A
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datacurrents ===
+                                undefined ||
+                              data?.monitoring["data"].datacurrents.length === 0
+                            ? currentValues.i_t_Output
+                            : data?.monitoring["data"].datacurrents[0]
+                                .i_t_Output}{" "}
+                          A
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End T Output */}
@@ -1590,34 +2612,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1640,51 +2634,36 @@ export default function DashboardOutline() {
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Ground Input
             </h2>
+
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datagrounds === undefined ||
-                    monitoring.monitoring["data"].datagrounds.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datagrounds[0]
-                      .voltage_input}{" "}
-                V
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].datagrounds === undefined ||
+                      data?.monitoring["data"].datagrounds.length === 0
+                    ? groundValues.voltage_input
+                    : data?.monitoring["data"].datagrounds[0]
+                        .voltage_input}{" "}
+                  V
+                </div>
+              )}
+
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1708,50 +2687,34 @@ export default function DashboardOutline() {
               Ground Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datagrounds === undefined ||
-                    monitoring.monitoring["data"].datagrounds.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datagrounds[0]
-                      .voltage_output}{" "}
-                V
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].datagrounds === undefined ||
+                      data?.monitoring["data"].datagrounds.length === 0
+                    ? groundValues.voltage_output
+                    : data?.monitoring["data"].datagrounds[0]
+                        .voltage_output}{" "}
+                  V
+                </div>
+              )}
+
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1781,51 +2744,34 @@ export default function DashboardOutline() {
               Frequency Input
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datafrequencys ===
-                      undefined ||
-                    monitoring.monitoring["data"].datafrequencys.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datafrequencys[0]
-                      .frequency_input}{" "}
-                Hz
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].datafrequencys === undefined ||
+                      data?.monitoring["data"].datafrequencys.length === 0
+                    ? frequencyValues.frequency_input
+                    : data?.monitoring["data"].datafrequencys[0]
+                        .frequency_input}{" "}
+                  Hz
+                </div>
+              )}
+
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1855,51 +2801,33 @@ export default function DashboardOutline() {
               Frequency Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datafrequencys ===
-                      undefined ||
-                    monitoring.monitoring["data"].datafrequencys.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].datafrequencys[0]
-                      .frequency_output}{" "}
-                Hz
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].datafrequencys === undefined ||
+                      data?.monitoring["data"].datafrequencys.length === 0
+                    ? frequencyValues.frequency_output
+                    : data?.monitoring["data"].datafrequencys[0]
+                        .frequency_output}{" "}
+                  Hz
+                </div>
+              )}
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -1959,20 +2887,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_r_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_r_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_r_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KWH R Input */}
@@ -1998,20 +2938,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_s_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_s_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_s_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KWH S Input */}
@@ -2037,20 +2989,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_t_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_t_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_t_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KWH T Input */}
@@ -2076,20 +3040,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_r_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_r_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_r_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KVARH R Input */}
@@ -2115,20 +3091,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_s_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_s_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_s_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KVARH S Input */}
@@ -2154,20 +3142,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_t_input}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_t_input
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_t_input}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End KVARH T Input */}
@@ -2178,34 +3178,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -2243,7 +3215,7 @@ export default function DashboardOutline() {
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
-                  {/* KWH R Output */}
+                  {/* KWH R Input */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-5 dark:bg-blue-500">
@@ -2265,24 +3237,36 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_r_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_r_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_r_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KWH R Output */}
-                  {/* KWH S Output */}
+                  {/* End KWH R output */}
+                  {/* KWH S output */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-5 dark:bg-blue-500">
@@ -2304,24 +3288,36 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_s_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_s_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_s_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KWH S Output */}
-                  {/* KWH T Output */}
+                  {/* End KWH S output */}
+                  {/* KWH T output */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-5 dark:bg-blue-500">
@@ -2343,24 +3339,36 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kwh_t_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kwh_t_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kwh_t_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KWH T Output */}
-                  {/* KVARH R Output */}
+                  {/* End KWH T output */}
+                  {/* KVARH R output */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-indigo-600 rounded-md size-5 dark:bg-indigo-500">
@@ -2382,24 +3390,36 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_r_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_r_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_r_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KVARH R Output */}
-                  {/* KVARH S Output */}
+                  {/* End KVARH R output */}
+                  {/* KVARH S output */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-indigo-600 rounded-md size-5 dark:bg-indigo-500">
@@ -2421,24 +3441,36 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_s_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_s_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_s_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KVARH S Output */}
-                  {/* KVARH T Output */}
+                  {/* End KVARH S output */}
+                  {/* KVARH T output */}
                   <li className="flex flex-wrap items-center justify-start gap-x-2">
                     <div className="flex items-center justify-center gap-x-2">
                       <span className="flex items-center justify-center text-white bg-indigo-600 rounded-md size-5 dark:bg-indigo-500">
@@ -2460,23 +3492,35 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataenergys.length ===
-                              0
-                          ? 0
-                          : monitoring.monitoring["data"].dataenergys[0]
-                              .kvarh_t_output}{" "}
-                        KWH
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataenergys ===
+                                undefined ||
+                              data?.monitoring["data"].dataenergys.length === 0
+                            ? energyValues.kvarh_t_output
+                            : data?.monitoring["data"].dataenergys[0]
+                                .kvarh_t_output}{" "}
+                          KWH
+                        </span>
+                      )}
                     </div>
                   </li>
-                  {/* End KVARH T Output */}
+                  {/* End KVARH T output */}
                 </ul>
                 {/* End List Group */}
               </div>
@@ -2484,34 +3528,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -2535,53 +3551,37 @@ export default function DashboardOutline() {
               Power Factor Input
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors ===
-                      undefined ||
-                    monitoring.monitoring["data"].dataPowerFactors.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors[0]
-                      .cosphi_input === -1
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors[0]
-                      .cosphi_input}
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].dataPowerFactors === undefined ||
+                      data?.monitoring["data"].dataPowerFactors.length === 0
+                    ? pfValues.cosphi_input === -1
+                      ? 0
+                      : pfValues.cosphi_input
+                    : data?.monitoring["data"].dataPowerFactors[0]
+                        .cosphi_input || pfValues.cosphi_input === -1
+                    ? 0
+                    : data?.monitoring["data"].dataPowerFactors[0].cosphi_input}
+                </div>
+              )}
+
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -2605,27 +3605,39 @@ export default function DashboardOutline() {
               Power Factor Output
             </h2>
             <div className="grid grid-cols-2 gap-x-2">
-              <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
-                {monitoring === undefined ||
-                monitoring === null ||
-                monitoring.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors ===
-                      undefined ||
-                    monitoring.monitoring["data"].dataPowerFactors.length === 0
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors[0]
-                      .cosphi_output === -1
-                  ? 0
-                  : monitoring.monitoring["data"].dataPowerFactors[0]
-                      .cosphi_output}
-              </div>
+              {data === undefined ||
+              data === null ||
+              data.length === 0 ||
+              isLoading ? (
+                <div
+                  className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                  role="status"
+                  aria-label="loading"
+                >
+                  <span className="sr-only">Loading...</span>
+                </div>
+              ) : (
+                <div className="col-span-4 text-lg font-semibold text-gray-800 lg:text-2xl md:col-span-1 dark:text-neutral-200">
+                  {data === undefined || data === null || data.length === 0
+                    ? 0
+                    : data?.monitoring["data"].dataPowerFactors === undefined ||
+                      data?.monitoring["data"].dataPowerFactors.length === 0
+                    ? pfValues.cosphi_output === -1
+                      ? 0
+                      : pfValues.cosphi_output
+                    : data?.monitoring["data"].dataPowerFactors[0]
+                        .cosphi_output || pfValues.cosphi_output === -1
+                    ? 0
+                    : data?.monitoring["data"].dataPowerFactors[0]
+                        .cosphi_output}
+                </div>
+              )}
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
             </div>
-            <div className="flex items-center gap-x-2">
+            {/* <div className="flex items-center gap-x-2">
               <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2652,7 +3664,7 @@ export default function DashboardOutline() {
                   hourCycle: "h24",
                 })}
               </span>
-            </div>
+            </div> */}
           </div>
         </div>
         {/* End Power Factor Output */}
@@ -2700,19 +3712,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rn_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rn_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rn_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RN Input */}
@@ -2738,19 +3763,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_sn_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_sn_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_sn_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End SN Input */}
@@ -2776,19 +3814,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_tn_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_tn_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_tn_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End TN Input */}
@@ -2814,19 +3865,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rs_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rs_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rs_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RS Input */}
@@ -2852,19 +3916,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_st_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_st_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_st_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End ST Input */}
@@ -2890,19 +3967,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rt_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rt_Input
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rt_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RT Input */}
@@ -2913,34 +4003,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -2989,19 +4051,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rn_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rn_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rn_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RN Output */}
@@ -3027,19 +4102,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_sn_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_sn_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_sn_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End SN Output */}
@@ -3065,19 +4153,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_tn_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_tn_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_tn_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End TN Output */}
@@ -3103,19 +4204,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rs_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rs_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rs_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RS Output */}
@@ -3141,19 +4255,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_st_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_st_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_st_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End ST Output */}
@@ -3179,19 +4306,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs ===
-                              undefined ||
-                            monitoring.monitoring["data"].dataThdvs.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].dataThdvs[0]
-                              .thdv_rt_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].dataThdvs ===
+                                undefined ||
+                              data?.monitoring["data"].dataThdvs.length === 0
+                            ? thdvValues.thdv_rt_output
+                            : data?.monitoring["data"].dataThdvs[0]
+                                .thdv_rt_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End RT Output */}
@@ -3202,34 +4342,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -3278,19 +4390,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_r_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_r_Input
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_r_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End R Input */}
@@ -3316,19 +4441,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_s_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_s_Input
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_s_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End S Input */}
@@ -3354,19 +4492,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_t_Input}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_t_Input
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_t_Input}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End T Input */}
@@ -3377,34 +4528,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
@@ -3453,19 +4576,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_r_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_r_output
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_r_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End R Output */}
@@ -3491,19 +4627,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_s_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_s_output
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_s_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End S Output */}
@@ -3529,19 +4678,32 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                        {monitoring === undefined ||
-                        monitoring === null ||
-                        monitoring.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis ===
-                              undefined ||
-                            monitoring.monitoring["data"].datathdis.length === 0
-                          ? 0
-                          : monitoring.monitoring["data"].datathdis[0]
-                              .thdi_t_output}{" "}
-                        %
-                      </span>
+                      {data === undefined ||
+                      data === null ||
+                      data.length === 0 ||
+                      isLoading ? (
+                        <div
+                          className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                          role="status"
+                          aria-label="loading"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
+                          {data === undefined ||
+                          data === null ||
+                          data.length === 0
+                            ? 0
+                            : data?.monitoring["data"].datathdis ===
+                                undefined ||
+                              data?.monitoring["data"].datathdis.length === 0
+                            ? thdiValues.thdi_t_output
+                            : data?.monitoring["data"].datathdis[0]
+                                .thdi_t_output}{" "}
+                          %
+                        </span>
+                      )}
                     </div>
                   </li>
                   {/* End T Output */}
@@ -3552,34 +4714,6 @@ export default function DashboardOutline() {
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
-            </div>
-            <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
             </div>
           </div>
         </div>
