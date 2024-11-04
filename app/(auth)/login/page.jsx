@@ -10,11 +10,11 @@ import Loader from "@/loading";
 
 export default function Login() {
   return (
-    <main id="auth-page" className="min-h-[calc(100dvh)]">
-      <div className="flex h-[calc(100dvh)] bg-black/85">
+    <main id="auth-page" className="h-[100dvh]">
+      <div className="flex h-[100dvh] bg-black/85">
         {/* Video Background */}
         <video
-          className="absolute top-0 left-0 object-cover w-full h-[calc(100dvh)] -z-10 scale-x-[-1]"
+          className="absolute top-0 left-0 object-cover w-full h-full -z-10 scale-x-[-1]"
           autoPlay
           muted
           loop
