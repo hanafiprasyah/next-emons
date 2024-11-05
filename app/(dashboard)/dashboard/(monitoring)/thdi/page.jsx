@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import PrelineScript from "@/components/PrelineScript";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
-import ErrorImage from "../../../../../public/images/error500.svg";
+import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
+import ErrorImage from "../../../../../public/images/error500.svg";
+import { useOnlineStatus } from "../../../../lib/hook/connection-hook";
 
 const DynamicAlert = dynamic(() =>
   import("@/components/alerts/SlowConnectionAlert")
@@ -15,7 +16,7 @@ const DynamicAlert = dynamic(() =>
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/ThdiRadialGauge"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 
@@ -26,6 +27,11 @@ export default function Thdi() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
+  // Connection state
+  const isOnline = useOnlineStatus();
+  const [responseTime, setResponseTime] = useState(null);
+  const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
   const [lastTimeUpdate, setLastTimeUpdate] = useState("");
@@ -35,15 +41,25 @@ export default function Thdi() {
   const [channel, setChannel] = useState("Connecting..");
   const [onLoading, setOnLoading] = useState(true);
 
-  // Used to set the /tool/dataside API
-  const [dataLoc, setDataLoc] = useState([]);
-  const [selectLoc, setSelectLoc] = useState([]);
-  // const [selectLoc, setSelectLoc] = useState([10, 'Siloam Cibubur']);
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
 
-  // Used to set the /tool/dataLocation API
-  const [dataDev, setDataDev] = useState([]);
-  const [selectDev, setSelectDev] = useState([]);
-  // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+  // State to store selected location
+  const [selectedLocation, setSelectedLocation] = useState({
+    code: null,
+    name: null,
+  });
+
+  // State to store selected device
+  const [selectedDevice, setSelectDevice] = useState({
+    code: null,
+    name: null,
+  });
+
+  // State to store list location
+  const [locationList, setLocationList] = useState([]);
+  // State to store list device
+  const [deviceList, setDeviceList] = useState([]);
 
   // Temporary memory to handle null/undefined value from Rest API
   const defaultThdiValues = {
@@ -54,16 +70,8 @@ export default function Thdi() {
     thdi_s_output: 0,
     thdi_t_output: 0,
   };
-  const [lastDataThdi, setLastDataThdi] = useState(defaultThdiValues); // default to 220 if data is null/undefined
+  const [lastDataThdi, setLastDataThdi] = useState(defaultThdiValues);
 
-  // Handle slow loading on SWR
-  const [isSlowLoad, setSlowLoad] = useState(false);
-
-  /**
-   * Used to conditioning the device dropdown pointer event
-   * if location === [] (null), then disable the device dropdown
-   */
-  const [showDev, isShowDev] = useState(true);
   /**
    * END OF STATE COLLECTION
    */
@@ -73,104 +81,149 @@ export default function Thdi() {
     e.preventDefault();
     setSignal(false);
     setOnLoading(true);
-    setSelectLoc([code, name]);
-    isShowDev(true);
-    setSelectDev([]);
+    setSelectedLocation({ code: code, name: name });
+    setSelectDevice({ code: null, name: null });
   };
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
     setSignal(false);
     setOnLoading(true);
-    setSelectDev([code, name]);
+    setSelectDevice({ code: code, name: name });
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
     setSignal(false);
-    setOnLoading(true);
-    setSelectLoc([]);
-    setSelectDev([]);
-    isShowDev(true);
+    isOnline ? setOnLoading(true) : setOnLoading(false);
+
+    if (locationList && locationList?.length > 0) {
+      if (selectedLocation.code !== locationList[0].code) {
+        setSelectedLocation({
+          code: locationList[0].code,
+          name: locationList[0].name,
+        });
+      }
+      return;
+    } else {
+      setSelectedLocation({ code: null, name: null });
+    }
+
+    if (deviceList && deviceList?.length > 0) {
+      if (selectedDevice.code !== deviceList[0].code) {
+        setSelectDevice({
+          code: deviceList[0].code,
+          name: deviceList[0].name,
+        });
+      }
+      return;
+    } else {
+      setSelectDevice({ code: null, name: null });
+    }
   };
   // End of Scripts
 
-  // Function to fetch the /tool/dataside API
-  const fetchSite = async (
-    tenant,
-    locationid,
-    lane,
-    status,
-    value,
-    side,
-    start_trancation_date,
-    end_trancation_date
-  ) => {
-    const response = await fetch("/api/tools/site/getsite", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+  // TODO: Function to fetch the site API [REALTIME]
+  const fetchSiteRealtime = async (url, tenant, start_date, end_date) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.site;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchSiteRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the /tool/dataLocation API
-  const fetchDevice = async (
+  // TODO: Function to fetch the device API [REALTIME]
+  const fetchDeviceRealtime = async (
+    url,
     tenant,
-    locationid,
-    lane,
-    status,
-    value,
     side,
-    start_trancation_date,
-    end_trancation_date
+    start_date,
+    end_date
   ) => {
-    const response = await fetch("/api/tools/location/getlocation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "0",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: side,
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.loc;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchDeviceRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the API [REALTIME]
+  // TODO: Function to fetch the API [REALTIME]
   const fetchThdiRealtime = async (url, tenant, locationid, start_date) => {
+    // main point to track unstable network
+    const startTime = performance.now();
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -196,7 +249,9 @@ export default function Thdi() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.statusText}`);
+        throw new Error(
+          `HTTP error on fetchThdiRealtime! Status: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -206,9 +261,9 @@ export default function Thdi() {
         setSignal(true);
 
         // Check if device list is not null
-        if (selectDev.length !== 0) {
+        if (selectedDevice.code && selectedDevice.name) {
           setSignal(true);
-          // Check if data ground length is null
+          // Check if data thdi length is null
           if (
             data.monitoring["data"]["datathdis"][0] === undefined ||
             data.monitoring["data"]["datathdis"][0] === null
@@ -217,54 +272,59 @@ export default function Thdi() {
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          } else {
-            // We will check the difference about last send_date from API and current date from NOW()
-            setSignal(true);
-
-            const currentDate = new Date();
-            const sendDate = data?.monitoring["data"]["datathdis"][0].send_date;
-            // format the send_date value
-            const isoConvSendDate = new Date(sendDate);
-            // count the diff
-            const diffTime = currentDate - isoConvSendDate;
-            // set the minutes value
-            const minutes = Math.floor(diffTime / 60000);
-            // Format the date to Indonesian format
-            const options = {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "numeric",
-              minute: "numeric",
-              hour12: false, // 24-hour format
-              locale: "id-ID",
-            };
-            // Format date using Intl Format
-            const formattedDateTime = new Intl.DateTimeFormat(
-              "en-EN",
-              options
-            ).format(isoConvSendDate);
-            // then set to state
-            setLastTimeUpdate(formattedDateTime);
-
-            // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-              setOnLoading(false);
-              setSignal(false);
-              setChannel("Lost connection");
-            } else {
-              setSignal(true);
-              setChannel("Stable");
-              setOnLoading(false);
-            }
-            return data.monitoring["data"]["datathdis"];
           }
+
+          // We will check the difference about last send_date from API and current date from NOW()
+          setSignal(true);
+
+          const currentDate = new Date();
+          const sendDate = data?.monitoring["data"]["datathdis"][0].send_date;
+          // format the send_date value
+          const isoConvSendDate = new Date(sendDate);
+          // count the diff
+          const diffTime = currentDate - isoConvSendDate;
+          // set the minutes value
+          const minutes = Math.floor(diffTime / 60000);
+          // Format the date to Indonesian format
+          const options = {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: false, // 24-hour format
+            locale: "id-ID",
+          };
+          // Format date using Intl Format
+          const formattedDateTime = new Intl.DateTimeFormat(
+            "en-EN",
+            options
+          ).format(isoConvSendDate);
+          // then set to state
+          setLastTimeUpdate(formattedDateTime);
+
+          // Set offline status if the diff time more than 5 minutes from NOW()
+          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+            setOnLoading(false);
+            setSignal(false);
+            setChannel("Lost connection");
+          } else {
+            setSignal(true);
+            setChannel("Stable");
+            setOnLoading(false);
+          }
+          // checkpoint to check network performance
+          const endTime = performance.now();
+          setResponseTime(endTime - startTime);
+
+          return data.monitoring["data"]["datathdis"];
         }
         // if device list is null?
         else {
           setSignal(false);
           setChannel("Cannot get device location");
           setOnLoading(false);
+          setResponseTime(null);
         }
       }
       // If response message is not OK
@@ -272,6 +332,7 @@ export default function Thdi() {
         setSignal(false);
         setOnLoading(false);
         setChannel("Server error");
+        setResponseTime(null);
         if (process.env.NODE_ENV === "development") {
           console.log("Error in fetchThdiRealtime: Response Message is Not OK");
         }
@@ -280,6 +341,7 @@ export default function Thdi() {
       setSignal(false);
       setOnLoading(false);
       setChannel("Error while fetch data");
+      setResponseTime(null);
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchThdiRealtime: ", err);
       }
@@ -287,26 +349,149 @@ export default function Thdi() {
     }
   };
 
-  // Clear SWR Cache
+  // TODO: Clear SWR Cache
   const clearSWRCache = () =>
     mutate(() => true, undefined, {
       revalidate: false,
       rollbackOnError: true,
     });
 
-  // SWR
-  const { data, isLoading, error } = useSWR(
-    ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
+  // TODO: to get site realtime
+  const { data: locationsData, error: locationsError } = useSWR(
+    localTenant
+      ? [
+          "/api/tools/site/getsite",
+          localTenant,
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, start_date, end_date]) =>
+      fetchSiteRealtime(url, tenant, start_date, end_date),
+    {
+      isPaused: () => !isOnline && !localTenant,
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/site/getsite",
+            localTenant,
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: to get device realtime
+  const { data: devicesData, error: devicesError } = useSWR(
+    localTenant && selectedLocation.code
+      ? [
+          "/api/tools/location/getlocation",
+          localTenant,
+          JSON.stringify(selectedLocation.code),
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, side, start_date, end_date]) =>
+      fetchDeviceRealtime(url, tenant, side, start_date, end_date),
+    {
+      isPaused: () =>
+        !isOnline && (!localTenant || !selectedLocation.code ? true : false),
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/location/getlocation",
+            localTenant,
+            JSON.stringify(selectedLocation.code),
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: SWR to get monitoring data
+  const {
+    data: thdiData,
+    isLoading: thdiLoading,
+    error: thdiError,
+  } = useSWR(
+    selectedDevice.code
+      ? [
+          "/api/monitoring/getmonitoring",
+          localTenant,
+          selectedDevice.code,
+          hoursAgo,
+        ]
+      : null,
     ([url, localTenant, locationid, start_date]) =>
       fetchThdiRealtime(url, localTenant, locationid, start_date),
     {
       isPaused: () =>
-        selectDev.length === 0 ||
-        (localTenant == "" && localTenant == undefined) ||
-        (hoursAgo == "" && hoursAgo == undefined)
+        !isOnline &&
+        (selectedLocation.code === null ||
+          selectedDevice.code === null ||
+          !localTenant ||
+          !hoursAgo)
           ? true
           : false,
+      isOnline: () => isOnline,
       refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -328,7 +513,7 @@ export default function Thdi() {
           JSON.stringify([
             "/api/monitoring/getmonitoring",
             localTenant,
-            selectDev[0],
+            selectedDevice.code,
             hoursAgo,
           ])
         )
@@ -341,11 +526,28 @@ export default function Thdi() {
     }
   );
 
+  // TODO: Get local tenant item
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
+    }
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    return () => {
+      setLocalTenant("");
+    };
+  }, []);
+
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
     const dateIns = new Date();
-    // const isoDate = "2024-09-13T11:30:54";
-    // const isoConvDate = new Date(isoDate);
 
     // Get current date time
     const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
@@ -369,158 +571,79 @@ export default function Thdi() {
       .toString()
       .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
 
-    // const diffTime = dateIns - isoConvDate;
-    // const minutes = Math.floor((diffTime % 3600000) / 60000);
     if (getFormatedCurrentDate.startsWith("202")) {
       setHoursAgo(getHoursAgo);
     }
-    // if (process.env.NODE_ENV === "development") {
-    //   console.log(
-    //     "Current date: " +
-    //       getFormatedCurrentDate +
-    //       "| 1 hours ago: " +
-    //       getHoursAgo
-    //   );
-    //   console.log("Different time: " + minutes);
-    // }
   }, []);
 
-  // TODO: Get default site
+  // TODO: Set defaults site when data is available
   useEffect(() => {
-    // Get local tenant item
-    const currentUser = localStorage.getItem("tenant");
+    if (locationsData?.data.length) {
+      setSelectedLocation({
+        code: locationsData.data[0].code,
+        name: locationsData.data[0].name,
+      });
 
-    // If tenant local storage is undefined or null
-    if (!currentUser) {
-      // set local tenant state to null
-      setLocalTenant("");
-      return;
+      setLocationList(locationsData.data);
     }
 
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectedLocation({ code: null, name: null });
+      setLocationList([]);
+    };
+  }, [locationsData]);
 
-    // TODO: fetch the site data
-    fetchSite(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      "",
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    ).then((dataSite) => {
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(dataSite.site["data"]);
-      // }
-
-      // If site response is not OK
-      if (dataSite.message !== "OK") {
-        setOnLoading(false);
-        setSignal(false);
-        setChannel("Unreachable");
-        return;
-      }
-
-      // If site response is OK
-      const siteData = dataSite.site["data"] || [];
-      setDataLoc(siteData);
-
-      // Scrap the first index data
-      const firstIndexSite = siteData[0];
-      if (firstIndexSite) {
-        // set code and name as location state
-        setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-        // set device state to null in order to refresh the device list
-        // when user move to another site
-        setSelectDev([]);
-      }
-    });
-  }, []);
-
-  // TODO: Get default device
+  // TODO: Set defaults device location when data is available
   useEffect(() => {
-    const currentUser = localStorage.getItem("tenant");
-    if (!currentUser || selectLoc.length === 0) return;
-
-    // TODO: fetch the device (location) based on selected location/site
-    fetchDevice(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    )
-      .then((dataLocation) => {
-        // if (process.env.NODE_ENV === "development") {
-        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-        // }
-
-        // response is not OK
-        if (!dataLocation || dataLocation.message !== "OK") {
-          setOnLoading(false);
-          setSignal(false);
-          setChannel("Failed to load resource");
-          return;
-        }
-
-        // device location response is OK
-        const deviceData = dataLocation.loc["data"] || [];
-        setDataDev(deviceData);
-
-        // Scrap the first index data
-        const firstIndexDev = deviceData[0];
-        if (selectLoc.length !== 0 && firstIndexDev) {
-          // set code and name as device state
-          setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
-        }
-
-        setOnLoading(true);
-        setChannel("Validating data..");
-      })
-      .catch((error) => {
-        setOnLoading(false);
-        setSignal(false);
-        setChannel("Failed to load resource");
+    if (devicesData?.data.length) {
+      setSelectDevice({
+        code: devicesData.data[0].code,
+        name: devicesData.data[0].name,
       });
-  }, [selectLoc]);
+
+      setDeviceList(devicesData.data);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectDevice({ code: null, name: null });
+      setDeviceList([]);
+    };
+  }, [devicesData]);
 
   // TODO: Update each thdi in lastDataThdi if data is valid
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      console.log("Effect triggered with data:", data);
+      console.log("Effect triggered with data:", thdiData);
     }
 
-    if (data) {
+    if (thdiData?.length > 0) {
       setLastDataThdi((prev) => {
         const newData = {
           thdi_r_Input:
-            data[0].thdi_r_Input != null
-              ? data[0].thdi_r_Input
+            thdiData[0].thdi_r_Input != null
+              ? thdiData[0].thdi_r_Input
               : prev.thdi_r_Input,
           thdi_s_Input:
-            data[0].thdi_s_Input != null
-              ? data[0].thdi_s_Input
+            thdiData[0].thdi_s_Input != null
+              ? thdiData[0].thdi_s_Input
               : prev.thdi_s_Input,
           thdi_t_Input:
-            data[0].thdi_t_Input != null
-              ? data[0].thdi_t_Input
+            thdiData[0].thdi_t_Input != null
+              ? thdiData[0].thdi_t_Input
               : prev.thdi_t_Input,
           thdi_r_output:
-            data[0].thdi_r_output != null
-              ? data[0].thdi_r_output
+            thdiData[0].thdi_r_output != null
+              ? thdiData[0].thdi_r_output
               : prev.thdi_r_output,
           thdi_s_output:
-            data[0].thdi_s_output != null
-              ? data[0].thdi_s_output
+            thdiData[0].thdi_s_output != null
+              ? thdiData[0].thdi_s_output
               : prev.thdi_s_output,
           thdi_t_output:
-            data[0].thdi_t_output != null
-              ? data[0].thdi_t_output
+            thdiData[0].thdi_t_output != null
+              ? thdiData[0].thdi_t_output
               : prev.thdi_t_output,
         };
 
@@ -539,38 +662,58 @@ export default function Thdi() {
         return prev;
       });
     }
-  }, [data]);
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setLastDataThdi(defaultThdiValues);
+    };
+  }, [thdiData]);
+
+  // TODO: Alert user if response time is high
+  useEffect(() => {
+    // Threshold of 5000ms / 5sec
+    if (responseTime !== null && responseTime > 5000) {
+      setIsConnectionUnstable(true);
+    } else {
+      setIsConnectionUnstable(false);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setIsConnectionUnstable(false);
+    };
+  }, [isOnline, responseTime]);
 
   // TODO: Set thdi values based on valid data or fallback to last known values
   const thdiValues = {
     thdi_r_Input:
-      data && data[0]?.thdi_r_Input != null
-        ? data[0].thdi_r_Input
+      thdiData && thdiData[0]?.thdi_r_Input != null
+        ? thdiData[0].thdi_r_Input
         : lastDataThdi.thdi_r_Input,
     thdi_s_Input:
-      data && data[0]?.thdi_s_Input != null
-        ? data[0].thdi_s_Input
+      thdiData && thdiData[0]?.thdi_s_Input != null
+        ? thdiData[0].thdi_s_Input
         : lastDataThdi.thdi_s_Input,
     thdi_t_Input:
-      data && data[0]?.thdi_t_Input != null
-        ? data[0].thdi_t_Input
+      thdiData && thdiData[0]?.thdi_t_Input != null
+        ? thdiData[0].thdi_t_Input
         : lastDataThdi.thdi_t_Input,
     thdi_r_output:
-      data && data[0]?.thdi_r_output != null
-        ? data[0].thdi_r_output
+      thdiData && thdiData[0]?.thdi_r_output != null
+        ? thdiData[0].thdi_r_output
         : lastDataThdi.thdi_r_output,
     thdi_s_output:
-      data && data[0]?.thdi_s_output != null
-        ? data[0].thdi_s_output
+      thdiData && thdiData[0]?.thdi_s_output != null
+        ? thdiData[0].thdi_s_output
         : lastDataThdi.thdi_s_output,
     thdi_t_output:
-      data && data[0]?.thdi_t_output != null
-        ? data[0].thdi_t_output
+      thdiData && thdiData[0]?.thdi_t_output != null
+        ? thdiData[0].thdi_t_output
         : lastDataThdi.thdi_t_output,
   };
 
   // If SWR Realtime connection error then show this widget below
-  if (error) {
+  if (thdiError) {
     return (
       <div className="p-2 space-y-5 text-center sm:p-5 sm:pb-0">
         {/* Content */}
@@ -640,7 +783,7 @@ export default function Thdi() {
   return (
     <div id="thdi-template" className="grid grid-cols-1 gap-0 mt-2">
       {/* Alert on slow loading */}
-      {isSlowLoad ? <DynamicAlert /> : null}
+      {isSlowLoad || isConnectionUnstable ? <DynamicAlert /> : null}
       {/* End Alert on slow loading */}
 
       {/* Page Heading */}
@@ -652,18 +795,20 @@ export default function Thdi() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectLoc.length === null ? "pointer-events-none" : null
+                  selectedLocation.length === null
+                    ? "pointer-events-none"
+                    : null
                 }`}
               >
                 <button
                   id="hs-dropdown-example"
                   type="button"
-                  className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                  className="py-2 px-2 duration-200 ease-in-out transition inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
                   aria-haspopup="menu"
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {selectLoc.length != 0 ? selectLoc[1] : "Select location"}
+                  {locationsData ? selectedLocation.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -685,16 +830,21 @@ export default function Thdi() {
                   aria-orientation="vertical"
                   aria-labelledby="hs-dropdown-example"
                 >
-                  {dataLoc
+                  {locationList
                     .filter(
                       (obj, index) =>
-                        dataLoc.findIndex((item) => item.code === obj.code) ===
-                        index
+                        locationList.findIndex(
+                          (item) => item.code === obj.code
+                        ) === index
                     )
                     .map((item, index) => (
                       <Link
                         key={index}
-                        className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                        className={`${
+                          selectedLocation.code === item.code
+                            ? "pointer-events-none"
+                            : "pointer-events-auto"
+                        } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                         href=""
                         onClick={handleSelectLocation.bind(
                           null,
@@ -706,7 +856,9 @@ export default function Thdi() {
                           {item.name}
                         </span>
                         <span className="inline-flex text-xs text-gray-400">
-                          {selectLoc[0] === item.code ? "Selected" : ""}
+                          {selectedLocation.code === item.code
+                            ? "Selected"
+                            : ""}
                         </span>
                       </Link>
                     ))}
@@ -714,25 +866,24 @@ export default function Thdi() {
               </div>
             </div>
             {/* End Select Location */}
+
             {/* Select Device */}
             <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectDev.length === null || !showDev
-                    ? "pointer-events-none"
-                    : null
+                  selectedDevice.length === null ? "pointer-events-none" : null
                 }`}
               >
                 <button
                   id="hs-dropdown-example"
                   type="button"
-                  className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                  className="py-2 duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
                   aria-haspopup="menu"
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {selectDev.length != 0 ? selectDev[1] : "Select device"}
+                  {devicesData ? selectedDevice.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -754,10 +905,14 @@ export default function Thdi() {
                   aria-orientation="vertical"
                   aria-labelledby="hs-dropdown-example"
                 >
-                  {dataDev.map((item, index) => (
+                  {deviceList.map((item, index) => (
                     <Link
                       key={index}
-                      className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                      className={`${
+                        selectedDevice.code === item.code
+                          ? "pointer-events-none"
+                          : "pointer-events-auto"
+                      } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                       href=""
                       onClick={handleSelectDevice.bind(
                         null,
@@ -769,7 +924,7 @@ export default function Thdi() {
                         {item.name}
                       </span>
                       <span className="inline-flex text-xs text-gray-400">
-                        {selectDev[0] === item.code ? "Selected" : ""}
+                        {selectedDevice.code === item.code ? "Selected" : ""}
                       </span>
                     </Link>
                   ))}
@@ -781,8 +936,8 @@ export default function Thdi() {
           {/* Reset Button */}
           <button
             type="button"
-            disabled={selectDev.length === 0 ? true : false}
-            className="py-[7px] px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-teal-500"
+            disabled={selectedDevice.length === 0 ? true : false}
+            className="py-[7px] duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none  "
             onClick={handleResetButton.bind(null)}
           >
             <svg
@@ -833,86 +988,76 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`r-input${index}`}
-                            id={"thdi-r-input"}
-                            alt={"R"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_r_Input
-                                : thdiValues.thdi_r_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiRInput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`r-input`}
+                        id={"thdi-r-input"}
+                        alt={"R"}
+                        title="Input"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_r_Input
+                            : thdiValues.thdi_r_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-r-input`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`r-output${index}`}
-                            id={"thdi-r-output"}
-                            alt={"R"}
-                            title="Output"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_r_output
-                                : thdiValues.thdi_r_output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiROutput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`r-output`}
+                        id={"thdi-r-output"}
+                        alt={"R"}
+                        title="Output"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_r_output
+                            : thdiValues.thdi_r_output
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-r-output`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -997,86 +1142,76 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`s-input${index}`}
-                            id={"thdi-s-input"}
-                            alt={"S"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_s_Input
-                                : thdiValues.thdi_s_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiSInput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`s-input`}
+                        id={"thdi-s-input"}
+                        alt={"S"}
+                        title="Input"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_s_Input
+                            : thdiValues.thdi_s_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-s-input`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`s-output${index}`}
-                            id={"thdi-s-output"}
-                            alt={"S"}
-                            title="Output"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_s_output
-                                : thdiValues.thdi_s_output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiSOutput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`s-output`}
+                        id={"thdi-s-output"}
+                        alt={"S"}
+                        title="Output"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_s_output
+                            : thdiValues.thdi_s_output
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-r-output`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -1161,86 +1296,76 @@ export default function Thdi() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`t-input${index}`}
-                            id={"thdi-t-input"}
-                            alt={"T"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_t_Input
-                                : thdiValues.thdi_t_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiTInput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`t-input`}
+                        id={"thdi-t-input"}
+                        alt={"T"}
+                        title="Input"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_t_Input
+                            : thdiValues.thdi_t_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-t-input`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`t-output${index}`}
-                            id={"thdi-t-output"}
-                            alt={"T"}
-                            title="Output"
-                            value={
-                              !error && data !== undefined
-                                ? item.thdi_t_output
-                                : thdiValues.thdi_t_output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`thdiTOutput${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !thdiError ? (
+                      <RadialDynamicGauge
+                        key={`t-output`}
+                        id={"thdi-t-output"}
+                        alt={"T"}
+                        title="Output"
+                        value={
+                          !thdiError && thdiData
+                            ? thdiData[0].thdi_t_output
+                            : thdiValues.thdi_t_output
+                        }
+                      />
+                    ) : (
+                      <div id={`thdi-r-output`}>
+                        <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          You are offline
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
