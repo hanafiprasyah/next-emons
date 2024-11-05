@@ -712,11 +712,6 @@ export default function Energy() {
         // Return previous state if nothing has changed
         return prev;
       });
-
-      // Cleanup function to reset state on unmount
-      return () => {
-        setLastDataEnergy(defaultEnergyValues);
-      };
     }
   }, [energyData]);
 

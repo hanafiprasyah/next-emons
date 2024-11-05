@@ -692,11 +692,6 @@ export default function Thdv() {
         return prev;
       });
     }
-
-    // Cleanup function to reset state on unmount
-    return () => {
-      setLastDataThdv(defaultThdvValues);
-    };
   }, [thdvData]);
 
   // TODO: Alert user if response time is high

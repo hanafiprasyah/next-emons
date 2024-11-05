@@ -662,11 +662,6 @@ export default function Thdi() {
         return prev;
       });
     }
-
-    // Cleanup function to reset state on unmount
-    return () => {
-      setLastDataThdi(defaultThdiValues);
-    };
   }, [thdiData]);
 
   // TODO: Alert user if response time is high

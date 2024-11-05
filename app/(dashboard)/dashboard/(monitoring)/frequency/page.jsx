@@ -651,11 +651,6 @@ export default function Frequency() {
         return prev;
       });
     }
-
-    // Cleanup function to reset state on unmount
-    return () => {
-      setLastDataFrequency(defaultFrequencyValue);
-    };
   }, [frequencyData]);
 
   // TODO: Alert user if response time is high

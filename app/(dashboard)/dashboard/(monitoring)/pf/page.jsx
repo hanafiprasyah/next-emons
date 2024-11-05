@@ -644,11 +644,6 @@ export default function PowerFactor() {
         return prev;
       });
     }
-
-    // Cleanup function to reset state on unmount
-    return () => {
-      setLastDataPF(defaultPFValues);
-    };
   }, [pfData]);
 
   // TODO: Alert user if response time is high
