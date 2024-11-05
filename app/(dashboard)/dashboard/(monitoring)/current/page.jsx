@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import PrelineScript from "@/components/PrelineScript";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
-import ErrorImage from "../../../../../public/images/error500.svg";
+import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
+import ErrorImage from "../../../../../public/images/error500.svg";
+import { useOnlineStatus } from "../../../../lib/hook/connection-hook";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const DynamicAlert = dynamic(() =>
@@ -16,7 +17,7 @@ const DynamicAlert = dynamic(() =>
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/CurrentRadialGauge"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 
@@ -26,6 +27,11 @@ export default function Current() {
    */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
+
+  // Connection state
+  const isOnline = useOnlineStatus();
+  const [responseTime, setResponseTime] = useState(null);
+  const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
 
   // Handle parameter from direct map access
   const router = useRouter();
@@ -49,15 +55,25 @@ export default function Current() {
   const [channel, setChannel] = useState("Connecting..");
   const [onLoading, setOnLoading] = useState(true);
 
-  // Used to set the /tool/dataside API
-  const [dataLoc, setDataLoc] = useState([]);
-  const [selectLoc, setSelectLoc] = useState([]);
-  // const [selectLoc, setSelectLoc] = useState([10, 'Siloam Cibubur']);
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
 
-  // Used to set the /tool/dataLocation API
-  const [dataDev, setDataDev] = useState([]);
-  const [selectDev, setSelectDev] = useState([]);
-  // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+  // State to store selected location
+  const [selectedLocation, setSelectedLocation] = useState({
+    code: null,
+    name: null,
+  });
+
+  // State to store selected device
+  const [selectedDevice, setSelectDevice] = useState({
+    code: null,
+    name: null,
+  });
+
+  // State to store list location
+  const [locationList, setLocationList] = useState([]);
+  // State to store list device
+  const [deviceList, setDeviceList] = useState([]);
 
   // Temporary memory to handle null/undefined value from Rest API
   const defaultCurrentValues = {
@@ -68,16 +84,8 @@ export default function Current() {
     i_t_Input: 10,
     i_t_Output: 10,
   };
-  const [lastDataCurrent, setLastDataCurrent] = useState(defaultCurrentValues); // default to 220 if data is null/undefined
+  const [lastDataCurrent, setLastDataCurrent] = useState(defaultCurrentValues);
 
-  // Handle slow loading on SWR
-  const [isSlowLoad, setSlowLoad] = useState(false);
-
-  /**
-   * Used to conditioning the device dropdown pointer event
-   * if location === [] (null), then disable the device dropdown
-   */
-  const [showDev, isShowDev] = useState(true);
   /**
    * END OF STATE COLLECTION
    */
@@ -91,9 +99,8 @@ export default function Current() {
       router.replace("/dashboard/current/");
       router.refresh();
     } else {
-      setSelectLoc([code, name]);
-      isShowDev(true);
-      setSelectDev([]);
+      setSelectedLocation({ code: code, name: name });
+      setSelectDevice({ code: null, name: null });
     }
   };
 
@@ -106,102 +113,148 @@ export default function Current() {
       router.replace("/dashboard/current/");
       router.refresh();
     } else {
-      setSelectDev([code, name]);
+      setSelectDevice({ code: code, name: name });
     }
   };
 
   const handleResetButton = (e) => {
     e.preventDefault();
     setSignal(false);
-    setOnLoading(true);
-    isShowDev(true);
+    isOnline ? setOnLoading(true) : setOnLoading(false);
+
     // indicate user bring params and clear the params after this button clicked
     if (param1.length !== 0 && param2.length !== 0) {
       router.replace("/dashboard/current/");
       router.refresh();
     } else {
-      setSelectLoc([]);
-      setSelectDev([]);
+      if (locationList && locationList?.length > 0) {
+        if (selectedLocation.code !== locationList[0].code) {
+          setSelectedLocation({
+            code: locationList[0].code,
+            name: locationList[0].name,
+          });
+        }
+        return;
+      } else {
+        setSelectedLocation({ code: null, name: null });
+      }
+
+      if (deviceList && deviceList?.length > 0) {
+        if (selectedDevice.code !== deviceList[0].code) {
+          setSelectDevice({
+            code: deviceList[0].code,
+            name: deviceList[0].name,
+          });
+        }
+        return;
+      } else {
+        setSelectDevice({ code: null, name: null });
+      }
     }
   };
   // End of Scripts
 
-  // Function to fetch the /tool/dataside API
-  const fetchSite = async (
-    tenant,
-    locationid,
-    lane,
-    status,
-    value,
-    side,
-    start_trancation_date,
-    end_trancation_date
-  ) => {
-    const response = await fetch("/api/tools/site/getsite", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+  // TODO: Function to fetch the site API [REALTIME]
+  const fetchSiteRealtime = async (url, tenant, start_date, end_date) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.site;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchSiteRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the /tool/dataLocation API
-  const fetchDevice = async (
+  // TODO: Function to fetch the device API [REALTIME]
+  const fetchDeviceRealtime = async (
+    url,
     tenant,
-    locationid,
-    lane,
-    status,
-    value,
     side,
-    start_trancation_date,
-    end_trancation_date
+    start_date,
+    end_date
   ) => {
-    const response = await fetch("/api/tools/location/getlocation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "0",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: side,
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.loc;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchDeviceRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the API [REALTIME]
+  // TODO: Function to fetch the API [REALTIME]
   const fetchCurrentRealtime = async (url, tenant, locationid, start_date) => {
+    // main point to track unstable network
+    const startTime = performance.now();
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -227,7 +280,9 @@ export default function Current() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.statusText}`);
+        throw new Error(
+          `HTTP error on fetchCurrentRealtime! Status: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -237,9 +292,9 @@ export default function Current() {
         setSignal(true);
 
         // Check if device list is not null
-        if (selectDev.length !== 0) {
+        if (selectedDevice.code && selectedDevice.name) {
           setSignal(true);
-          // Check if data ground length is null
+          // Check if data current length is null
           if (
             data.monitoring["data"]["datacurrents"][0] === undefined ||
             data.monitoring["data"]["datacurrents"][0] === null
@@ -248,57 +303,60 @@ export default function Current() {
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          } else {
-            // We will check the difference about last send_date from API and current date from NOW()
-            setSignal(true);
-
-            const currentDate = new Date();
-            const sendDate =
-              data?.monitoring["data"]["datacurrents"][0].send_date;
-
-            // format the send_date value
-            const isoConvSendDate = new Date(sendDate);
-            // count the diff
-            const diffTime = currentDate - isoConvSendDate;
-            // set the minutes value
-            const minutes = Math.floor(diffTime / 60000);
-            // Format the date to Indonesian format
-            const options = {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "numeric",
-              minute: "numeric",
-              hour12: false, // 24-hour format
-              locale: "id-ID",
-            };
-            // Format date using Intl Format
-            const formattedDateTime = new Intl.DateTimeFormat(
-              "en-EN",
-              options
-            ).format(isoConvSendDate);
-            // then set to state
-            setLastTimeUpdate(formattedDateTime);
-
-            // Set offline status if the diff time more than 5 minutes from NOW()
-            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-              setOnLoading(false);
-              setSignal(false);
-              setChannel("Lost connection");
-            } else {
-              setSignal(true);
-              setChannel("Stable");
-              setOnLoading(false);
-            }
-
-            return data.monitoring["data"]["datacurrents"];
           }
+
+          // We will check the difference about last send_date from API and current date from NOW()
+          setSignal(true);
+
+          const currentDate = new Date();
+          const sendDate =
+            data?.monitoring["data"]["datacurrents"][0].send_date;
+          // format the send_date value
+          const isoConvSendDate = new Date(sendDate);
+          // count the diff
+          const diffTime = currentDate - isoConvSendDate;
+          // set the minutes value
+          const minutes = Math.floor(diffTime / 60000);
+          // Format the date to Indonesian format
+          const options = {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: false, // 24-hour format
+            locale: "id-ID",
+          };
+          // Format date using Intl Format
+          const formattedDateTime = new Intl.DateTimeFormat(
+            "en-EN",
+            options
+          ).format(isoConvSendDate);
+          // then set to state
+          setLastTimeUpdate(formattedDateTime);
+
+          // Set offline status if the diff time more than 5 minutes from NOW()
+          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+            setOnLoading(false);
+            setSignal(false);
+            setChannel("Lost connection");
+          } else {
+            setSignal(true);
+            setChannel("Stable");
+            setOnLoading(false);
+          }
+          // checkpoint to check network performance
+          const endTime = performance.now();
+          setResponseTime(endTime - startTime);
+
+          return data.monitoring["data"]["datacurrents"];
         }
         // if device list is null?
         else {
           setSignal(false);
           setChannel("Cannot get device location");
           setOnLoading(false);
+          setResponseTime(null);
         }
       }
       // If response message is not OK
@@ -306,6 +364,7 @@ export default function Current() {
         setSignal(false);
         setOnLoading(false);
         setChannel("Server error");
+        setResponseTime(null);
         if (process.env.NODE_ENV === "development") {
           console.log(
             "Error in fetchCurrentRealtime: Response Message is Not OK"
@@ -316,6 +375,7 @@ export default function Current() {
       setSignal(false);
       setOnLoading(false);
       setChannel("Error while fetch data");
+      setResponseTime(null);
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchCurrentRealtime: ", err);
       }
@@ -323,27 +383,31 @@ export default function Current() {
     }
   };
 
-  // Clear SWR Cache
+  // TODO: Clear SWR Cache
   const clearSWRCache = () =>
     mutate(() => true, undefined, {
       revalidate: false,
       rollbackOnError: true,
     });
 
-  // SWR
-  const { data, isLoading, error } = useSWR(
-    ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
-    ([url, localTenant, locationid, start_date]) =>
-      fetchCurrentRealtime(url, localTenant, locationid, start_date),
+  // TODO: to get site realtime
+  const { data: locationsData, error: locationsError } = useSWR(
+    localTenant
+      ? [
+          "/api/tools/site/getsite",
+          localTenant,
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, start_date, end_date]) =>
+      fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () =>
-        selectLoc.length === 0 ||
-        selectDev.length === 0 ||
-        (localTenant == "" && localTenant == undefined) ||
-        (hoursAgo == "" && hoursAgo == undefined)
-          ? true
-          : false,
-      refreshInterval: 3000,
+      isPaused: () => !isOnline && !localTenant,
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -363,10 +427,10 @@ export default function Current() {
         if (
           JSON.stringify(key) ===
           JSON.stringify([
-            "/api/monitoring/getmonitoring",
+            "/api/tools/site/getsite",
             localTenant,
-            selectDev[0],
-            hoursAgo,
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
           ])
         )
           return;
@@ -378,7 +442,64 @@ export default function Current() {
     }
   );
 
-  // Helper function to parse JSON safely
+  // TODO: to get device realtime
+  const { data: devicesData, error: devicesError } = useSWR(
+    localTenant && selectedLocation.code
+      ? [
+          "/api/tools/location/getlocation",
+          localTenant,
+          param2.length === 0
+            ? JSON.stringify(selectedLocation.code)
+            : selectedLocation.code,
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, side, start_date, end_date]) =>
+      fetchDeviceRealtime(url, tenant, side, start_date, end_date),
+    {
+      isPaused: () =>
+        !isOnline && (!localTenant || !selectedLocation.code ? true : false),
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/location/getlocation",
+            localTenant,
+            JSON.stringify(selectedLocation.code),
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: Helper function to parse JSON safely
   const parseJSON = (str, fallback) => {
     if (!str) {
       // If str is null, undefined, or an empty string, return the fallback value
@@ -403,11 +524,91 @@ export default function Current() {
     }
   };
 
+  // TODO: SWR to get monitoring data
+  const {
+    data: currentData,
+    isLoading: currentLoading,
+    error: currentError,
+  } = useSWR(
+    selectedDevice.code
+      ? [
+          "/api/monitoring/getmonitoring",
+          localTenant,
+          selectedDevice.code,
+          hoursAgo,
+        ]
+      : null,
+    ([url, localTenant, locationid, start_date]) =>
+      fetchCurrentRealtime(url, localTenant, locationid, start_date),
+    {
+      isPaused: () =>
+        !isOnline &&
+        (selectedLocation.code === null ||
+          selectedDevice.code === null ||
+          !localTenant ||
+          !hoursAgo)
+          ? true
+          : false,
+      isOnline: () => isOnline,
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/getmonitoring",
+            localTenant,
+            selectedDevice.code,
+            hoursAgo,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: Get local tenant item
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
+    }
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    return () => {
+      setLocalTenant("");
+    };
+  }, []);
+
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
     const dateIns = new Date();
-    // const isoDate = "2024-09-13T11:30:54";
-    // const isoConvDate = new Date(isoDate);
 
     // Get current date time
     const getFormatedCurrentDate = `${dateIns.getFullYear()}-${(
@@ -431,163 +632,90 @@ export default function Current() {
       .toString()
       .padStart(2, "0")}:${dateIns.getSeconds().toString().padStart(2, "0")}`;
 
-    // const diffTime = dateIns - isoConvDate;
-    // const minutes = Math.floor((diffTime % 3600000) / 60000);
     if (getFormatedCurrentDate.startsWith("202")) {
       setHoursAgo(getHoursAgo);
     }
-    // if (process.env.NODE_ENV === "development") {
-    //   console.log(
-    //     "Current date: " +
-    //       getFormatedCurrentDate +
-    //       "| 1 hours ago: " +
-    //       getHoursAgo
-    //   );
-    //   console.log("Different time: " + minutes);
-    // }
   }, []);
 
-  // TODO: Get default site
+  // TODO: Set defaults site when data is available
   useEffect(() => {
-    // Get local tenant item
-    const currentUser = localStorage.getItem("tenant");
+    if (locationsData?.data.length) {
+      const parsedParam1 = parseJSON(param1);
 
-    // If tenant local storage is undefined or null
-    if (!currentUser) {
-      // set local tenant state to null
-      setLocalTenant("");
-      return;
+      // Check and Set initial selectLoc if none provided by user
+      parsedParam1 === undefined
+        ? setSelectedLocation({
+            code: locationsData.data[0].code,
+            name: locationsData.data[0].name,
+          })
+        : setSelectedLocation({ code: parsedParam1[0], name: parsedParam1[1] });
+
+      setLocationList(locationsData.data);
     }
 
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectedLocation({ code: null, name: null });
+      setLocationList([]);
+    };
+  }, [locationsData, param1]);
 
-    // TODO: fetch the site data
-    fetchSite(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      "",
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    ).then((dataSite) => {
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(dataSite.site["data"]);
-      // }
-
-      // If site response is not OK
-      if (dataSite.message !== "OK") {
-        setOnLoading(false);
-        setSignal(false);
-        setChannel("Unreachable");
-        return;
-      }
-
-      // If site response is OK
-      const siteData = dataSite.site["data"] || [];
-      setDataLoc(siteData);
-
-      // Scrap the first index data
-      const firstIndexSite = siteData[0];
-
-      if (firstIndexSite) {
-        const parsedParam1 = parseJSON(param1);
-
-        // Check and Set initial selectLoc if none provided by user
-
-        setSelectLoc(
-          parsedParam1 === undefined
-            ? [firstIndexSite["code"], firstIndexSite["name"]]
-            : parsedParam1
-        );
-        // set device state to null in order to refresh the device list
-        // when user move to another site
-        setSelectDev([]);
-      }
-    });
-  }, [param1]);
-
-  // TODO: GET default device
+  // TODO: Set defaults device location when data is available
   useEffect(() => {
-    const currentUser = localStorage.getItem("tenant");
-    if (!currentUser || selectLoc.length === 0) return;
+    if (devicesData?.data.length) {
+      const parsedParam2 = parseJSON(param2);
 
-    // TODO: fetch the device (location) based on selected location/site
-    fetchDevice(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      param2.length === 0 ? JSON.stringify(selectLoc[0]) : selectLoc[0],
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    )
-      .then((dataLocation) => {
-        // if (process.env.NODE_ENV === "development") {
-        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-        // }
+      // Set initial selectDev if none provided by user
+      parsedParam2 === undefined
+        ? setSelectDevice({
+            code: devicesData.data[0].code,
+            name: devicesData.data[0].name,
+          })
+        : setSelectDevice({ code: parsedParam2[0], name: parsedParam2[1] });
 
-        // response is not OK
-        if (!dataLocation || dataLocation.message !== "OK") {
-          setOnLoading(false);
-          setSignal(false);
-          setChannel("Failed to load resource");
-          return;
-        }
+      setDeviceList(devicesData.data);
+    }
 
-        const deviceData = dataLocation.loc["data"] || [];
-
-        // device location response is OK
-        setDataDev(deviceData);
-
-        // Scrap the first index data
-        const firstIndexDev = deviceData[0];
-
-        // Set initial selectDev if none provided by user
-        if (firstIndexDev && selectLoc.length !== 0) {
-          const parsedParam2 = parseJSON(param2);
-
-          setSelectDev(
-            parsedParam2 === undefined
-              ? [firstIndexDev["code"], firstIndexDev["name"]]
-              : parsedParam2
-          );
-        }
-
-        setOnLoading(true);
-        setChannel("Validating data..");
-      })
-      .catch((error) => {
-        setOnLoading(false);
-        setSignal(false);
-        setChannel("Failed to load resource");
-      });
-  }, [param2, selectLoc]);
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectDevice({ code: null, name: null });
+      setDeviceList([]);
+    };
+  }, [devicesData, param2]);
 
   // TODO: Update each current in lastDataCurrent if data is valid
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      console.log("Effect triggered with data:", data);
+      console.log("Effect triggered with data:", currentData);
     }
 
-    if (data) {
+    if (currentData) {
       setLastDataCurrent((prev) => {
         const newData = {
           i_r_Input:
-            data[0].i_r_Input != null ? data[0].i_r_Input : prev.i_r_Input,
+            currentData[0].i_r_Input != null
+              ? currentData[0].i_r_Input
+              : prev.i_r_Input,
           i_r_Output:
-            data[0].i_r_Output != null ? data[0].i_r_Output : prev.i_r_Output,
+            currentData[0].i_r_Output != null
+              ? currentData[0].i_r_Output
+              : prev.i_r_Output,
           i_s_Input:
-            data[0].i_s_Input != null ? data[0].i_s_Input : prev.i_s_Input,
+            currentData[0].i_s_Input != null
+              ? currentData[0].i_s_Input
+              : prev.i_s_Input,
           i_s_Output:
-            data[0].i_s_Output != null ? data[0].i_s_Output : prev.i_s_Output,
+            currentData[0].i_s_Output != null
+              ? currentData[0].i_s_Output
+              : prev.i_s_Output,
           i_t_Input:
-            data[0].i_t_Input != null ? data[0].i_t_Input : prev.i_t_Input,
+            currentData[0].i_t_Input != null
+              ? currentData[0].i_t_Input
+              : prev.i_t_Input,
           i_t_Output:
-            data[0].i_t_Output != null ? data[0].i_t_Output : prev.i_t_Output,
+            currentData[0].i_t_Output != null
+              ? currentData[0].i_t_Output
+              : prev.i_t_Output,
         };
 
         // Log previous and new data for comparison
@@ -605,38 +733,53 @@ export default function Current() {
         return prev;
       });
     }
-  }, [data]);
+  }, [currentData]);
+
+  // TODO: Alert user if response time is high
+  useEffect(() => {
+    // Threshold of 5000ms / 5sec
+    if (responseTime !== null && responseTime > 5000) {
+      setIsConnectionUnstable(true);
+    } else {
+      setIsConnectionUnstable(false);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setIsConnectionUnstable(false);
+    };
+  }, [isOnline, responseTime]);
 
   // TODO: Set current values based on valid data or fallback to last known values
   const currentValues = {
     i_r_Input:
-      data && data[0]?.i_r_Input != null
-        ? data[0].i_r_Input
+      currentData && currentData[0]?.i_r_Input != null
+        ? currentData[0].i_r_Input
         : lastDataCurrent.i_r_Input,
     i_r_Output:
-      data && data[0]?.i_r_Output != null
-        ? data[0].i_r_Output
+      currentData && currentData[0]?.i_r_Output != null
+        ? currentData[0].i_r_Output
         : lastDataCurrent.i_r_Output,
     i_s_Input:
-      data && data[0]?.i_s_Input != null
-        ? data[0].i_s_Input
+      currentData && currentData[0]?.i_s_Input != null
+        ? currentData[0].i_s_Input
         : lastDataCurrent.i_s_Input,
     i_s_Output:
-      data && data[0]?.i_s_Output != null
-        ? data[0].i_s_Output
+      currentData && currentData[0]?.i_s_Output != null
+        ? currentData[0].i_s_Output
         : lastDataCurrent.i_s_Output,
     i_t_Input:
-      data && data[0]?.i_t_Input != null
-        ? data[0].i_t_Input
+      currentData && currentData[0]?.i_t_Input != null
+        ? currentData[0].i_t_Input
         : lastDataCurrent.i_t_Input,
     i_t_Output:
-      data && data[0]?.i_t_Output != null
-        ? data[0].i_t_Output
+      currentData && currentData[0]?.i_t_Output != null
+        ? currentData[0].i_t_Output
         : lastDataCurrent.i_t_Output,
   };
 
   // If SWR Realtime connection error then show this widget below
-  if (error) {
+  if (currentError) {
     return (
       <div className="p-2 space-y-5 text-center sm:p-5 sm:pb-0">
         {/* Content */}
@@ -706,7 +849,7 @@ export default function Current() {
   return (
     <div id="current-template" className="grid grid-cols-1 gap-0 mt-2">
       {/* Alert on slow loading */}
-      {isSlowLoad ? <DynamicAlert /> : null}
+      {isSlowLoad || isConnectionUnstable ? <DynamicAlert /> : null}
       {/* End Alert on slow loading */}
 
       {/* Page Heading */}
@@ -718,7 +861,7 @@ export default function Current() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectLoc.length === null ||
+                  selectedLocation.length === 0 ||
                   param1.length !== 0 ||
                   param2.length !== 0
                     ? "pointer-events-none"
@@ -728,12 +871,12 @@ export default function Current() {
                 <button
                   id="hs-dropdown-example"
                   type="button"
-                  className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                  className="py-2 px-2 duration-200 ease-in-out transition inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
                   aria-haspopup="menu"
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {selectLoc.length != 0 ? selectLoc[1] : "Select location"}
+                  {locationsData ? selectedLocation.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -755,16 +898,21 @@ export default function Current() {
                   aria-orientation="vertical"
                   aria-labelledby="hs-dropdown-example"
                 >
-                  {dataLoc
+                  {locationList
                     .filter(
                       (obj, index) =>
-                        dataLoc.findIndex((item) => item.code === obj.code) ===
-                        index
+                        locationList.findIndex(
+                          (item) => item.code === obj.code
+                        ) === index
                     )
                     .map((item, index) => (
                       <Link
                         key={index}
-                        className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                        className={`${
+                          selectedLocation.code === item.code
+                            ? "pointer-events-none"
+                            : "pointer-events-auto"
+                        } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                         href=""
                         onClick={handleSelectLocation.bind(
                           null,
@@ -776,7 +924,9 @@ export default function Current() {
                           {item.name}
                         </span>
                         <span className="inline-flex text-xs text-gray-400">
-                          {selectLoc[0] === item.code ? "Selected" : ""}
+                          {selectedLocation.code === item.code
+                            ? "Selected"
+                            : ""}
                         </span>
                       </Link>
                     ))}
@@ -789,8 +939,7 @@ export default function Current() {
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectDev.length === null ||
-                  !showDev ||
+                  selectedDevice.length === 0 ||
                   param1.length !== 0 ||
                   param2.length !== 0
                     ? "pointer-events-none"
@@ -800,12 +949,12 @@ export default function Current() {
                 <button
                   id="hs-dropdown-example"
                   type="button"
-                  className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                  className="py-2 duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
                   aria-haspopup="menu"
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {selectDev.length != 0 ? selectDev[1] : "Select device"}
+                  {devicesData ? selectedDevice.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -827,10 +976,14 @@ export default function Current() {
                   aria-orientation="vertical"
                   aria-labelledby="hs-dropdown-example"
                 >
-                  {dataDev.map((item, index) => (
+                  {deviceList.map((item, index) => (
                     <Link
                       key={index}
-                      className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                      className={`${
+                        selectedDevice.code === item.code
+                          ? "pointer-events-none"
+                          : "pointer-events-auto"
+                      } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                       href=""
                       onClick={handleSelectDevice.bind(
                         null,
@@ -842,7 +995,7 @@ export default function Current() {
                         {item.name}
                       </span>
                       <span className="inline-flex text-xs text-gray-400">
-                        {selectDev[0] === item.code ? "Selected" : ""}
+                        {selectedDevice.code === item.code ? "Selected" : ""}
                       </span>
                     </Link>
                   ))}
@@ -857,13 +1010,13 @@ export default function Current() {
               <button
                 type="button"
                 disabled={
-                  selectDev.length === 0 ||
+                  selectedDevice.length === 0 ||
                   param1.length === 0 ||
                   param2.length === 0
                     ? true
                     : false
                 }
-                className="py-[7px] px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-rose-600 dark:bg-rose-700 text-white hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="py-[7px] duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-rose-600 dark:bg-rose-700 text-white hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
                 onClick={handleResetButton.bind(null)}
               >
                 <svg
@@ -884,6 +1037,7 @@ export default function Current() {
               </button>
             </>
           ) : null}
+
           {/* End Reset Button */}
         </div>
       </div>
@@ -924,86 +1078,76 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`r-input${index}`}
-                            id={"current-r-input"}
-                            alt={"R"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.i_r_Input
-                                : currentValues.i_r_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-r-input${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`r-input`}
+                        id={"current-r-input"}
+                        alt={"R"}
+                        title="Input"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_r_Input
+                            : currentValues.i_r_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`r-input`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`r-output${index}`}
-                            id={"current-r-output"}
-                            alt={"R"}
-                            title="Output"
-                            value={
-                              !error && data !== undefined
-                                ? item.i_r_Output
-                                : currentValues.i_r_Output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-r-output${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`r-output`}
+                        id={"current-r-output"}
+                        alt={"R"}
+                        title="Output"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_r_Output
+                            : currentValues.i_r_Output
+                        }
+                      />
+                    ) : (
+                      <div id={`r-output`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -1094,86 +1238,76 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`s-input${index}`}
-                            id={"current-s-input"}
-                            alt={"S"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.i_s_Input
-                                : currentValues.i_s_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-s-input${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`s-input`}
+                        id={"current-s-input"}
+                        alt={"S"}
+                        title="Input"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_s_Input
+                            : currentValues.i_s_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`s-input`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`s-output${index}`}
-                            id={"current-s-output"}
-                            alt={"S"}
-                            title="Output"
-                            value={
-                              !error & (data !== undefined)
-                                ? item.i_s_Output
-                                : currentValues.i_s_Output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-s-output${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`s-output`}
+                        id={"current-s-output"}
+                        alt={"S"}
+                        title="Output"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_s_Output
+                            : currentValues.i_s_Output
+                        }
+                      />
+                    ) : (
+                      <div id={`s-output`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -1264,86 +1398,76 @@ export default function Current() {
               {!onLoading ? (
                 <>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`t-input${index}`}
-                            id={"current-t-input"}
-                            alt={"T"}
-                            title="Input"
-                            value={
-                              !error && data !== undefined
-                                ? item.i_t_Input
-                                : currentValues.i_t_Input
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-t-input${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`t-input`}
+                        id={"current-t-input"}
+                        alt={"T"}
+                        title="Input"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_t_Input
+                            : currentValues.i_t_Input
+                        }
+                      />
+                    ) : (
+                      <div id={`t-input`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="w-full h-full md:w-1/2">
-                    {data?.map((item, index) => {
-                      if (!error) {
-                        return (
-                          <RadialDynamicGauge
-                            key={`t-output${index}`}
-                            id={"current-t-output"}
-                            alt={"T"}
-                            title="Output"
-                            value={
-                              !error && data !== undefined
-                                ? item.i_t_Output
-                                : currentValues.i_t_Output
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <div key={`current-t-output${index}`}>
-                          <span className="inline-flex items-center px-2 py-1 my-4 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
-                            <svg
-                              className="shrink-0 size-3"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                              <line x1="12" x2="12" y1="2" y2="12"></line>
-                            </svg>
-                            Device is not connected
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {isOnline && !currentError ? (
+                      <RadialDynamicGauge
+                        key={`t-output`}
+                        id={"current-t-output"}
+                        alt={"T"}
+                        title="Output"
+                        value={
+                          !currentError && currentData
+                            ? currentData[0].i_t_Output
+                            : currentValues.i_t_Output
+                        }
+                      />
+                    ) : (
+                      <div id={`t-output`}>
+                        <span className="inline-flex items-center px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full gap-x-1 dark:bg-neutral-500/20 dark:text-neutral-400">
+                          <svg
+                            className="shrink-0 size-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" x2="12" y1="2" y2="12"></line>
+                          </svg>
+                          Device is not connected
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
