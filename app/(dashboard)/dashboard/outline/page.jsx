@@ -170,7 +170,6 @@ export default function DashboardOutline() {
 
   // Used to set date time
   const [dateState, setDateState] = useState(new Date());
-
   /**
    * END OF STATE COLLECTION
    */
@@ -436,7 +435,7 @@ export default function DashboardOutline() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    (isOnline || !isConnectionUnstable) && localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -449,11 +448,11 @@ export default function DashboardOutline() {
     {
       isPaused: () => !isOnline && !localTenant,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -488,7 +487,7 @@ export default function DashboardOutline() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -503,11 +502,11 @@ export default function DashboardOutline() {
       isPaused: () =>
         !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -543,7 +542,7 @@ export default function DashboardOutline() {
 
   // TODO: SWR to get monitoring data
   const { data, isLoading, error } = useSWR(
-    selectedDevice.code
+    (isOnline || !isConnectionUnstable) && selectedDevice.code
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -567,7 +566,7 @@ export default function DashboardOutline() {
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },

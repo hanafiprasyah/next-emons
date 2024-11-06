@@ -81,7 +81,6 @@ export default function Grounding() {
     voltage_output: 0,
   };
   const [lastDataGround, setLastDataGround] = useState(defaultGroundValues);
-
   /**
    * END OF STATE COLLECTION
    */
@@ -146,6 +145,30 @@ export default function Grounding() {
       } else {
         setSelectDevice({ code: null, name: null });
       }
+    }
+  };
+
+  const parseJSON = (str, fallback) => {
+    if (!str) {
+      // If str is null, undefined, or an empty string, return the fallback value
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Received empty or null input, returning fallback.");
+      }
+
+      return fallback;
+    }
+    try {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("trying to parse str:");
+      }
+
+      return JSON.parse(str);
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("JSON Parsing Error:", error);
+      }
+
+      return fallback;
     }
   };
   // End of Scripts
@@ -387,7 +410,7 @@ export default function Grounding() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    (isOnline || !isConnectionUnstable) && localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -400,11 +423,11 @@ export default function Grounding() {
     {
       isPaused: () => !isOnline && !localTenant,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -439,7 +462,7 @@ export default function Grounding() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -456,11 +479,11 @@ export default function Grounding() {
       isPaused: () =>
         !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -494,38 +517,13 @@ export default function Grounding() {
     }
   );
 
-  // TODO: Helper function to parse JSON safely
-  const parseJSON = (str, fallback) => {
-    if (!str) {
-      // If str is null, undefined, or an empty string, return the fallback value
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Received empty or null input, returning fallback.");
-      }
-
-      return fallback;
-    }
-    try {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("trying to parse str:");
-      }
-
-      return JSON.parse(str);
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("JSON Parsing Error:", error);
-      }
-
-      return fallback;
-    }
-  };
-
   // TODO: SWR to get monitoring data
   const {
     data: groundData,
     isLoading: groundLoading,
     error: groundError,
   } = useSWR(
-    selectedDevice.code
+    (isOnline || !isConnectionUnstable) && selectedDevice.code
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -538,8 +536,8 @@ export default function Grounding() {
     {
       isPaused: () =>
         !isOnline &&
-        (selectedLocation.code === null ||
-          selectedDevice.code === null ||
+        (selectedLocation.code ||
+          selectedDevice.code ||
           !localTenant ||
           !hoursAgo)
           ? true
@@ -549,7 +547,7 @@ export default function Grounding() {
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -809,7 +807,7 @@ export default function Grounding() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedLocation.length === 0 ||
+                  (!selectedLocation.code && !selectedLocation.name) ||
                   param1.length !== 0 ||
                   param2.length !== 0
                     ? "pointer-events-none"
@@ -824,7 +822,7 @@ export default function Grounding() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {locationsData ? selectedLocation.name : "Loading"}
+                  {selectedLocation.code ? selectedLocation.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -887,7 +885,7 @@ export default function Grounding() {
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedDevice.length === 0 ||
+                  (!selectedDevice.code && !selectedDevice.name) ||
                   param1.length !== 0 ||
                   param2.length !== 0
                     ? "pointer-events-none"
@@ -902,7 +900,7 @@ export default function Grounding() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {devicesData ? selectedDevice.name : "Loading"}
+                  {selectedDevice.code ? selectedDevice.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"

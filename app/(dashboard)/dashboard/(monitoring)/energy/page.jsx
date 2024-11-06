@@ -369,7 +369,7 @@ export default function Energy() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    (isOnline || !isConnectionUnstable) && localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -382,11 +382,11 @@ export default function Energy() {
     {
       isPaused: () => !isOnline && !localTenant,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -421,7 +421,7 @@ export default function Energy() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -436,11 +436,11 @@ export default function Energy() {
       isPaused: () =>
         !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -480,7 +480,7 @@ export default function Energy() {
     isLoading: energyLoading,
     error: energyError,
   } = useSWR(
-    selectedDevice.code
+    (isOnline || !isConnectionUnstable) && selectedDevice.code
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -493,8 +493,8 @@ export default function Energy() {
     {
       isPaused: () =>
         !isOnline &&
-        (selectedLocation.code === null ||
-          selectedDevice.code === null ||
+        (selectedLocation.code ||
+          selectedDevice.code ||
           !localTenant ||
           !hoursAgo)
           ? true
@@ -504,7 +504,7 @@ export default function Energy() {
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -881,7 +881,7 @@ export default function Energy() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedLocation.length === null
+                  !selectedLocation.code && !selectedLocation.name
                     ? "pointer-events-none"
                     : null
                 }`}
@@ -894,7 +894,7 @@ export default function Energy() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {locationsData ? selectedLocation.name : "Loading"}
+                  {selectedLocation.code ? selectedLocation.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -958,7 +958,9 @@ export default function Energy() {
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedDevice.length === null ? "pointer-events-none" : null
+                  !selectedDevice.code && !selectedDevice.name
+                    ? "pointer-events-none"
+                    : null
                 }`}
               >
                 <button
@@ -969,7 +971,7 @@ export default function Energy() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {devicesData ? selectedDevice.name : "Loading"}
+                  {selectedDevice.code ? selectedDevice.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -1100,7 +1102,7 @@ export default function Energy() {
                             ? energyData[0].kwh_total_input
                             : energyValues.kwh_total_input
                         }
-                        isConnected={isOnline && !energyError && energyData}
+                        isConnected={isOnline && !energyError}
                       />
                     ) : (
                       <div id={`kwh-input`}>
@@ -1152,7 +1154,7 @@ export default function Energy() {
                             ? energyData[0].kwh_total_output
                             : energyValues.kwh_total_output
                         }
-                        isConnected={isOnline && !energyError && energyData}
+                        isConnected={isOnline && !energyError}
                       />
                     ) : (
                       <div id={`kwh-output`}>
@@ -1287,7 +1289,7 @@ export default function Energy() {
                             ? energyData[0].kvarh_total_input
                             : energyValues.kvarh_total_input
                         }
-                        isConnected={isOnline && !energyError && energyData}
+                        isConnected={isOnline && !energyError}
                       />
                     ) : (
                       <div id={`kvarh-input`}>
@@ -1339,7 +1341,7 @@ export default function Energy() {
                             ? energyData[0].kvarh_total_output
                             : energyValues.kvarh_total_output
                         }
-                        isConnected={isOnline && !energyError && energyData}
+                        isConnected={isOnline && !energyError}
                       />
                     ) : (
                       <div id={`kvarh-output`}>

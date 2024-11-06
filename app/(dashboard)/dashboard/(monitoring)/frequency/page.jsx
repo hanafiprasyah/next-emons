@@ -363,7 +363,7 @@ export default function Frequency() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    (isOnline || !isConnectionUnstable) && localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -376,11 +376,11 @@ export default function Frequency() {
     {
       isPaused: () => !isOnline && !localTenant,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -415,7 +415,7 @@ export default function Frequency() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -430,11 +430,11 @@ export default function Frequency() {
       isPaused: () =>
         !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
       isOnline: () => isOnline,
-      refreshInterval: 100,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -474,7 +474,7 @@ export default function Frequency() {
     isLoading: frequencyLoading,
     error: frequencyError,
   } = useSWR(
-    selectedDevice.code
+    (isOnline || !isConnectionUnstable) && selectedDevice.code
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -487,8 +487,8 @@ export default function Frequency() {
     {
       isPaused: () =>
         !isOnline &&
-        (selectedLocation.code === null ||
-          selectedDevice.code === null ||
+        (selectedLocation.code ||
+          selectedDevice.code ||
           !localTenant ||
           !hoursAgo)
           ? true
@@ -498,7 +498,7 @@ export default function Frequency() {
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -763,7 +763,7 @@ export default function Frequency() {
               <h2 className="pb-2 text-xs ps-1">Location:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedLocation.length === null
+                  !selectedLocation.code && !selectedLocation.name
                     ? "pointer-events-none"
                     : null
                 }`}
@@ -776,7 +776,7 @@ export default function Frequency() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {locationsData ? selectedLocation.name : "Loading"}
+                  {selectedLocation.code ? selectedLocation.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
@@ -840,7 +840,9 @@ export default function Frequency() {
               <h2 className="pb-2 text-xs ps-1">Device:</h2>
               <div
                 className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                  selectedDevice.length === null ? "pointer-events-none" : null
+                  !selectedDevice.code && !selectedDevice.name
+                    ? "pointer-events-none"
+                    : null
                 }`}
               >
                 <button
@@ -851,7 +853,7 @@ export default function Frequency() {
                   aria-expanded="false"
                   aria-label="Dropdown"
                 >
-                  {devicesData ? selectedDevice.name : "Loading"}
+                  {selectedDevice.code ? selectedDevice.name : "Loading"}
                   <svg
                     className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
