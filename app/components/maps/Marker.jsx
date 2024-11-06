@@ -65,12 +65,11 @@ function useMonitoring(tenantRef, locationid, start_date) {
         (start_date == "" && start_date == undefined)
           ? true
           : false,
-      refreshInterval: 3000,
+      refreshInterval: 6000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
-      onLoadingSlow: () => {
-        setChannel("Unstable network, please wait..");
-      },
+      loadingTimeout: 10000,
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
@@ -80,7 +79,7 @@ function useMonitoring(tenantRef, locationid, start_date) {
           JSON.stringify(key) ===
           JSON.stringify([
             "/api/monitoring/getmonitoring",
-            localTenant,
+            tenantRef,
             locationid,
             start_date,
           ])

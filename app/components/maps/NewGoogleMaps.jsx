@@ -107,7 +107,7 @@ const Default = () => {
    * then we will get the tenancy (more than 2 devices) with their own datas
    */
   const { data, isLoading, error } = useSWR(
-    localTenant
+    (isOnline || !isConnectionUnstable) && localTenant
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -125,11 +125,11 @@ const Default = () => {
     {
       isPaused: () => (!isOnline && !localTenant ? true : false),
       isOnline: () => isOnline,
-      refreshInterval: 500,
+      refreshInterval: 6000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -256,7 +256,7 @@ const Default = () => {
           </div>
         )}
       >
-        {!localTenant || selectedDevice.lat === undefined ? (
+        {!localTenant && !selectedDevice.lat ? (
           <div
             className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
             role="status"
@@ -282,7 +282,7 @@ const Default = () => {
           >
             {localTenant && isOnline && !isSlowLoad && !isConnectionUnstable
               ? data?.loc["data"].map((location, index) =>
-                  location.parent != 0 && deviceStatus ? (
+                  location.parent != 0 ? (
                     <DynamicMarkerWithInfo
                       key={`${location.code}-${index}`}
                       locationid={location.code}
