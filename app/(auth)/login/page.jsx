@@ -10,13 +10,13 @@ import Loader from "@/loading";
 
 export default function Login() {
   return (
-    <main id="auth-page" className="max-h-[calc(100dvh)]">
-      <section id="login-page" className="h-full">
-        <div className="flex bg-black/75">
+    <main id="auth-page" className="h-[100dvh]">
+      <section id="login-page" className="h-[100dvh]">
+        <div className="flex bg-black/75 h-[100dvh]">
           <>
             {/* Video Background */}
             <video
-              className="absolute object-cover w-full h-[calc(100dvh)] -z-10 scale-x-[-1]"
+              className="absolute object-cover w-full h-[100dvh] -z-10 scale-x-[-1]"
               autoPlay
               muted
               loop
@@ -34,7 +34,7 @@ export default function Login() {
             </video>
 
             <div className="w-full px-5 grow">
-              <div className="h-full min-h-screen sm:w-[448px] flex flex-col justify-center mx-auto space-y-5 select-none z-50">
+              <div className="h-[100dvh] sm:w-[448px] flex flex-col justify-center mx-auto space-y-5 select-none z-50">
                 {/* Glass Container */}
                 <div className="p-6 text-white shadow-xl lg:p-12 bg-white/10 backdrop-blur-md rounded-xl">
                   <h1 className="text-lg font-semibold text-gray-800 transition-opacity duration-300 ease-in-out lg:text-xl dark:text-neutral-200 animate-fade-in">
