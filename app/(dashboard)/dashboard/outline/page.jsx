@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import useSWR, { mutate } from "swr";
+import ErrorImage from "../../../../public/images/error500.svg";
+import { useOnlineStatus } from "../../../lib/hook/connection-hook";
 import dynamic from "next/dynamic";
 
 const DynamicAlert = dynamic(
@@ -40,6 +42,11 @@ export default function DashboardOutline() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
+  // Connection state
+  const isOnline = useOnlineStatus();
+  const [responseTime, setResponseTime] = useState(null);
+  const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
   const [lastTimeUpdate, setLastTimeUpdate] = useState("");
@@ -47,21 +54,25 @@ export default function DashboardOutline() {
   // Init the device connection status and signal recipient status
   const [signal, setSignal] = useState(false);
 
-  // Used to set the /tool/dataside API
-  const [dataLoc, setDataLoc] = useState([]);
-  const [selectLoc, setSelectLoc] = useState([]);
-  // const [selectLoc, setSelectLoc] = useState([10, 'Siloam Cibubur']);
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
 
-  // Used to set the /tool/dataLocation API
-  const [dataDev, setDataDev] = useState([]);
-  const [selectDev, setSelectDev] = useState([]);
-  // const [selectDev, setSelectDev] = useState([102, 'Ruang ICU Lt 3']);
+  // State to store selected location
+  const [selectedLocation, setSelectedLocation] = useState({
+    code: null,
+    name: null,
+  });
 
-  /**
-   * Used to conditioning the device dropdown pointer event
-   * if location === [] (null), then disable the device dropdown
-   */
-  const [showDev, isShowDev] = useState(true);
+  // State to store selected device
+  const [selectedDevice, setSelectDevice] = useState({
+    code: null,
+    name: null,
+  });
+
+  // State to store list location
+  const [locationList, setLocationList] = useState([]);
+  // State to store list device
+  const [deviceList, setDeviceList] = useState([]);
 
   // Temporary memory to handle null/undefined value from Rest API
   const defaultVoltageValues = {
@@ -157,11 +168,9 @@ export default function DashboardOutline() {
   const [lastDataThdv, setLastDataThdv] = useState(defaultThdvValues);
   const [lastDataThdi, setLastDataThdi] = useState(defaultThdiValues);
 
-  // Handle slow loading on SWR
-  const [isSlowLoad, setSlowLoad] = useState(false);
-
   // Used to set date time
   const [dateState, setDateState] = useState(new Date());
+
   /**
    * END OF STATE COLLECTION
    */
@@ -170,15 +179,14 @@ export default function DashboardOutline() {
   const handleSelectLocation = (code, name, e) => {
     e.preventDefault();
     setSignal(false);
-    setSelectLoc([code, name]);
-    isShowDev(true);
-    setSelectDev([]);
+    setSelectedLocation({ code: code, name: name });
+    setSelectDevice({ code: null, name: null });
   };
 
   const handleSelectDevice = (code, name, e) => {
     e.preventDefault();
     setSignal(false);
-    setSelectDev([code, name]);
+    setSelectDevice({ code: code, name: name });
   };
 
   const handleDisableClick = (e) => {
@@ -187,87 +195,112 @@ export default function DashboardOutline() {
 
   // End of Scripts
 
-  // Function to fetch the /tool/dataside API
-  const fetchSite = async (
-    tenant,
-    locationid,
-    lane,
-    status,
-    value,
-    side,
-    start_trancation_date,
-    end_trancation_date
-  ) => {
-    const response = await fetch("/api/tools/site/getsite", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+  // TODO: Function to fetch the site API [REALTIME]
+  const fetchSiteRealtime = async (url, tenant, start_date, end_date) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.site;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchSiteRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the /tool/dataLocation API
-  const fetchDevice = async (
+  // TODO: Function to fetch the device API [REALTIME]
+  const fetchDeviceRealtime = async (
+    url,
     tenant,
-    locationid,
-    lane,
-    status,
-    value,
     side,
-    start_trancation_date,
-    end_trancation_date
+    start_date,
+    end_date
   ) => {
-    const response = await fetch("/api/tools/location/getlocation", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenant,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid ?? 0,
-        lane: lane ?? "",
-        status: status ?? "",
-        value: value ?? "",
-        side: side ?? "0",
-        start_trancation_date: start_trancation_date ?? "",
-        end_trancation_date: end_trancation_date ?? "",
-        tenant: tenant ?? "",
-      }),
-    });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: side,
+          start_date: start_date,
+          end_date: end_date,
+          tenant: tenant,
+        }),
+      });
 
-    return response.json();
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data.loc;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchDeviceRealtime: ", err);
+      }
+      throw err;
+    }
   };
 
-  // Function to fetch the data API [REALTIME]
+  // TODO: Function to fetch the data API [REALTIME]
   const fetchDataRealtime = async (
     url,
     localTenant,
     locationid,
     start_date
   ) => {
+    // main point to track unstable network
+    const startTime = performance.now();
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -293,7 +326,9 @@ export default function DashboardOutline() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.statusText}`);
+        throw new Error(
+          `HTTP error on fetchDataRealtime! Status: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -302,9 +337,9 @@ export default function DashboardOutline() {
         setSignal(true);
 
         // Check if device list is not null
-        if (selectDev.length !== 0) {
+        if (selectedDevice.code && selectedDevice.name) {
           setSignal(true);
-          // Check if data ground length is null
+          // Check if all data length is null
           if (
             data?.monitoring["data"]["datavoltages"][0] === undefined ||
             data?.monitoring["data"]["datacurrents"][0] === undefined ||
@@ -362,52 +397,175 @@ export default function DashboardOutline() {
               setSignal(true);
             }
 
+            // checkpoint to check network performance
+            const endTime = performance.now();
+            setResponseTime(endTime - startTime);
+
             return data;
           }
         } // if device list is null?
         else {
+          setResponseTime(null);
           setSignal(false);
         }
       }
       // If response message is not OK
       else {
         setSignal(false);
+        setResponseTime(null);
         if (process.env.NODE_ENV === "development") {
-          console.log(
-            "Error in fetchVoltageRealtime: Response Message is Not OK"
-          );
+          console.log("Error in fetchDataRealtime: Response Message is Not OK");
         }
       }
     } catch (err) {
       setSignal(false);
+      setResponseTime(null);
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchRealtime: ", err);
+        console.log("Error in fetchDataRealtime: ", err);
       }
       throw err;
     }
   };
 
-  // Clear SWR Cache
+  // TODO: Clear SWR Cache
   const clearSWRCache = () =>
     mutate(() => true, undefined, {
       revalidate: false,
       rollbackOnError: true,
     });
 
-  // SWR
+  // TODO: to get site realtime
+  const { data: locationsData, error: locationsError } = useSWR(
+    localTenant
+      ? [
+          "/api/tools/site/getsite",
+          localTenant,
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, start_date, end_date]) =>
+      fetchSiteRealtime(url, tenant, start_date, end_date),
+    {
+      isPaused: () => !isOnline && !localTenant,
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/site/getsite",
+            localTenant,
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: to get device realtime
+  const { data: devicesData, error: devicesError } = useSWR(
+    localTenant && selectedLocation.code
+      ? [
+          "/api/tools/location/getlocation",
+          localTenant,
+          JSON.stringify(selectedLocation.code),
+          "2023-01-01 00:00:00",
+          "2024-12-30 00:00:00",
+        ]
+      : null,
+    ([url, tenant, side, start_date, end_date]) =>
+      fetchDeviceRealtime(url, tenant, side, start_date, end_date),
+    {
+      isPaused: () =>
+        !isOnline && (!localTenant || !selectedLocation.code ? true : false),
+      isOnline: () => isOnline,
+      refreshInterval: 100,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 6000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/location/getlocation",
+            localTenant,
+            JSON.stringify(selectedLocation.code),
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: SWR to get monitoring data
   const { data, isLoading, error } = useSWR(
-    ["/api/monitoring/getmonitoring", localTenant, selectDev[0], hoursAgo],
+    selectedDevice.code
+      ? [
+          "/api/monitoring/getmonitoring",
+          localTenant,
+          selectedDevice.code,
+          hoursAgo,
+        ]
+      : null,
     ([url, localTenant, locationid, start_date]) =>
       fetchDataRealtime(url, localTenant, locationid, start_date),
     {
       isPaused: () =>
-        selectLoc.length === 0 ||
-        selectDev.length === 0 ||
-        (localTenant == "" && localTenant == undefined) ||
-        (hoursAgo == "" && hoursAgo == undefined)
+        !isOnline &&
+        (selectedLocation.code === null ||
+          selectedDevice.code === null ||
+          !localTenant ||
+          !hoursAgo)
           ? true
           : false,
+      isOnline: () => isOnline,
       refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
       revalidateOnFocus: false,
       loadingTimeout: 6000,
       onLoadingSlow: () => {
@@ -429,8 +587,8 @@ export default function DashboardOutline() {
           JSON.stringify([
             "/api/monitoring/getmonitoring",
             localTenant,
-            locationid,
-            start_date,
+            selectedDevice.code,
+            hoursAgo,
           ])
         )
           return;
@@ -441,6 +599,25 @@ export default function DashboardOutline() {
       },
     }
   );
+
+  // TODO: Get local tenant item
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
+    }
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    return () => {
+      setLocalTenant("");
+    };
+  }, []);
 
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
@@ -485,102 +662,41 @@ export default function DashboardOutline() {
     // }
   }, []);
 
-  // TODO: Get default site
+  // TODO: Set defaults site when data is available
   useEffect(() => {
-    // Get local tenant item
-    const currentUser = localStorage.getItem("tenant");
+    if (locationsData?.data.length) {
+      setSelectedLocation({
+        code: locationsData.data[0].code,
+        name: locationsData.data[0].name,
+      });
 
-    // If tenant local storage is undefined or null
-    if (!currentUser) {
-      // set local tenant state to null
-      setLocalTenant("");
-      return;
+      setLocationList(locationsData.data);
     }
 
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectedLocation({ code: null, name: null });
+      setLocationList([]);
+    };
+  }, [locationsData]);
 
-    // TODO: fetch the site data
-    fetchSite(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      "",
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    ).then((dataSite) => {
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log(dataSite.site["data"]);
-      // }
-
-      // If site response is not OK
-      if (dataSite.message !== "OK") {
-        setSignal(false);
-
-        return;
-      }
-
-      // If site response is OK
-      const siteData = dataSite.site["data"] || [];
-      setDataLoc(siteData);
-
-      // Scrap the first index data
-      const firstIndexSite = siteData[0];
-      if (firstIndexSite) {
-        // set code and name as location state
-        setSelectLoc([firstIndexSite["code"], firstIndexSite["name"]]);
-        // set device state to null in order to refresh the device list
-        // when user move to another site
-        setSelectDev([]);
-      }
-    });
-  }, []);
-
-  // TODO: Get default device
+  // TODO: Set defaults device location when data is available
   useEffect(() => {
-    const currentUser = localStorage.getItem("tenant");
-    if (!currentUser || selectLoc.length === 0) return;
-
-    // TODO: fetch the device (location) based on selected location/site
-    fetchDevice(
-      currentUser,
-      0,
-      "",
-      "",
-      "",
-      selectLoc.length === 0 ? "0" : JSON.stringify(selectLoc[0]),
-      "2023-01-01 00:00:00",
-      "2024-12-30 23:59:00"
-    )
-      .then((dataLocation) => {
-        // if (process.env.NODE_ENV === "development") {
-        //   console.log("fetchDevice: " + dataLocation.loc["data"]);
-        // }
-
-        // response is not OK
-        if (!dataLocation || dataLocation.message !== "OK") {
-          setSignal(false);
-
-          return;
-        }
-
-        // device location response is OK
-        const deviceData = dataLocation.loc["data"] || [];
-        setDataDev(deviceData);
-
-        // Scrap the first index data
-        const firstIndexDev = deviceData[0];
-        if (selectLoc.length !== 0 && firstIndexDev) {
-          // set code and name as device state
-          setSelectDev([firstIndexDev["code"], firstIndexDev["name"]]);
-        }
-      })
-      .catch((error) => {
-        setSignal(false);
+    if (devicesData?.data.length) {
+      setSelectDevice({
+        code: devicesData.data[0].code,
+        name: devicesData.data[0].name,
       });
-  }, [selectLoc]);
+
+      setDeviceList(devicesData.data);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setSelectDevice({ code: null, name: null });
+      setDeviceList([]);
+    };
+  }, [devicesData]);
 
   // TODO: Update each monitoring in lastData state if data is valid
   useEffect(() => {
@@ -982,7 +1098,20 @@ export default function DashboardOutline() {
     }
   }, [data]);
 
-  // monitoring["data"]["datathdis"]
+  // TODO: Alert user if response time is high
+  useEffect(() => {
+    // Threshold of 5000ms / 5sec
+    if (responseTime !== null && responseTime > 5000) {
+      setIsConnectionUnstable(true);
+    } else {
+      setIsConnectionUnstable(false);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setIsConnectionUnstable(false);
+    };
+  }, [isOnline, responseTime]);
 
   // TODO: Set monitoring values based on valid data or fallback to last known values
   const voltageValues = {
@@ -1319,7 +1448,7 @@ export default function DashboardOutline() {
   return (
     <div id="outline-template" className="max-w-full h-fit">
       {/* Alert on slow loading */}
-      {isSlowLoad ? <DynamicAlert /> : null}
+      {isSlowLoad || isConnectionUnstable ? <DynamicAlert /> : null}
       {/* End Alert on slow loading */}
 
       {/* Page Heading */}
@@ -1422,18 +1551,20 @@ export default function DashboardOutline() {
               <div className="relative inline-block">
                 <div
                   className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                    selectLoc.length === null ? "pointer-events-none" : null
+                    !selectedLocation.code ? "pointer-events-none" : null
                   }`}
                 >
                   <button
                     id="hs-dropdown-example"
                     type="button"
-                    className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-sky-900 dark:text-sky-200 dark:hover:bg-sky-800 dark:focus:bg-sky-800"
+                    className="py-2 px-2 duration-200 ease-in-out transition inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-sky-900 dark:text-sky-200 dark:hover:bg-sky-800 dark:focus:bg-sky-800"
                     aria-haspopup="menu"
                     aria-expanded="false"
                     aria-label="Dropdown"
                   >
-                    {selectLoc.length != 0 ? selectLoc[1] : "Select location"}
+                    {selectedLocation.code
+                      ? selectedLocation.name
+                      : "Select location"}
                     <svg
                       className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-200"
                       xmlns="http://www.w3.org/2000/svg"
@@ -1455,17 +1586,21 @@ export default function DashboardOutline() {
                     aria-orientation="vertical"
                     aria-labelledby="hs-dropdown-example"
                   >
-                    {dataLoc
+                    {locationList
                       .filter(
                         (obj, index) =>
-                          dataLoc.findIndex(
+                          locationList.findIndex(
                             (item) => item.code === obj.code
                           ) === index
                       )
                       .map((item, index) => (
                         <Link
                           key={index}
-                          className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                          className={`${
+                            selectedLocation.code === item.code
+                              ? "pointer-events-none"
+                              : "pointer-events-auto"
+                          } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                           href=""
                           onClick={handleSelectLocation.bind(
                             null,
@@ -1473,11 +1608,13 @@ export default function DashboardOutline() {
                             item.name
                           )}
                         >
-                          <span className="inline-flex text-sm text-white">
+                          <span className="inline-flex text-xs text-white">
                             {item.name}
                           </span>
                           <span className="inline-flex text-xs text-gray-400">
-                            {selectLoc[0] === item.code ? "Selected" : ""}
+                            {selectedLocation.code === item.code
+                              ? "Selected"
+                              : ""}
                           </span>
                         </Link>
                       ))}
@@ -1489,20 +1626,18 @@ export default function DashboardOutline() {
               <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
                 <div
                   className={`relative inline-flex hs-dropdown hs-dropdown-example ${
-                    selectDev.length === null || !showDev
-                      ? "pointer-events-none"
-                      : null
+                    !selectedDevice.code ? "pointer-events-none" : null
                   }`}
                 >
                   <button
                     id="hs-dropdown-example"
                     type="button"
-                    className="py-2 px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-sky-900 dark:text-sky-200 dark:hover:bg-sky-800 dark:focus:bg-sky-800"
+                    className="py-2 duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1.5 text-xs rounded-lg bg-white text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-sky-900 dark:text-sky-200 dark:hover:bg-sky-800 dark:focus:bg-sky-800"
                     aria-haspopup="menu"
                     aria-expanded="false"
                     aria-label="Dropdown"
                   >
-                    {selectDev.length != 0 ? selectDev[1] : "Select device"}
+                    {selectedDevice ? selectedDevice.name : "Select device"}
                     <svg
                       className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-200"
                       xmlns="http://www.w3.org/2000/svg"
@@ -1524,10 +1659,14 @@ export default function DashboardOutline() {
                     aria-orientation="vertical"
                     aria-labelledby="hs-dropdown-example"
                   >
-                    {dataDev.map((item, index) => (
+                    {deviceList.map((item, index) => (
                       <Link
                         key={index}
-                        className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
+                        className={`${
+                          selectedDevice.code === item.code
+                            ? "pointer-events-none"
+                            : "pointer-events-auto"
+                        } flex duration-200 ease-in-out transition items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-300 dark:focus:bg-neutral-700`}
                         href=""
                         onClick={handleSelectDevice.bind(
                           null,
@@ -1535,11 +1674,11 @@ export default function DashboardOutline() {
                           item.name
                         )}
                       >
-                        <span className="inline-flex text-sm text-white">
+                        <span className="inline-flex text-xs text-white">
                           {item.name}
                         </span>
                         <span className="inline-flex text-xs text-gray-400">
-                          {selectDev[0] === item.code ? "Selected" : ""}
+                          {selectedDevice.code === item.code ? "Selected" : ""}
                         </span>
                       </Link>
                     ))}
@@ -1552,6 +1691,7 @@ export default function DashboardOutline() {
         </div>
       </div>
       {/* End Page Heading */}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 mx-2 my-2 xl:mb-5 xl:gap-6">
         {/* Voltage Input */}
