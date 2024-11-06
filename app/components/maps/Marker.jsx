@@ -32,7 +32,7 @@ function useMonitoring(tenantRef, locationid, start_date) {
         status: "",
         value: "",
         side: "",
-        start_date: start_date ?? "2024-01-01 00:40:20",
+        start_date: start_date,
         end_date: "",
       }),
     }).then((res) => {
