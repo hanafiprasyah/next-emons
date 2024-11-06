@@ -501,7 +501,7 @@ export default function DashboardOutline() {
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
       isPaused: () =>
-        !isOnline && (!localTenant || !selectedLocation.code ? true : false),
+        !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
       isOnline: () => isOnline,
       refreshInterval: 100,
       revalidateOnMount: true,
