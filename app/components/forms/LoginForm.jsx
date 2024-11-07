@@ -26,12 +26,12 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setLoggedIn] = useState(false);
-  const [errors, setError] = useState("");
+  const [errors, setError] = useState(null);
   const router = useRouter();
 
   function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     const regex = /\\$/;
 
@@ -53,7 +53,7 @@ function LoginForm() {
     }
     // if all clear, continue the process
     else {
-      setError("");
+      setError(null);
       setLoading(true);
 
       // Patch the value of substringUsername(input) value
@@ -184,11 +184,14 @@ function LoginForm() {
                 }
 
                 if (dataLoggedIn.message === "Login successfully") {
+                  setLoggedIn(true);
+                  setError(null);
                   localStorage.setItem(
                     "userName",
                     `${dataLoggedIn.datalogin["decript"]}`
                   );
                   localStorage.setItem("tenant", `${pureTenant}`);
+                  // Redirect to dashboard after successful login
                   router.replace("/dashboard/");
                 } else {
                   setLoading(false);
@@ -221,31 +224,38 @@ function LoginForm() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // TODO: Check user credentials
-  useEffect(() => {
-    if (isLoggedIn) {
-      router.replace("/dashboard/");
-    }
-
-    router.replace("/login");
-    router.refresh();
-  }, [router, isLoggedIn]);
-
   // TODO:Direct to login after tenant check
   useEffect(() => {
+    // Check if user and tenant details are stored
     const storedLocalValue = localStorage.getItem("userName");
+    const storedTenantOnLocal = localStorage.getItem("tenant");
 
-    if (storedLocalValue) {
+    // Determine if the user is logged in and if tenant info is available
+    const isAuthenticated =
+      isLoggedIn && storedLocalValue && storedTenantOnLocal;
+
+    const dizzyAuthenticated =
+      !isLoggedIn && storedLocalValue && storedTenantOnLocal;
+
+    if (isAuthenticated) {
       setLoading(false);
       setLoggedIn(true);
-
+      router.replace("/dashboard/");
       // if (process.env.NODE_ENV === "development") {
       //   console.log("Local key: " + storedLocalValue);
       // }
+    }
+    // check if user is not logged in but localStorage is not empty
+    else if (dizzyAuthenticated) {
+      setLoggedIn(false);
+      localStorage.clear();
+      router.refresh();
     } else {
+      setLoggedIn(false);
+      localStorage.clear();
       router.replace("/login/");
     }
-  }, [router]);
+  }, [isLoggedIn, router]);
 
   return (
     <>

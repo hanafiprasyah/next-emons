@@ -27,9 +27,8 @@ export default function AccountDropdown() {
 
       if (response.ok) {
         // Clear storage if response OK
-        // TODO: Clear all localStorage key
-        window.localStorage.clear();
-        router.refresh();
+        localStorage.clear();
+        router.replace("/login/");
       }
     } catch (error) {
       setLoading(false);
