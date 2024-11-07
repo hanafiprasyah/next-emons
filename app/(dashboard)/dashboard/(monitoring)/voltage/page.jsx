@@ -121,15 +121,19 @@ export default function Voltage() {
     }
   };
 
-  const handleResetButton = (e) => {
+  const handleResetButton = async (e) => {
     e.preventDefault();
+
+    const hasParams = param1.length !== 0 && param2.length !== 0;
+
     setSignal(false);
     isOnline ? setOnLoading(true) : setOnLoading(false);
 
     // indicate user bring params and clear the params after this button clicked
-    if (param1.length !== 0 && param2.length !== 0) {
-      router.replace("/dashboard/voltage/");
+    if (hasParams) {
+      await router.replace("/dashboard/voltage/");
       router.refresh();
+      return;
     } else {
       if (locationList && locationList?.length > 0) {
         if (selectedLocation.code !== locationList[0].code) {
