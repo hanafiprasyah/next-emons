@@ -1102,7 +1102,7 @@ export default function Energy() {
                             ? energyData[0].kwh_total_input
                             : energyValues.kwh_total_input
                         }
-                        isConnected={isOnline && !energyError}
+                        isConnected={isOnline && signal}
                       />
                     ) : (
                       <div id={`kwh-input`}>
@@ -1154,7 +1154,7 @@ export default function Energy() {
                             ? energyData[0].kwh_total_output
                             : energyValues.kwh_total_output
                         }
-                        isConnected={isOnline && !energyError}
+                        isConnected={isOnline && signal}
                       />
                     ) : (
                       <div id={`kwh-output`}>
@@ -1289,7 +1289,7 @@ export default function Energy() {
                             ? energyData[0].kvarh_total_input
                             : energyValues.kvarh_total_input
                         }
-                        isConnected={isOnline && !energyError}
+                        isConnected={isOnline && signal}
                       />
                     ) : (
                       <div id={`kvarh-input`}>
@@ -1341,7 +1341,7 @@ export default function Energy() {
                             ? energyData[0].kvarh_total_output
                             : energyValues.kvarh_total_output
                         }
-                        isConnected={isOnline && !energyError}
+                        isConnected={isOnline && signal}
                       />
                     ) : (
                       <div id={`kvarh-output`}>
