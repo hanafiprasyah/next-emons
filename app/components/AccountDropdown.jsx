@@ -28,7 +28,7 @@ export default function AccountDropdown() {
       if (response.ok) {
         // Clear storage if response OK
         localStorage.clear();
-        router.replace("/login/");
+        router.refresh();
       }
     } catch (error) {
       setLoading(false);
@@ -41,15 +41,17 @@ export default function AccountDropdown() {
 
   useEffect(() => {
     const getLocalValue = async () => {
-      const data = await localStorage.getItem("userName");
-      if (data && data != "") {
-        setUsername(data);
+      const username = await localStorage.getItem("userName");
+      const tenant = await localStorage.getItem("tenant");
+
+      if (username && tenant) {
+        setUsername(username);
       }
       return username;
     };
 
     getLocalValue();
-  });
+  }, []);
 
   return (
     <div
