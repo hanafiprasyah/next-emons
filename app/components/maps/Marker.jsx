@@ -10,139 +10,6 @@ import {
 import useSWR, { mutate } from "swr";
 import Link from "next/link";
 
-// TODO: Fetch monitoring data with SWR isolated
-function useMonitoring(tenantRef, locationid, start_date) {
-  // Function to fetch the data API [REALTIME]
-  const fetchDataRealtime = async (url, tenantRef, locationid, start_date) => {
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenantRef,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        tenant: tenantRef,
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_date: start_date,
-        end_date: "",
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error("500. An error occured.");
-      }
-
-      const data = res.json();
-      return data;
-    });
-  };
-
-  // Clear SWR Cache
-  const clearSWRCache = () =>
-    mutate(() => true, undefined, {
-      revalidate: false,
-      rollbackOnError: true,
-    });
-
-  const { data, isLoading, error } = useSWR(
-    tenantRef !== "" && tenantRef !== undefined && tenantRef !== null
-      ? ["/api/monitoring/getmonitoring", tenantRef, locationid, start_date]
-      : null,
-    ([url, tenantRef, locationid, start_date]) =>
-      fetchDataRealtime(url, tenantRef, locationid, start_date),
-    {
-      isPaused: () =>
-        (tenantRef == "" && tenantRef == undefined) ||
-        (locationid === null && locationid === undefined) ||
-        (start_date == "" && start_date == undefined)
-          ? true
-          : false,
-      refreshInterval: 6000,
-      revalidateOnMount: true,
-      revalidateOnReconnect: true,
-      revalidateOnFocus: false,
-      loadingTimeout: 10000,
-      onError: (err) => clearSWRCache(),
-      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-        // TODO: Never retry on 404
-        if (error.status === 404) return;
-        // TODO: Disable retry for spesific key
-        if (
-          JSON.stringify(key) ===
-          JSON.stringify([
-            "/api/monitoring/getmonitoring",
-            tenantRef,
-            locationid,
-            start_date,
-          ])
-        )
-          return;
-        // TODO: Only 10 times retry
-        if (retryCount > 10) return;
-        // TODO: Retry interval
-        setTimeout(() => revalidate({ retryCount }), 5000);
-      },
-    }
-  );
-
-  if (data?.message === "OK") {
-    if (
-      data?.monitoring["data"]["datacurrents"][0] === undefined ||
-      data?.monitoring["data"]["dataenergys"][0] === undefined ||
-      data?.monitoring["data"]["datagrounds"][0] === undefined ||
-      data?.monitoring["data"]["datathdis"][0] === undefined ||
-      data?.monitoring["data"]["dataThdvs"][0] === undefined ||
-      data?.monitoring["data"]["datavoltages"][0] === undefined ||
-      data?.monitoring["data"]["datafrequencys"][0] === undefined ||
-      data?.monitoring["data"]["dataPowerFactors"][0] === undefined
-    ) {
-      return {
-        monitoring: null,
-        isMonitoringError: error,
-        isMonitoringLoading: isLoading,
-      };
-    } else {
-      const currentDate = new Date();
-      const sendDate = data?.monitoring["data"]["datavoltages"][0].send_date;
-      // format the send_date value
-      const isoConvSendDate = new Date(sendDate);
-      // count the diff
-      const diffTime = currentDate - isoConvSendDate;
-      // set the minutes value
-      const minutes = Math.floor(diffTime / 60000);
-
-      // Set offline status if the diff time more than 5 minutes from NOW()
-      if (minutes >= 5) {
-        return {
-          monitoring: null,
-          isMonitoringError: error,
-          isMonitoringLoading: isLoading,
-        };
-      } else {
-        return {
-          monitoring: data,
-          isMonitoringError: error,
-          isMonitoringLoading: isLoading,
-        };
-      }
-    }
-  } else {
-    return {
-      monitoring: null,
-      isMonitoringError: error,
-      isMonitoringLoading: isLoading,
-    };
-  }
-}
-
 const Marker = ({
   locationid,
   tenantRef,
@@ -163,7 +30,7 @@ const Marker = ({
   const [infoWindowShown, setInfoWindowShown] = useState(false);
   const [infoClickable, setInfoClickable] = useState(true);
 
-  // Set monitoring data state
+  // Set monitoring connection state
   const [connected, setConnection] = useState(false);
 
   // set parent name from API
@@ -196,53 +63,193 @@ const Marker = ({
     "bg-neutral-800 dark:bg-neutral-500"
   );
 
-  // SWR
+  // TODO: Function to fetch the /tool/dataside API
+  const fetchSite = async (tenantRef, locationid) => {
+    try {
+      const response = await fetch("/api/tools/getsiteloc", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenantRef,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_trancation_date: "",
+          end_trancation_date: "",
+          tenant: tenantRef,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetchSite on marker! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data.message === "OK") {
+        return data;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetchSite on marker: ", err);
+      }
+      throw err;
+    }
+  };
+
+  // TODO: Function to fetch the data API [REALTIME]
+  const fetchDataRealtime2 = async (url, tenantRef, locationid, start_date) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenantRef,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenantRef,
+          locationid: locationid,
+          lane: "",
+          status: "",
+          value: "",
+          side: "",
+          start_date: start_date,
+          end_date: "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error on fetch data at marker! Status: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (data?.message === "OK") {
+        if (
+          data?.monitoring["data"]["datacurrents"][0] === undefined ||
+          data?.monitoring["data"]["dataenergys"][0] === undefined ||
+          data?.monitoring["data"]["datagrounds"][0] === undefined ||
+          data?.monitoring["data"]["datathdis"][0] === undefined ||
+          data?.monitoring["data"]["dataThdvs"][0] === undefined ||
+          data?.monitoring["data"]["datavoltages"][0] === undefined ||
+          data?.monitoring["data"]["datafrequencys"][0] === undefined ||
+          data?.monitoring["data"]["dataPowerFactors"][0] === undefined
+        ) {
+          return null;
+        } else {
+          const currentDate = new Date();
+          const sendDate =
+            data?.monitoring["data"]["datavoltages"][0].send_date;
+          // format the send_date value
+          const isoConvSendDate = new Date(sendDate);
+          // count the diff
+          const diffTime = currentDate - isoConvSendDate;
+          // set the minutes value
+          const minutes = Math.floor(diffTime / 60000);
+
+          // Set offline status if the diff time more than 5 minutes from NOW()
+          if (minutes >= 5) {
+            return null;
+          } else {
+            return data;
+          }
+        }
+      } else {
+        if (process.env.NODE_ENV === "development") {
+          console.log("Error in fetch marker data: Response Message is Not OK");
+        }
+        return null;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Error in fetch marker data: ", err);
+      }
+      throw new Error("500. An error occured.");
+    }
+  };
+
+  // TODO: Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
   /**
    * We will map this data based on their Index
    * then we will get the tenancy (more than 2 devices) with their own datas
    */
-  const { monitoring, isMonitoringError, isMonitoringLoading } = useMonitoring(
-    tenantRef,
-    locationid,
-    hoursAgo
+  // TODO: SWR to get monitoring datas
+  const {
+    data: monitoring,
+    isLoading: isMonitoringLoading,
+    error: isMonitoringError,
+  } = useSWR(
+    tenantRef !== "" && tenantRef !== undefined && tenantRef !== null
+      ? ["/api/monitoring/getmonitoring", tenantRef, locationid, hoursAgo]
+      : null,
+    ([url, tenantRef, locationid, start_date]) =>
+      fetchDataRealtime2(url, tenantRef, locationid, start_date),
+    {
+      isPaused: () =>
+        (tenantRef == "" && tenantRef == undefined) ||
+        (locationid === null && locationid === undefined) ||
+        (hoursAgo == "" && hoursAgo == undefined)
+          ? true
+          : false,
+      isOnline: () => signal,
+      refreshInterval: 6000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/getmonitoring",
+            tenantRef,
+            locationid,
+            hoursAgo,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
   );
 
-  // console.log(monitoring);
-
-  // Function to fetch the /tool/dataside API
-  const fetchSite = async (tenantRef, locationid) => {
-    const response = await fetch("/api/tools/getsiteloc", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers":
-          "Content-Type, Accept, Origin, X-Requested-With",
-        tenant: tenantRef,
-        token: process.env.AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        locationid: locationid,
-        lane: "",
-        status: "",
-        value: "",
-        side: "",
-        start_trancation_date: "",
-        end_trancation_date: "",
-        tenant: tenantRef,
-      }),
-    });
-
-    return response.json();
-  };
-
-  // clicking the marker will toggle the infowindow
+  // TODO: Clicking the marker will toggle the infowindow
   const handleMarkerClick = useCallback(() => {
     setInfoWindowShown((isShown) => !isShown);
   }, []);
 
-  // if the maps api closes the infowindow, we have to synchronize our state
+  // TODO: if the maps api closes the infowindow, we have to synchronize our state
   const handleClose = useCallback(() => setInfoWindowShown(false), []);
 
   // TODO: Get current datetime, this will be mounted at the first time
@@ -392,27 +399,15 @@ const Marker = ({
           } else {
             setGroundColor("bg-red-800 dark:bg-red-500");
           }
-        } else if (
-          dataVoltage === undefined &&
-          dataGround === undefined &&
-          dataCurrent === undefined
-        ) {
+        } else {
           setShowMarker(false);
           setInfoClickable(false);
+          setConnection(false);
           // if (process.env.NODE_ENV === "development") {
           //   console.log(dataVoltage);
           //   console.log(dataGround);
           //   console.log(dataCurrent);
           //   console.log("SRW Connection -> Please wait..");
-          // }
-        } else {
-          setShowMarker(false);
-          setInfoClickable(false);
-          // if (process.env.NODE_ENV === "development") {
-          //   console.log(dataVoltage);
-          //   console.log(dataGround);
-          //   console.log(dataCurrent);
-          //   console.log("SRW Connection -> error");
           // }
         }
       } else {
