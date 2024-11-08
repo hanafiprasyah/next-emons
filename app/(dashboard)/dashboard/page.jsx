@@ -1,11 +1,205 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PrelineScript from "@/components/PrelineScript";
 import Image from "next/image";
-import Maps from "@/components/maps/NewGoogleMaps";
+import dynamic from "next/dynamic";
+import useSWR, { mutate } from "swr";
+import { useOnlineStatus } from "@/lib/hook/connection-hook";
+
+const DynamicAlert = dynamic(() =>
+  import("@/components/alerts/SlowConnectionAlert")
+);
+
+const DynamicMap = dynamic(() => import("@/components/maps/NewGoogleMaps"), {
+  ssr: true,
+});
+
+// import Maps from "@/components/maps/NewGoogleMaps";
 
 export default function DashboardMaps() {
+  // local Value
+  const [localTenant, setLocalTenant] = useState("");
+
+  // Connection state
+  const isOnline = useOnlineStatus();
+  const [responseTime, setResponseTime] = useState(null);
+  const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
+  // Handle slow loading on SWR
+  const [isSlowLoad, setSlowLoad] = useState(false);
+
+  // Used to set pin color based on SWR Connection
+  const [deviceStatus, setDeviceStatus] = useState(false);
+
+  // Function to fetch the /tools/location/getlocation API [REALTIME]
+  const fetchDeviceRealtime = async (
+    url,
+    tenant,
+    start_trancation_date,
+    end_trancation_date
+  ) => {
+    // main point to track unstable network
+    const startTime = performance.now();
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Origin, X-Requested-With",
+          tenant: tenant,
+          token: process.env.AUTH_TOKEN,
+        },
+        body: JSON.stringify({
+          tenant: tenant,
+          locationid: 0,
+          lane: "",
+          status: "",
+          value: "",
+          side: "0",
+          start_trancation_date: start_trancation_date,
+          end_trancation_date: end_trancation_date,
+        }),
+      });
+
+      if (!response.ok) {
+        setDeviceStatus(false);
+        throw new Error(
+          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
+        );
+      }
+
+      // checkpoint to check network performance
+      const endTime = performance.now();
+      setResponseTime(endTime - startTime);
+
+      setDeviceStatus(true);
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      setDeviceStatus(false);
+      setResponseTime(null);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error in fetchDeviceRealtime: ", err);
+      }
+      throw err;
+    }
+  };
+
+  // TODO: Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+
+  // TODO: SWR to get device list
+  /**
+   * We will map this data based on their Index
+   * then we will get the tenancy (more than 2 devices) with their own datas
+   */
+  const { data, isLoading, error } = useSWR(
+    (isOnline || !isConnectionUnstable) && localTenant
+      ? [
+          "/api/tools/location/getlocation",
+          localTenant,
+          "2023-01-01 00:00:00",
+          "2024-12-30 23:59:00",
+        ]
+      : null,
+    ([url, tenant, start_trancation_date, end_trancation_date]) =>
+      fetchDeviceRealtime(
+        url,
+        tenant,
+        start_trancation_date,
+        end_trancation_date
+      ),
+    {
+      isPaused: () => (!isOnline || !localTenant ? true : false),
+      isOnline: () => isOnline,
+      refreshInterval: 30000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onLoadingSlow: () => {
+        setSlowLoad(true);
+      },
+      onSuccess: () => {
+        setSlowLoad(false);
+      },
+      onError: (err) => {
+        setSlowLoad(false);
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/tools/location/getlocation",
+            localTenant,
+            "2023-01-01 00:00:00",
+            "2024-12-30 23:59:00",
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: Get local tenant item
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
+    }
+
+    // save local tenant value to state
+    setLocalTenant(currentUser.toString());
+
+    return () => {
+      setLocalTenant("");
+    };
+  }, []);
+
+  // TODO: Alert user if response time is high
+  useEffect(() => {
+    // Threshold of 5000ms / 5sec
+    if (responseTime !== null && responseTime > 5000) {
+      setIsConnectionUnstable(true);
+    } else {
+      setIsConnectionUnstable(false);
+    }
+
+    // Cleanup function to reset state on unmount
+    return () => {
+      setIsConnectionUnstable(false);
+    };
+  }, [isOnline, responseTime]);
+
+  if (!isOnline) {
+    return (
+      <span className="text-sm text-white text-wrap text-clip">
+        You are offline.
+      </span>
+    );
+  }
+
   return (
     <div className="h-[calc(100dvh-78px)]">
       <>
@@ -38,9 +232,12 @@ export default function DashboardMaps() {
                       role="tab"
                       tabIndex="0" // Make the button accessible via keyboard
                     >
-                      Device(s) Map
+                      {data ? "Device(s) Map" : "Counting devices.."}
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-teal-800 bg-teal-100 rounded-full gap-x-1 dark:bg-teal-500/10 dark:text-teal-500">
-                        2
+                        {data
+                          ? data?.loc.data.filter((item) => item.parent !== 0)
+                              .length
+                          : 0}
                       </span>
                     </button>
                   </nav>
@@ -58,7 +255,24 @@ export default function DashboardMaps() {
                   aria-labelledby="hs-pro-tabs-dtsch-item-revenue"
                   hidden={false} // Change this dynamically based on active state
                 >
-                  <Maps></Maps>
+                  {isOnline && data && !error && localTenant ? (
+                    <DynamicMap
+                      key={"Google Map for React/NextJS"}
+                      mapData={data}
+                      mapError={error}
+                      mapLoading={isLoading}
+                      deviceStatus={deviceStatus}
+                      tenantRef={localTenant}
+                    ></DynamicMap>
+                  ) : (
+                    <div
+                      className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
+                      role="status"
+                      aria-label="loading"
+                    >
+                      <span className="sr-only">Loading...</span>
+                    </div>
+                  )}
                 </div>
                 {/* End Maps component */}
               </div>

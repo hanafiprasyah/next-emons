@@ -100,6 +100,8 @@ const Marker = ({
       if (data.message === "OK") {
         return data;
       }
+
+      return;
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchSite on marker: ", err);
@@ -440,9 +442,13 @@ const Marker = ({
             key={locationid}
             ref={markerRef}
             position={{ lat: lat, lng: lot }}
-            onClick={handleMarkerClick}
+            onClick={connected ? handleMarkerClick : null}
             clickable={infoClickable}
-            title={connected ? `${parentName} - ${title}` : `Connection lost`}
+            title={
+              connected
+                ? `${parentName} - ${title}`
+                : `Connection lost: ${title}`
+            }
             draggable={false}
             collisionBehavior="OPTIONAL_AND_HIDES_LOWER_PRIORITY"
           >
@@ -518,7 +524,7 @@ const Marker = ({
                     <div className="mt-1 truncate grow">
                       <div className="pe-5">
                         <span className="block text-xs text-sky-800 md:text-sm 2xl:text-2xl lg:text-lg xl:text-xl">
-                          {markerLabel}
+                          {connected ? markerLabel : "Error"}
                         </span>
                       </div>
                       <div className="block shrink-0">
@@ -527,9 +533,7 @@ const Marker = ({
                             connected ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
-                          {parentName != null ||
-                          parentName != undefined ||
-                          parentName != ""
+                          {parentName
                             ? connected
                               ? parentName
                               : "Connection lost"
