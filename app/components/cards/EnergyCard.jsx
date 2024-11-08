@@ -42,8 +42,16 @@ const Default = ({
           {/* Pulse */}
           <div className="inline-flex">
             <span className="relative flex w-3 h-3">
-              <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
-              <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
+              <span
+                className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${
+                  isConnected ? "bg-emerald-500" : "bg-red-500"
+                }`}
+              ></span>
+              <span
+                className={`relative inline-flex w-3 h-3 rounded-full ${
+                  isConnected ? "bg-emerald-700" : "bg-red-700"
+                }`}
+              ></span>
             </span>
           </div>
           {/* End Pulse */}

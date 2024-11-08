@@ -1544,8 +1544,8 @@ export default function DashboardOutline() {
           <p className="w-full pb-2 text-xs font-light text-center lg:text-sm text-wrap text-clip">
             Currently you are viewing data:
           </p>
-          <div className="flex items-center justify-center gap-1 sm:gap-2">
-            <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+          <div className="flex items-center justify-center gap-1 md:gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
               {/* Select Location */}
               <div className="relative inline-block">
                 <div
@@ -1622,7 +1622,7 @@ export default function DashboardOutline() {
               </div>
               {/* End Select Location */}
               {/* Select Device */}
-              <div className="relative ps-0.5 sm:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
+              <div className="relative md:ps-2 before:block before:absolute before:top-1/2 before:-start-px before:w-px md:before:h-4 before:bg-gray-300 before:-translate-y-1/2 dark:before:bg-neutral-700">
                 <div
                   className={`relative inline-flex hs-dropdown hs-dropdown-example ${
                     !selectedDevice.code ? "pointer-events-none" : null
@@ -1695,28 +1695,30 @@ export default function DashboardOutline() {
       <div className="grid grid-cols-2 gap-4 mx-2 my-2 xl:mb-5 xl:gap-6">
         {/* Voltage Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
-            <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
+          <div className="flex items-center mb-4 space-x-2">
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
+                />
+              </svg>
+            </span>
+            <h2 className="text-xs font-bold leading-none uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Voltage Input
             </h2>
+          </div>
+
+          {/* End Icon */}
+          <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -1743,10 +1745,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -1756,9 +1755,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -1794,10 +1791,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -1807,9 +1801,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -1845,10 +1837,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -1858,9 +1847,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -1896,10 +1883,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -1909,9 +1893,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -1947,10 +1929,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -1960,9 +1939,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -1998,10 +1975,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2011,9 +1985,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2040,28 +2012,31 @@ export default function DashboardOutline() {
         {/* End Voltage Input */}
         {/* Voltage Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
+                />
+              </svg>
+            </span>
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Voltage Output
             </h2>
+          </div>
+
+          {/* End Icon */}
+          <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -2088,10 +2063,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2101,9 +2073,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2139,10 +2109,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2152,9 +2119,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2190,10 +2155,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2203,9 +2165,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2241,10 +2201,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2254,9 +2211,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2292,10 +2247,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2305,9 +2257,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2343,10 +2293,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2356,9 +2303,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datavoltages ===
                                 undefined ||
@@ -2385,22 +2330,25 @@ export default function DashboardOutline() {
         {/* End Voltage Output */}
         {/* Current Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={Current}
-              className="text-rose-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={Current}
+                className="text-rose-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Current Input
             </h2>
+            {/* End Icon */}
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -2427,10 +2375,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2440,9 +2385,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2478,10 +2421,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2491,9 +2431,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2529,10 +2467,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2542,9 +2477,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2571,22 +2504,25 @@ export default function DashboardOutline() {
         {/* End Current Input */}
         {/* Current Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={Current}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={Current}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Current Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -2613,10 +2549,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2626,9 +2559,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2664,10 +2595,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2677,9 +2605,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2715,10 +2641,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -2728,9 +2651,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datacurrents ===
                                 undefined ||
@@ -2757,23 +2678,25 @@ export default function DashboardOutline() {
         {/* End Current Output */}
         {/* Ground Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={Ground}
-              className="text-rose-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={Ground}
+                className="text-rose-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Ground Input
             </h2>
+          </div>
 
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -2809,22 +2732,25 @@ export default function DashboardOutline() {
         {/* End Ground Input */}
         {/* Ground Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={Ground}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={Ground}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Ground Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -2860,28 +2786,31 @@ export default function DashboardOutline() {
         {/* End Ground Output */}
         {/* Frequency Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                />
+              </svg>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Frequency Input
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -2917,28 +2846,31 @@ export default function DashboardOutline() {
         {/* End Frequency Input */}
         {/* Frequency Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                />
+              </svg>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Frequency Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -2973,33 +2905,36 @@ export default function DashboardOutline() {
         {/* End Frequency Output */}
         {/* Energy KWH/KVARH Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"
+                />
+              </svg>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Energy Input
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -3026,10 +2961,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3039,9 +2971,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3077,10 +3007,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3090,9 +3017,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3128,10 +3053,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3141,9 +3063,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3179,10 +3099,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3192,9 +3109,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3230,10 +3145,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3243,9 +3155,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3281,10 +3191,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3294,9 +3201,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3323,33 +3228,36 @@ export default function DashboardOutline() {
         {/* End Energy KWH/KVARH Input */}
         {/* Energy KWH/KVARH Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="text-white shrink-0 size-4 md:size-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"
-              />
-            </svg>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="text-white shrink-0 size-4 md:size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"
+                />
+              </svg>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Energy Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -3376,10 +3284,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3389,9 +3294,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3427,10 +3330,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3440,9 +3340,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3478,10 +3376,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KWH T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3491,9 +3386,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3529,10 +3422,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3542,9 +3432,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3580,10 +3468,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3593,9 +3478,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3631,10 +3514,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         KVARH T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3644,9 +3524,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataenergys ===
                                 undefined ||
@@ -3673,22 +3551,25 @@ export default function DashboardOutline() {
         {/* End Energy KWH/KVARH Output */}
         {/* Power Factor Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={PowerFactor}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={PowerFactor}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               Power Factor Input
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -3727,22 +3608,25 @@ export default function DashboardOutline() {
         {/* End Power Factor Input */}
         {/* Power Factor Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={PowerFactor}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={PowerFactor}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               Power Factor Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-x-2">
               {data === undefined ||
               data === null ||
@@ -3809,22 +3693,25 @@ export default function DashboardOutline() {
         {/* End Power Factor Output */}
         {/* THDv Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={THDv}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={THDv}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               THDv Input
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -3851,10 +3738,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3864,9 +3748,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -3902,10 +3784,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3915,9 +3794,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -3953,10 +3830,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -3966,9 +3840,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4004,10 +3876,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4017,9 +3886,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4055,10 +3922,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4068,9 +3932,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4106,10 +3968,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4119,9 +3978,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4148,22 +4005,25 @@ export default function DashboardOutline() {
         {/* End THDv Input */}
         {/* THDv Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-800/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={THDv}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={THDv}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               THDv Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -4190,10 +4050,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4203,9 +4060,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4241,10 +4096,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4254,9 +4106,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4292,10 +4142,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T-N
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4305,9 +4152,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4343,10 +4188,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4356,9 +4198,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4394,10 +4234,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4407,9 +4244,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4445,10 +4280,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R-T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4458,9 +4290,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].dataThdvs ===
                                 undefined ||
@@ -4487,22 +4317,25 @@ export default function DashboardOutline() {
         {/* End THDv Output */}
         {/* THDi Input */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-rose-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-rose-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={THDi}
-              className="text-rose-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={THDi}
+                className="text-rose-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-rose-500 dark:text-rose-400">
               THDi Input
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -4529,10 +4362,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4542,9 +4372,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||
@@ -4580,10 +4408,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4593,9 +4418,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||
@@ -4631,10 +4454,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4644,9 +4464,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||
@@ -4673,22 +4491,25 @@ export default function DashboardOutline() {
         {/* End THDi Input */}
         {/* THDi Output */}
         <div className="relative p-4 overflow-hidden bg-white border border-gray-200 shadow-sm sm:p-5 rounded-xl before:absolute before:top-0 before:end-0 before:size-full before:bg-gradient-to-br before:from-emerald-100 before:via-transparent before:blur-xl dark:bg-neutral-800 dark:border-neutral-700 dark:before:from-emerald-700/30 dark:before:via-transparent">
-          {/* Icon */}
-          <span className="inline-flex items-center justify-center mb-3 text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
-            <Image
-              priority={true}
-              src={THDi}
-              className="text-emerald-500 shrink-0 size-4 md:size-5"
-              width={24}
-              height={24}
-              alt="EMONS | Electrical Monitoring System"
-            ></Image>
-          </span>
-          {/* End Icon */}
-          <div className="space-y-2">
+          <div className="flex items-center mb-4 space-x-2">
+            {/* Icon */}
+            <span className="inline-flex items-center justify-center text-gray-700 bg-white rounded-lg shadow-lg size-8 md:size-10 dark:bg-neutral-900/50 dark:border-neutral-700 dark:text-neutral-400">
+              <Image
+                priority={true}
+                src={THDi}
+                className="text-emerald-500 shrink-0 size-4 md:size-5"
+                width={24}
+                height={24}
+                alt="EMONS | Electrical Monitoring System"
+              ></Image>
+            </span>
+            {/* End Icon */}
             <h2 className="text-xs font-bold uppercase lg:text-sm text-emerald-500 dark:text-emerald-400">
               THDi Output
             </h2>
+          </div>
+
+          <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
               <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
@@ -4715,10 +4536,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         R
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4728,9 +4546,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||
@@ -4766,10 +4582,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         S
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4779,9 +4592,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||
@@ -4817,10 +4628,7 @@ export default function DashboardOutline() {
                       <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
                         T
                       </h2>
-                      {data === undefined ||
-                      data === null ||
-                      data.length === 0 ||
-                      isLoading ? (
+                      {!data || isLoading ? (
                         <div
                           className="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                           role="status"
@@ -4830,9 +4638,7 @@ export default function DashboardOutline() {
                         </div>
                       ) : (
                         <span className="text-sm text-gray-800 md:text-lg dark:text-neutral-200">
-                          {data === undefined ||
-                          data === null ||
-                          data.length === 0
+                          {!data
                             ? 0
                             : data?.monitoring["data"].datathdis ===
                                 undefined ||

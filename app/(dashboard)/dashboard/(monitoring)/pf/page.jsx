@@ -956,6 +956,7 @@ export default function PowerFactor() {
                           ? pfData[0]?.cosphi_input
                           : pfValues.cosphi_input
                       }
+                      signalStatus={signal}
                     />
                   ) : (
                     <div id={`pfInput`}>
@@ -992,6 +993,7 @@ export default function PowerFactor() {
                           ? pfData[0]?.cosphi_output
                           : pfValues.cosphi_output
                       }
+                      signalStatus={signal}
                     />
                   ) : (
                     <div id={`pfOutput`}>

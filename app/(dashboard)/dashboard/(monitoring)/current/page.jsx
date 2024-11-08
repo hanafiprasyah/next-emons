@@ -1091,6 +1091,7 @@ export default function Current() {
                             ? currentData[0].i_r_Input
                             : currentValues.i_r_Input
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`r-input`}>
@@ -1127,6 +1128,7 @@ export default function Current() {
                             ? currentData[0].i_r_Output
                             : currentValues.i_r_Output
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`r-output`}>
@@ -1251,6 +1253,7 @@ export default function Current() {
                             ? currentData[0].i_s_Input
                             : currentValues.i_s_Input
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`s-input`}>
@@ -1287,6 +1290,7 @@ export default function Current() {
                             ? currentData[0].i_s_Output
                             : currentValues.i_s_Output
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`s-output`}>
@@ -1411,6 +1415,7 @@ export default function Current() {
                             ? currentData[0].i_t_Input
                             : currentValues.i_t_Input
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`t-input`}>
@@ -1447,6 +1452,7 @@ export default function Current() {
                             ? currentData[0].i_t_Output
                             : currentValues.i_t_Output
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`t-output`}>

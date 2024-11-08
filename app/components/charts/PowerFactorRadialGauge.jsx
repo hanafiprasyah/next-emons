@@ -18,7 +18,7 @@ import {
   ImageExport,
 } from "@syncfusion/ej2-react-circulargauge";
 
-const Default = ({ id, key, alt, title, value }) => {
+const Default = ({ id, key, alt, title, value, signalStatus }) => {
   var gaugeInstance;
 
   function rnExportInputHandler() {
@@ -215,8 +215,16 @@ const Default = ({ id, key, alt, title, value }) => {
               {/* Pulse show when mobile view */}
               <div className="inline-flex md:hidden p-0 lg:p-0.5 me-2 border border-gray-200 rounded-full dark:border-neutral-700">
                 <span className="relative flex w-3 h-3">
-                  <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-emerald-400"></span>
-                  <span className="relative inline-flex w-3 h-3 rounded-full bg-emerald-500"></span>
+                  <span
+                    className={`absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping ${
+                      signalStatus ? "dark:bg-emerald-500" : "dark:bg-red-500"
+                    }`}
+                  ></span>
+                  <span
+                    className={`relative inline-flex w-3 h-3 rounded-full ${
+                      signalStatus ? "bg-emerald-700" : "bg-red-700"
+                    }`}
+                  ></span>
                 </span>
               </div>
               <div className="p-0.5 sm:p-1 inline-flex items-center bg-white border border-gray-200 lg:shadow rounded-lg dark:bg-neutral-800 dark:border-neutral-700">

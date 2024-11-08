@@ -1033,6 +1033,7 @@ export default function Grounding() {
                             ? groundData[0].voltage_input
                             : groundValues.voltage_input
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div key={`groundInput`}>
@@ -1069,6 +1070,7 @@ export default function Grounding() {
                             ? groundData[0].voltage_output
                             : groundValues.voltage_output
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div key={`groundOutput`}>

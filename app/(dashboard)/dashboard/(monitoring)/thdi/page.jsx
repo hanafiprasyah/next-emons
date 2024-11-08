@@ -995,6 +995,7 @@ export default function Thdi() {
                             ? thdiData[0].thdi_r_Input
                             : thdiValues.thdi_r_Input
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdi-r-input`}>
@@ -1031,6 +1032,7 @@ export default function Thdi() {
                             ? thdiData[0].thdi_r_output
                             : thdiValues.thdi_r_output
                         }
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdi-r-output`}>

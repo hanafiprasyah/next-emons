@@ -1053,6 +1053,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rn_Input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rn-input`}>
@@ -1090,6 +1091,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rn-output`}>
@@ -1209,6 +1211,7 @@ export default function Thdv() {
                             : thdvValues.thdv_sn_Input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-sn-input`}>
@@ -1246,6 +1249,7 @@ export default function Thdv() {
                             : thdvValues.thdv_sn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-sn-output`}>
@@ -1365,6 +1369,7 @@ export default function Thdv() {
                             : thdvValues.thdv_tn_Input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-tn-input`}>
@@ -1402,6 +1407,7 @@ export default function Thdv() {
                             : thdvValues.thdv_tn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-tn-output`}>
@@ -1525,6 +1531,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rs_Input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rs-input`}>
@@ -1562,6 +1569,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rs_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rs-output`}>
@@ -1681,6 +1689,7 @@ export default function Thdv() {
                             : thdvValues.thdv_st_Input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-st-input`}>
@@ -1718,6 +1727,7 @@ export default function Thdv() {
                             : thdvValues.thdv_st_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-st-output`}>
@@ -1837,6 +1847,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rt_Input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rt-input`}>
@@ -1874,6 +1885,7 @@ export default function Thdv() {
                             : thdvValues.thdv_rt_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`thdv-rt-output`}>

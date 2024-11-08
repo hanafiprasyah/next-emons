@@ -963,6 +963,7 @@ export default function Frequency() {
                           ? frequencyData[0]?.frequency_input
                           : frequencyValues.frequency_input
                       }
+                      signalStatus={signal}
                     />
                   ) : (
                     <div id={`freqInput`}>
@@ -999,6 +1000,7 @@ export default function Frequency() {
                           ? frequencyData[0]?.frequency_output
                           : frequencyValues.frequency_output
                       }
+                      signalStatus={signal}
                     />
                   ) : (
                     <div id={`freqOutput`}>

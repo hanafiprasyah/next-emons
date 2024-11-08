@@ -1146,6 +1146,7 @@ export default function Voltage() {
                             : voltageValues.v_rn_input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rn-input`}>
@@ -1183,6 +1184,7 @@ export default function Voltage() {
                             : voltageValues.v_rn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rn-output`}>
@@ -1309,6 +1311,7 @@ export default function Voltage() {
                             : voltageValues.v_sn_input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`sn-input`}>
@@ -1346,6 +1349,7 @@ export default function Voltage() {
                             : voltageValues.v_sn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`sn-output`}>
@@ -1472,6 +1476,7 @@ export default function Voltage() {
                             : voltageValues.v_tn_input
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`tn-input`}>
@@ -1509,6 +1514,7 @@ export default function Voltage() {
                             : voltageValues.v_tn_output
                         }
                         isThreePhase={1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`tn-output`}>
@@ -1638,6 +1644,7 @@ export default function Voltage() {
                             : voltageValues.v_rs_input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rs-input`}>
@@ -1675,6 +1682,7 @@ export default function Voltage() {
                             : voltageValues.v_rs_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rs-output`}>
@@ -1801,6 +1809,7 @@ export default function Voltage() {
                             : voltageValues.v_st_input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`st-input`}>
@@ -1838,6 +1847,7 @@ export default function Voltage() {
                             : voltageValues.v_st_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`st-output`}>
@@ -1964,6 +1974,7 @@ export default function Voltage() {
                             : voltageValues.v_rt_input
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rt-input`}>
@@ -2001,6 +2012,7 @@ export default function Voltage() {
                             : voltageValues.v_rt_output
                         }
                         isThreePhase={selectedDevice.code === 102 ? 0 : 1}
+                        signalStatus={signal}
                       />
                     ) : (
                       <div id={`rt-output`}>
