@@ -18,8 +18,8 @@ async function handler(req, res) {
 
   const secretKey = process.env.CRYPT_SECRET;
   const encryptedCookieString = encryptCookies(tenant, secretKey);
-  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
-  const expiresAtUTC = expiresAt.toUTCString();
+  // const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
+  // const expiresAtUTC = expiresAt.toUTCString();
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
 
   try {
@@ -62,7 +62,7 @@ async function handler(req, res) {
 
     res.setHeader(
       "Set-Cookie",
-      `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; ${secureFlag}; Expires=${expiresAtUTC}; Max-Age=3600`
+      `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Lax; ${secureFlag}; Max-Age=3600`
     );
 
     const data = await response.json();
