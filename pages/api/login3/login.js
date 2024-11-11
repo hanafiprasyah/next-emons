@@ -2,7 +2,6 @@
 
 import { NextResponse, NextRequest } from "next/server";
 import { encryptCookies } from "@/lib/helper/cookie-encryption";
-import rateLimitMiddleware from "../../utils/rateLimit";
 
 async function handler(req, res) {
   if (req.method !== "POST") {
@@ -13,15 +12,15 @@ async function handler(req, res) {
   }
 
   const { tenant, userName, password, salt } = JSON.parse(req.body);
+  if (!tenant || !userName || !password || !salt) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   const secretKey = process.env.CRYPT_SECRET;
   const encryptedCookieString = encryptCookies(tenant, secretKey);
-
-  const expiresAt = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000); // 1 hours from now
+  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
   const expiresAtUTC = expiresAt.toUTCString();
-
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
-
-  let data;
 
   try {
     const response = await fetch(
@@ -59,25 +58,17 @@ async function handler(req, res) {
           .json({ message: "Status: " + response.status });
       }
       throw new Error("Service Unavailable");
-    } else {
-      res.setHeader(
-        "Set-Cookie",
-        `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; ${secureFlag}; Expires=${expiresAtUTC}`
-      );
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (error) {
-        res
-          .status(response.status)
-          .json({ message: "Login failed", datalogin: null });
-      }
-
-      res
-        .status(response.status)
-        .json({ message: "Login successfully", datalogin: data });
     }
+
+    res.setHeader(
+      "Set-Cookie",
+      `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Strict; ${secureFlag}; Expires=${expiresAtUTC}; Max-Age=3600`
+    );
+
+    const data = await response.json();
+    res
+      .status(response.status)
+      .json({ message: "Login successfully", datalogin: data });
   } catch (e) {
     if (process.env.NODE_ENV === "development") {
       console.error(e);
@@ -86,4 +77,4 @@ async function handler(req, res) {
   }
 }
 
-export default rateLimitMiddleware(handler);
+export default handler;
