@@ -2004,7 +2004,15 @@ export default function DashboardOutline() {
               </div>
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
-                {/* <RealTimeVoltageInputSplineChart /> */}
+                {signal && (
+                  <RealTimeVoltageInputSplineChart
+                    key={"spline-chart-input-voltage"}
+                    tenant={localTenant ?? ""}
+                    locationid={selectedDevice.code ?? ""}
+                    online={isOnline ?? true}
+                    unstableConnection={isConnectionUnstable ?? false}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -2322,7 +2330,15 @@ export default function DashboardOutline() {
               </div>
               {/* Line Chart */}
               <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
-                {/* <RealTimeVoltageOutputSplineChart /> */}
+                {signal && (
+                  <RealTimeVoltageOutputSplineChart
+                    key={"spline-chart-output-voltage"}
+                    tenant={localTenant ?? ""}
+                    locationid={selectedDevice.code ?? ""}
+                    online={isOnline ?? true}
+                    unstableConnection={isConnectionUnstable ?? false}
+                  />
+                )}
               </div>
             </div>
           </div>

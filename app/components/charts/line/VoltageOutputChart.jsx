@@ -13,23 +13,23 @@ import {
 } from "@syncfusion/ej2-react-charts";
 import useSWR from "swr";
 
-const fetcher = async (url) => {
+const fetcher = async (url, tenant, locationid) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      tenant: "alif",
+      tenant: tenant,
       token: process.env.AUTH_TOKEN,
     },
     body: JSON.stringify({
-      locationid: 106,
+      locationid: locationid,
       lane: "",
       status: "",
       value: "",
       side: "",
       start_trancation_date: "",
       end_trancation_date: "",
-      tenant: "alif",
+      tenant: tenant,
     }),
   });
 
@@ -38,6 +38,7 @@ const fetcher = async (url) => {
   }
 
   const result = await response.json();
+
   return result.voltage["data"].map((item) => ({
     time: new Date(item.send_date).toLocaleTimeString(),
     // Single phase
@@ -57,24 +58,61 @@ const fetcher = async (url) => {
   }));
 };
 
-const RealTimeVoltageOutputSplineChart = () => {
+const RealTimeVoltageOutputSplineChart = ({
+  tenant,
+  locationid,
+  online,
+  unstableConnection,
+}) => {
   const [chartData, setChartData] = useState([]);
   const [threePhase, setThreePhase] = useState(false);
+
+  // TODO: Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
 
   const {
     data: newData,
     isLoading,
     error,
-  } = useSWR("/api/monitoring/voltage/getdata", fetcher, {
-    refreshInterval: 2000,
-    dedupingInterval: 500,
-    refreshWhenHidden: true,
-    refreshWhenOffline: false,
-    errorRetryInterval: 1000,
-    errorRetryCount: 10,
-    shouldRetryOnError: true,
-    keepPreviousData: true,
-  });
+  } = useSWR(
+    tenant && locationid
+      ? ["/api/monitoring/voltage/getdata", tenant, locationid]
+      : null,
+    ([url, tenant, locationid]) => fetcher(url, tenant, locationid),
+    {
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      keepPreviousData: true,
+      onError: (err) => {
+        clearSWRCache();
+      },
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/voltage/getdata",
+            tenant,
+            locationid,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
 
   useEffect(() => {
     if (newData) {
@@ -100,7 +138,7 @@ const RealTimeVoltageOutputSplineChart = () => {
     </div>;
   }
 
-  if (error) {
+  if (error && !tenant && !locationid) {
     return (
       <div className="w-full text-center text-clip">
         <p className="text-sm font-thin text-white">Error: {error}</p>
