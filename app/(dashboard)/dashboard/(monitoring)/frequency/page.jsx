@@ -363,7 +363,7 @@ export default function Frequency() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    (isOnline || !isConnectionUnstable) && localTenant
+    localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -374,8 +374,8 @@ export default function Frequency() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !isOnline && !localTenant,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
@@ -415,7 +415,7 @@ export default function Frequency() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
+    localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -427,9 +427,8 @@ export default function Frequency() {
     ([url, tenant, side, start_date, end_date]) =>
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
-      isPaused: () =>
-        !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant && !selectedLocation.code,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
@@ -474,7 +473,7 @@ export default function Frequency() {
     isLoading: frequencyLoading,
     error: frequencyError,
   } = useSWR(
-    (isOnline || !isConnectionUnstable) && selectedDevice.code
+    localTenant && selectedDevice.code && hoursAgo
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -485,15 +484,8 @@ export default function Frequency() {
     ([url, localTenant, locationid, start_date]) =>
       fetchFrequencyRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () =>
-        !isOnline &&
-        (selectedLocation.code ||
-          selectedDevice.code ||
-          !localTenant ||
-          !hoursAgo)
-          ? true
-          : false,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant && !selectedDevice.code && !hoursAgo,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 3000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
