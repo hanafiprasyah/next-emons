@@ -480,7 +480,7 @@ const Marker = ({
                             : "dark:border-red-400"
                         }`}
                       >
-                        <div className="flex items-center justify-center size-8 md:size-10 lg:size-12">
+                        <div className="flex items-center justify-center size-6 md:size-10 lg:size-12">
                           {connected ? (
                             <svg
                               className="text-sky-500 shrink-0 size-4 md:size-6 lg:size-8 dark:text-sky-700"
@@ -529,7 +529,7 @@ const Marker = ({
                       </div>
                       <div className="block shrink-0">
                         <h4
-                          className={`text-xs font-medium truncate ${
+                          className={`text-xs md:text-sm font-medium truncate ${
                             connected ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
@@ -545,11 +545,11 @@ const Marker = ({
                   </div>
                   {/* End Header */}
                   {/* List */}
-                  <div className="grid items-center justify-center grid-cols-1 py-3 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-4 md:gap-y-0 md:divide-none md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
+                  <div className="grid items-center justify-center grid-cols-1 py-1 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-1 md:gap-y-0 md:divide-none md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
                     <>
                       {/* Voltage */}
                       <Link
-                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                        className={`mx-2 my-0 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
                             : "select-none cursor-not-allowed pointer-events-none"
@@ -610,7 +610,7 @@ const Marker = ({
 
                       {/* Current */}
                       <Link
-                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                        className={`mx-2 my-0 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
                             : "select-none cursor-not-allowed pointer-events-none"
@@ -694,7 +694,7 @@ const Marker = ({
 
                       {/* Ground */}
                       <Link
-                        className={`mx-2 my-2 transition-all duration-200 ease-in-out rounded-lg ${
+                        className={`mx-2 my-0 transition-all duration-200 ease-in-out rounded-lg ${
                           connected
                             ? "cursor-pointer"
                             : "select-none cursor-not-allowed pointer-events-none"
@@ -779,10 +779,10 @@ const Marker = ({
                     </>
                   </div>
                   {/* End List */}
-                  {/* Grid */}
-                  <div className="flex flex-col p-4 gap-y-4">
+                  {/* Grid Information */}
+                  <div className="flex flex-col pt-2 pb-2 md:p-4 gap-y-2 md:gap-y-4">
                     {/* Item */}
-                    <div className="flex items-center gap-x-2">
+                    <div className="flex items-center gap-x-0 md:gap-x-2">
                       <p className="text-xs text-gray-500 md:text-sm min-w-20 dark:text-neutral-800">
                         Last updated
                       </p>
@@ -798,14 +798,20 @@ const Marker = ({
                     </div>
                     {/* End Item */}
                     {/* Item */}
-                    <div className="flex items-center gap-x-2">
+                    <div className="flex items-center gap-x-0 md:gap-x-2">
                       <p className="text-xs text-gray-500 md:text-sm min-w-20 dark:text-neutral-800">
                         Device Status
                       </p>
                       <div className="grow">
-                        <span className="py-px px-2 inline-flex items-center gap-x-1 md:gap-x-1.5 bg-gray-100 text-xs lg:text-sm text-gray-800 rounded-md dark:bg-neutral-700 dark:text-neutral-200">
+                        <span
+                          className={`py-px px-2 inline-flex items-center gap-x-1 md:gap-x-1.5 bg-gray-100 text-xs lg:text-sm text-gray-800 rounded-md ${
+                            connected
+                              ? "dark:bg-emerald-600"
+                              : "dark:bg-red-600"
+                          } dark:md:bg-neutral-700 dark:text-neutral-200`}
+                        >
                           <span
-                            className={`inline-block w-1 h-3 ${
+                            className={`hidden md:inline-block w-1 h-3 ${
                               connected ? "bg-emerald-600" : "bg-red-600"
                             } rounded-full`}
                           />
@@ -815,7 +821,7 @@ const Marker = ({
                     </div>
                     {/* End Item */}
                   </div>
-                  {/* End Grid */}
+                  {/* End Grid Information */}
                   {/* Footer */}
                   <div className="flex items-center justify-center px-4 py-3 mt-auto border-t border-gray-200 md:justify-evenly dark:border-sky-700">
                     {/* Tenant */}
@@ -839,9 +845,9 @@ const Marker = ({
                         />
                       </svg>
                       {connected ? (
-                        <small>Linked to {tenantRef}</small>
+                        <small>Connected to {tenantRef}</small>
                       ) : (
-                        <small>Not linked to {tenantRef}</small>
+                        <small>Disconnected from {tenantRef}</small>
                       )}
                     </span>
                     {/* End Tenant */}
