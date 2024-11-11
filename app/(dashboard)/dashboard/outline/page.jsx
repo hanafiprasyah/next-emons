@@ -1537,7 +1537,7 @@ export default function DashboardOutline() {
             Currently you are viewing data:
           </p>
           <div className="flex items-center justify-center gap-1 md:gap-2">
-            <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-2 md:gap-2">
               {/* Select Location */}
               <div className="relative inline-block">
                 <div
@@ -1710,7 +1710,7 @@ export default function DashboardOutline() {
           {/* End Icon */}
           <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* V_RN Input */}
@@ -1732,7 +1732,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-N
                       </h2>
                       {!data || isLoading ? (
@@ -1778,7 +1778,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-N
                       </h2>
                       {!data || isLoading ? (
@@ -1824,7 +1824,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T-N
                       </h2>
                       {!data || isLoading ? (
@@ -1870,7 +1870,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-S
                       </h2>
                       {!data || isLoading ? (
@@ -1916,7 +1916,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-T
                       </h2>
                       {!data || isLoading ? (
@@ -1962,7 +1962,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-T
                       </h2>
                       {!data || isLoading ? (
@@ -1993,8 +1993,8 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
-                {signal && (
+              {signal && (
+                <div className="hidden w-full h-full lg:block col-span-0 lg:col-span-3">
                   <RealTimeVoltageInputSplineChart
                     key={"spline-chart-input-voltage"}
                     tenant={localTenant ?? ""}
@@ -2002,8 +2002,8 @@ export default function DashboardOutline() {
                     online={isOnline ?? true}
                     unstableConnection={isConnectionUnstable ?? false}
                   />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2036,7 +2036,7 @@ export default function DashboardOutline() {
           {/* End Icon */}
           <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* V_RN Output */}
@@ -2058,7 +2058,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-N
                       </h2>
                       {!data || isLoading ? (
@@ -2104,7 +2104,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-N
                       </h2>
                       {!data || isLoading ? (
@@ -2150,7 +2150,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T-N
                       </h2>
                       {!data || isLoading ? (
@@ -2196,7 +2196,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-S
                       </h2>
                       {!data || isLoading ? (
@@ -2242,7 +2242,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-T
                       </h2>
                       {!data || isLoading ? (
@@ -2288,7 +2288,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-T
                       </h2>
                       {!data || isLoading ? (
@@ -2319,8 +2319,8 @@ export default function DashboardOutline() {
                 {/* End List Group */}
               </div>
               {/* Line Chart */}
-              <div className="w-full h-full hide md:block col-span-0 md:col-span-3">
-                {signal && (
+              {signal && (
+                <div className="hidden w-full h-full lg:block col-span-0 lg:col-span-3">
                   <RealTimeVoltageOutputSplineChart
                     key={"spline-chart-output-voltage"}
                     tenant={localTenant ?? ""}
@@ -2328,8 +2328,8 @@ export default function DashboardOutline() {
                     online={isOnline ?? true}
                     unstableConnection={isConnectionUnstable ?? false}
                   />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2356,7 +2356,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Input */}
@@ -2378,7 +2378,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R
                       </h2>
                       {!data || isLoading ? (
@@ -2424,7 +2424,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S
                       </h2>
                       {!data || isLoading ? (
@@ -2470,7 +2470,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T
                       </h2>
                       {!data || isLoading ? (
@@ -2530,7 +2530,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* R Output */}
@@ -2552,7 +2552,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R
                       </h2>
                       {!data || isLoading ? (
@@ -2598,7 +2598,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S
                       </h2>
                       {!data || isLoading ? (
@@ -2644,7 +2644,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T
                       </h2>
                       {!data || isLoading ? (
@@ -2942,7 +2942,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* KWH R Input */}
@@ -3103,7 +3103,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH R
+                        <small>KVARH R</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3149,7 +3149,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH S
+                        <small>KVARH S</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3195,7 +3195,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH T
+                        <small>KVARH T</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3265,7 +3265,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid grid-cols-2 pt-2 pb-4 gap-x-2">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* KWH R Input */}
@@ -3426,7 +3426,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH R
+                        <small>KVARH R</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3472,7 +3472,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH S
+                        <small>KVARH S</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3518,7 +3518,7 @@ export default function DashboardOutline() {
                         </svg>
                       </span>
                       <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
-                        KVARH T
+                        <small>KVARH T</small>
                       </h2>
                       {!data || isLoading ? (
                         <div
@@ -3666,34 +3666,6 @@ export default function DashboardOutline() {
                 {/* <RealTimeVoltageOutputSplineChart /> */}
               </div>
             </div>
-            {/* <div className="flex items-center gap-x-2">
-              <span className="py-1 px-1.5 inline-flex items-center gap-x-1 text-xs bg-gray-100 text-gray-800 rounded-md dark:bg-neutral-500/20 dark:text-neutral-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="shrink-0 size-3"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-                {dateState.toLocaleString("id-ID", {
-                  timeZone: "Asia/Jakarta",
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                  hourCycle: "h24",
-                })}
-              </span>
-            </div> */}
           </div>
         </div>
         {/* End Power Factor Output */}
@@ -3719,7 +3691,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* RN Input */}
@@ -3741,7 +3713,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-N
                       </h2>
                       {!data || isLoading ? (
@@ -3787,7 +3759,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-N
                       </h2>
                       {!data || isLoading ? (
@@ -3833,7 +3805,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T-N
                       </h2>
                       {!data || isLoading ? (
@@ -3879,7 +3851,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-S
                       </h2>
                       {!data || isLoading ? (
@@ -3925,7 +3897,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-T
                       </h2>
                       {!data || isLoading ? (
@@ -3971,7 +3943,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-T
                       </h2>
                       {!data || isLoading ? (
@@ -4031,7 +4003,7 @@ export default function DashboardOutline() {
 
           <div className="space-y-2">
             <div className="grid items-center justify-center grid-flow-row-dense grid-cols-4 grid-rows-1 pt-2 pb-4">
-              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-1 dark:text-neutral-200">
+              <div className="col-span-4 text-2xl font-semibold text-gray-800 md:col-span-2 lg:col-span-1 dark:text-neutral-200">
                 {/* List Group */}
                 <ul className="space-y-1">
                   {/* RN Output */}
@@ -4053,7 +4025,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-N
                       </h2>
                       {!data || isLoading ? (
@@ -4099,7 +4071,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-N
                       </h2>
                       {!data || isLoading ? (
@@ -4145,7 +4117,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T-N
                       </h2>
                       {!data || isLoading ? (
@@ -4191,7 +4163,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-S
                       </h2>
                       {!data || isLoading ? (
@@ -4237,7 +4209,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S-T
                       </h2>
                       {!data || isLoading ? (
@@ -4283,7 +4255,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R-T
                       </h2>
                       {!data || isLoading ? (
@@ -4365,7 +4337,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R
                       </h2>
                       {!data || isLoading ? (
@@ -4411,7 +4383,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S
                       </h2>
                       {!data || isLoading ? (
@@ -4457,7 +4429,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T
                       </h2>
                       {!data || isLoading ? (
@@ -4539,7 +4511,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         R
                       </h2>
                       {!data || isLoading ? (
@@ -4585,7 +4557,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         S
                       </h2>
                       {!data || isLoading ? (
@@ -4631,7 +4603,7 @@ export default function DashboardOutline() {
                           />
                         </svg>
                       </span>
-                      <h2 className="inline-block text-sm text-gray-500 align-middle dark:text-neutral-400">
+                      <h2 className="inline-block text-xs text-gray-500 align-middle md:text-sm dark:text-neutral-400">
                         T
                       </h2>
                       {!data || isLoading ? (
