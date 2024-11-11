@@ -435,7 +435,7 @@ export default function DashboardOutline() {
 
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    (isOnline || !isConnectionUnstable) && localTenant
+    localTenant
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -446,8 +446,8 @@ export default function DashboardOutline() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !isOnline && !localTenant,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
@@ -487,7 +487,7 @@ export default function DashboardOutline() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    (isOnline || !isConnectionUnstable) && localTenant && selectedLocation.code
+    localTenant && selectedLocation.code
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -499,9 +499,8 @@ export default function DashboardOutline() {
     ([url, tenant, side, start_date, end_date]) =>
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
-      isPaused: () =>
-        !isOnline && (!localTenant || !selectedLocation.code) ? true : false,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant && !selectedLocation.code,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
@@ -542,7 +541,7 @@ export default function DashboardOutline() {
 
   // TODO: SWR to get monitoring data
   const { data, isLoading, error } = useSWR(
-    (isOnline || !isConnectionUnstable) && selectedDevice.code
+    localTenant && selectedDevice.code && hoursAgo
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -553,15 +552,8 @@ export default function DashboardOutline() {
     ([url, localTenant, locationid, start_date]) =>
       fetchDataRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () =>
-        !isOnline &&
-        (selectedLocation.code === null ||
-          selectedDevice.code === null ||
-          !localTenant ||
-          !hoursAgo)
-          ? true
-          : false,
-      isOnline: () => isOnline,
+      isPaused: () => !localTenant && !selectedDevice.code && !hoursAgo,
+      isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 3000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
@@ -1561,9 +1553,7 @@ export default function DashboardOutline() {
                     aria-expanded="false"
                     aria-label="Dropdown"
                   >
-                    {selectedLocation.code
-                      ? selectedLocation.name
-                      : "Select location"}
+                    {selectedLocation.code ? selectedLocation.name : "Loading"}
                     <svg
                       className="text-gray-600 hs-dropdown-open:rotate-180 size-3 dark:text-neutral-200"
                       xmlns="http://www.w3.org/2000/svg"
@@ -1636,7 +1626,7 @@ export default function DashboardOutline() {
                     aria-expanded="false"
                     aria-label="Dropdown"
                   >
-                    {selectedDevice ? selectedDevice.name : "Select device"}
+                    {selectedDevice.code ? selectedDevice.name : "Loading"}
                     <svg
                       className="text-gray-600 hs-dropdown-open:rotate-180 size-4 dark:text-neutral-200"
                       xmlns="http://www.w3.org/2000/svg"
