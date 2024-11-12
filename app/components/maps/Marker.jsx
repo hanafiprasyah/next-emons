@@ -480,10 +480,10 @@ const Marker = ({
                             : "dark:border-red-400"
                         }`}
                       >
-                        <div className="flex items-center justify-center size-6 md:size-10 lg:size-12">
+                        <div className="flex items-center justify-center size-6 md:size-10">
                           {connected ? (
                             <svg
-                              className="text-sky-500 shrink-0 size-4 md:size-6 lg:size-8 dark:text-sky-700"
+                              className="text-sky-500 shrink-0 size-4 md:size-5 dark:text-sky-700"
                               width={32}
                               height={32}
                               xmlns="http://www.w3.org/2000/svg"
@@ -521,15 +521,15 @@ const Marker = ({
                     </div>
                     {/* End Logo */}
                     {/* Title */}
-                    <div className="mt-1 truncate grow">
+                    <div className="mt-0 truncate grow">
                       <div className="pe-5">
-                        <span className="block text-xs text-sky-800 md:text-sm 2xl:text-2xl lg:text-lg xl:text-xl">
+                        <span className="block text-xs text-sky-800 md:text-sm xl:text-lg">
                           {connected ? markerLabel : "Error"}
                         </span>
                       </div>
                       <div className="block shrink-0">
                         <h4
-                          className={`text-xs md:text-sm font-medium truncate ${
+                          className={`text-xs font-medium truncate ${
                             connected ? "text-sky-800" : "text-neutral-500"
                           }`}
                         >
@@ -545,7 +545,7 @@ const Marker = ({
                   </div>
                   {/* End Header */}
                   {/* List */}
-                  <div className="grid items-center justify-center grid-cols-1 py-1 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-1 md:gap-y-0 md:divide-none md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
+                  <div className="grid items-center justify-center grid-cols-1 py-2 text-center align-middle border-gray-200 divide-x-reverse divide-gray-200 gap-y-1 md:gap-y-0 md:divide-none md:grid-cols-3 border-y dark:border-sky-700 dark:divide-sky-700">
                     <>
                       {/* Voltage */}
                       <Link
@@ -600,7 +600,7 @@ const Marker = ({
                             </svg>
                           </span>
                           <span className="text-center">
-                            <p className="mb-2 text-xs xl:text-lg text-neutral-800">
+                            <p className="mb-2 text-xs xl:text-md 2xl:text-lg text-neutral-800">
                               Voltage
                             </p>
                           </span>
@@ -684,7 +684,7 @@ const Marker = ({
                             </svg>
                           </span>
                           <span className="text-center">
-                            <p className="mb-2 text-xs xl:text-lg text-neutral-800">
+                            <p className="mb-2 text-xs xl:text-md 2xl:text-lg text-neutral-800">
                               Current/Ampere
                             </p>
                           </span>
@@ -768,7 +768,7 @@ const Marker = ({
                             </svg>
                           </span>
                           <span className="text-center">
-                            <p className="mb-2 text-xs xl:text-xl text-neutral-800">
+                            <p className="mb-2 text-xs xl:text-md 2xl:text-lg text-neutral-800">
                               Ground
                             </p>
                           </span>
