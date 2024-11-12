@@ -146,14 +146,14 @@ const Marker = ({
 
       if (data?.message === "OK") {
         if (
-          data?.monitoring["data"]["datacurrents"][0] === undefined ||
-          data?.monitoring["data"]["dataenergys"][0] === undefined ||
-          data?.monitoring["data"]["datagrounds"][0] === undefined ||
-          data?.monitoring["data"]["datathdis"][0] === undefined ||
-          data?.monitoring["data"]["dataThdvs"][0] === undefined ||
-          data?.monitoring["data"]["datavoltages"][0] === undefined ||
-          data?.monitoring["data"]["datafrequencys"][0] === undefined ||
-          data?.monitoring["data"]["dataPowerFactors"][0] === undefined
+          data?.monitoring["data"]["datacurrents"] === null ||
+          data?.monitoring["data"]["dataenergys"] === null ||
+          data?.monitoring["data"]["datagrounds"] === null ||
+          data?.monitoring["data"]["datathdis"] === null ||
+          data?.monitoring["data"]["dataThdvs"] === null ||
+          data?.monitoring["data"]["datavoltages"] === null ||
+          data?.monitoring["data"]["datafrequencys"] === null ||
+          data?.monitoring["data"]["dataPowerFactors"] === null
         ) {
           return null;
         } else {
