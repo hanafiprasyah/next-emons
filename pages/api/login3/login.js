@@ -21,6 +21,7 @@ async function handler(req, res) {
   // const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
   // const expiresAtUTC = expiresAt.toUTCString();
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
+  const siteType = process.env.NODE_ENV === "production" ? "None" : "Lax";
 
   try {
     const response = await fetch(
@@ -67,7 +68,7 @@ async function handler(req, res) {
       try {
         await res.setHeader(
           "Set-Cookie",
-          `enc-header-site=${encryptedCookieString}; HttpOnly; ${secureFlag}; SameSite=Lax; Path=/; Max-Age=3600`
+          `enc-header-site=${encryptedCookieString}; HttpOnly; ${secureFlag}; SameSite=${siteType}; Path=/; Max-Age=3600`
         );
       } catch (error) {
         // Handle the error as needed
