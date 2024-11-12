@@ -26,15 +26,16 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Origin": process.env.BASE_URL,
+          "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
-          "Cache-Control": "s-maxage=10",
-          "Content-Security-Policy":
-            "default-src 'self'; script-src 'self'; object-src 'none';",
+          "Cache-Control": "s-maxage=3600, max-age=3600",
           "X-Content-Type-Options": "nosniff",
           "X-Frame-Options": "SAMEORIGIN",
+          "Strict-Transport-Security":
+            "max-age=31536000; includeSubDomains; preload",
           "X-XSS-Protection": "1; mode=block",
           "X-API-Version": "1.0.0",
           tenant: tenant,
