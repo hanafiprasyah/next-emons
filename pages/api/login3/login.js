@@ -29,15 +29,17 @@ async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
+          "Access-Control-Allow-Origin": process.env.BASE_URL,
+          "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Methods": "POST",
           "Access-Control-Allow-Headers":
             "Content-Type, Accept, Origin, X-Requested-With",
-          "Cache-Control": "s-maxage=10",
-          "Content-Security-Policy":
-            "default-src 'self'; script-src 'self'; object-src 'none';",
+          "Cache-Control":
+            "s-maxage=10, max-age=0, no-store, no-cache, must-revalidate",
           "X-Content-Type-Options": "nosniff",
-          "X-Frame-Options": "DENY",
+          "X-Frame-Options": "SAMEORIGIN",
+          "Strict-Transport-Security":
+            "max-age=31536000; includeSubDomains; preload",
           "X-XSS-Protection": "1; mode=block",
           "X-API-Version": "1.0.0",
           tenant: tenant,
@@ -60,15 +62,27 @@ async function handler(req, res) {
       throw new Error("Service Unavailable");
     }
 
-    res.setHeader(
-      "Set-Cookie",
-      `enc-header-site=${encryptedCookieString}; Path=/; HttpOnly; SameSite=Lax; ${secureFlag}; Max-Age=3600`
-    );
-
     const data = await response.json();
-    res
-      .status(response.status)
-      .json({ message: "Login successfully", datalogin: data });
+    if (data) {
+      try {
+        await res.setHeader(
+          "Set-Cookie",
+          `enc-header-site=${encryptedCookieString}; HttpOnly; ${secureFlag}; SameSite=Lax; Path=/; Max-Age=3600`
+        );
+      } catch (error) {
+        // Handle the error as needed
+        res
+          .status(500)
+          .json({ message: "Error setting cookie", datalogin: null });
+      }
+      res
+        .status(response.status)
+        .json({ message: "Login successfully", datalogin: data });
+    } else {
+      res
+        .status(response.status)
+        .json({ message: "Login failed", datalogin: null });
+    }
   } catch (e) {
     if (process.env.NODE_ENV === "development") {
       console.error(e);

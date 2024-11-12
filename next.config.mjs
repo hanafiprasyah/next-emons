@@ -2,19 +2,19 @@
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' https://maps.googleapis.com https://maps.gstatic.com 'unsafe-inline' 'unsafe-eval';
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://maps.gstatic.com https://*.googleapis.com;
-  font-src 'self' https://fonts.gstatic.com;
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  connect-src 'self' https://maps.googleapis.com https://*.googleapis.com;
-  upgrade-insecure-requests;
-`;
+// const cspHeader = `
+//   default-src 'self';
+//   script-src 'self' https://maps.googleapis.com https://maps.gstatic.com 'unsafe-inline' 'unsafe-eval';
+//   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+//   img-src 'self' blob: data: https://maps.gstatic.com https://*.googleapis.com;
+//   font-src 'self' https://fonts.gstatic.com;
+//   object-src 'none';
+//   base-uri 'self';
+//   form-action 'self';
+//   frame-ancestors 'none';
+//   connect-src 'self' https://maps.googleapis.com https://*.googleapis.com;
+//   upgrade-insecure-requests;
+// `;
 
 const nextConfig = {
   // Ensure cookies are sent properly between domains
@@ -31,6 +31,7 @@ const nextConfig = {
   optimizeFonts: true,
   // Image opt on production, disable it on development mode
   output: "standalone",
+  // Images
   images: {
     // Use modern formats for images
     formats: ["image/webp", "image/avif"],
@@ -45,34 +46,6 @@ const nextConfig = {
     ],
     // Cache images for at least 1 minute
     minimumCacheTTL: 60,
-  },
-  async headers() {
-    return !isDevelopment
-      ? [
-          {
-            source: "/(.*)", // Apply these headers globally
-            headers: [
-              {
-                key: "X-Frame-Options",
-                value: "SAMEORIGIN", // Protect against clickjacking
-              },
-              {
-                key: "X-Content-Type-Options",
-                value: "nosniff", // Prevent MIME type sniffing
-              },
-              {
-                key: "Strict-Transport-Security",
-                value: "max-age=31536000; includeSubDomains; preload", // Force HTTPS
-              },
-              // disable for development only
-              {
-                key: "Content-Security-Policy",
-                value: cspHeader.replace(/\n/g, ""),
-              },
-            ],
-          },
-        ]
-      : [];
   },
   async redirects() {
     return [

@@ -32,15 +32,18 @@ function LoginForm() {
   function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     const regex = /\\$/;
 
     // First, we will check if user input their data or not
     if (username == "" || password == "") {
+      setLoading(false);
       setError("Please fill in the username and password!");
     }
     // then check if user input their team name or not
     else if (!username.includes("/")) {
+      setLoading(false);
       setError("Authentication failed! Please check your form again.");
     }
     // then check if user input on username field completely or not
@@ -49,6 +52,7 @@ function LoginForm() {
       username.endsWith("\\") ||
       regex.test(username)
     ) {
+      setLoading(false);
       setError("Fill in the form correctly!");
     }
     // if all clear, continue the process
@@ -69,41 +73,62 @@ function LoginForm() {
 
       // TODO: Salt and username encryption
       const saltPost = async () => {
-        const response = await fetch(`/api/login/${pureUsername}`, {
-          headers: {
-            tenant: pureTenant,
-          },
-          method: "GET",
-        });
+        try {
+          const response = await fetch(`/api/login/${pureUsername}`, {
+            headers: {
+              tenant: pureTenant,
+            },
+            method: "GET",
+          });
 
-        return response.json();
+          return response.json();
+        } catch (err) {
+          process.env.NODE_ENV === "development" ??
+            console.error("Something happened while feeding the salt");
+          setError("Internal server error");
+          setLoading(false);
+        }
       };
 
       // TODO: Password encryption
       const passEnc = async () => {
-        const response = await fetch(`/api/login2/${password}`, {
-          headers: {
-            tenant: pureTenant,
-          },
-          method: "GET",
-        });
+        try {
+          const response = await fetch(`/api/login2/${password}`, {
+            headers: {
+              tenant: pureTenant,
+            },
+            method: "GET",
+          });
 
-        return response.json();
+          return response.json();
+        } catch (err) {
+          process.env.NODE_ENV === "development" ??
+            console.error("Something happened while encrypt the password");
+          setError("Internal server error(2)");
+          setLoading(false);
+        }
       };
 
       // TODO: Final chapter to process the encrypt username, password and salt
       const loggedIn = async (tenant, userName, password, salt) => {
-        const response = await fetch("/api/login3/login", {
-          method: "POST",
-          body: JSON.stringify({
-            tenant: tenant,
-            userName: userName,
-            password: password,
-            salt: salt,
-          }),
-        });
+        try {
+          const response = await fetch("/api/login3/login", {
+            method: "POST",
+            body: JSON.stringify({
+              tenant: tenant,
+              userName: userName,
+              password: password,
+              salt: salt,
+            }),
+          });
 
-        return response.json();
+          return response.json();
+        } catch (err) {
+          process.env.NODE_ENV === "development" ??
+            console.error("Something happened while logging in user");
+          setError("Internal server error(3)");
+          setLoading(false);
+        }
       };
 
       // TODO: Processing
@@ -121,7 +146,9 @@ function LoginForm() {
 
           if (data.datas["salt"] === null || data.datas["ecript"] === null) {
             setLoading(false);
-            throw new Error("Empty value from encryption");
+            setError("Failed to authenticate your username");
+            process.env.NODE_ENV === "development" ??
+              console.warn("Check the salt process on server actions!");
           }
 
           return {
@@ -143,7 +170,13 @@ function LoginForm() {
 
               if (data2.passdata["ecript"] === null) {
                 setLoading(false);
-                throw new Error("Empty value from encryptions");
+                setError(
+                  "Failed to encrypt your password. The login flow is not safe!"
+                );
+                process.env.NODE_ENV === "development" ??
+                  console.warn(
+                    "Check the encrypted password process on server actions!"
+                  );
               }
 
               return {
@@ -180,7 +213,13 @@ function LoginForm() {
 
                 if (dataLoggedIn.datalogin["decript"] === null) {
                   setLoading(false);
-                  throw new Error("Empty value from encryptions.");
+                  setError(
+                    "Failed to logged you in. Please check your network signal!"
+                  );
+                  process.env.NODE_ENV === "development" ??
+                    console.warn(
+                      "Check the final login process on server actions!"
+                    );
                 }
 
                 if (dataLoggedIn.message === "Login successfully") {
@@ -191,6 +230,8 @@ function LoginForm() {
                     `${dataLoggedIn.datalogin["decript"]}`
                   );
                   localStorage.setItem("tenant", `${pureTenant}`);
+                  // Ensure session storage is clear before replace to dashboard
+                  sessionStorage.clear();
                   // Redirect to dashboard after successful login
                   router.replace("/dashboard/");
                 } else {
