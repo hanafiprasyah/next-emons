@@ -264,59 +264,59 @@ export default function Thdi() {
           setSignal(true);
           // Check if data thdi length is null
           if (
-            data.monitoring["data"]["datathdis"][0] === undefined ||
-            data.monitoring["data"]["datathdis"][0] === null
+            data.monitoring["data"]["datathdis"] === undefined ||
+            data.monitoring["data"]["datathdis"] === null
           ) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          }
-
-          // We will check the difference about last send_date from API and current date from NOW()
-          setSignal(true);
-
-          const currentDate = new Date();
-          const sendDate = data?.monitoring["data"]["datathdis"][0].send_date;
-          // format the send_date value
-          const isoConvSendDate = new Date(sendDate);
-          // count the diff
-          const diffTime = currentDate - isoConvSendDate;
-          // set the minutes value
-          const minutes = Math.floor(diffTime / 60000);
-          // Format the date to Indonesian format
-          const options = {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: false, // 24-hour format
-            locale: "id-ID",
-          };
-          // Format date using Intl Format
-          const formattedDateTime = new Intl.DateTimeFormat(
-            "en-EN",
-            options
-          ).format(isoConvSendDate);
-          // then set to state
-          setLastTimeUpdate(formattedDateTime);
-
-          // Set offline status if the diff time more than 5 minutes from NOW()
-          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-            setOnLoading(false);
-            setSignal(false);
-            setChannel("Lost connection");
           } else {
+            // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
-            setChannel("Stable");
-            setOnLoading(false);
-          }
-          // checkpoint to check network performance
-          const endTime = performance.now();
-          setResponseTime(endTime - startTime);
 
-          return data.monitoring["data"]["datathdis"];
+            const currentDate = new Date();
+            const sendDate = data?.monitoring["data"]["datathdis"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Lost connection");
+            } else {
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
+            }
+            // checkpoint to check network performance
+            const endTime = performance.now();
+            setResponseTime(endTime - startTime);
+
+            return data.monitoring["data"]["datathdis"];
+          }
         }
         // if device list is null?
         else {

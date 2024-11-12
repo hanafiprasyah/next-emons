@@ -340,16 +340,16 @@ export default function DashboardOutline() {
           setSignal(true);
           // Check if all data length is null
           if (
-            data?.monitoring["data"]["datavoltages"][0] === undefined ||
-            data?.monitoring["data"]["datacurrents"][0] === undefined ||
-            data?.monitoring["data"]["datagrounds"][0] === undefined ||
-            data?.monitoring["data"]["datafrequencys"][0] === undefined ||
-            data?.monitoring["data"]["dataenergys"][0] === undefined ||
-            data?.monitoring["data"]["dataPowerFactors"][0] === undefined ||
-            data?.monitoring["data"]["dataThdvs"][0] === undefined ||
-            data?.monitoring["data"]["datathdis"][0] === undefined
+            data?.monitoring["data"]["datavoltages"] === null ||
+            data?.monitoring["data"]["datacurrents"] === null ||
+            data?.monitoring["data"]["datagrounds"] === null ||
+            data?.monitoring["data"]["datafrequencys"] === null ||
+            data?.monitoring["data"]["dataenergys"] === null ||
+            data?.monitoring["data"]["dataPowerFactors"] === null ||
+            data?.monitoring["data"]["dataThdvs"] === null ||
+            data?.monitoring["data"]["datathdis"] === null
           ) {
-            // Give signal to offline, and set channel to unreachable
+            // Give signal to offline
             setSignal(false);
           } else {
             // We will check the difference about last send_date from API and current date from NOW()
@@ -1498,7 +1498,9 @@ export default function DashboardOutline() {
                           Last data update:
                         </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-neutral-200">
-                          {lastTimeUpdate ?? "Loading.."}
+                          {lastTimeUpdate.length === 0
+                            ? "Loading.."
+                            : lastTimeUpdate}
                         </p>
                       </div>
                       {/* <svg

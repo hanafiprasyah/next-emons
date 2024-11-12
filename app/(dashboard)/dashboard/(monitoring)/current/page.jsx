@@ -326,60 +326,60 @@ export default function Current() {
           setSignal(true);
           // Check if data current length is null
           if (
-            data.monitoring["data"]["datacurrents"][0] === undefined ||
-            data.monitoring["data"]["datacurrents"][0] === null
+            data.monitoring["data"]["datacurrents"] === undefined ||
+            data.monitoring["data"]["datacurrents"] === null
           ) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          }
-
-          // We will check the difference about last send_date from API and current date from NOW()
-          setSignal(true);
-
-          const currentDate = new Date();
-          const sendDate =
-            data?.monitoring["data"]["datacurrents"][0].send_date;
-          // format the send_date value
-          const isoConvSendDate = new Date(sendDate);
-          // count the diff
-          const diffTime = currentDate - isoConvSendDate;
-          // set the minutes value
-          const minutes = Math.floor(diffTime / 60000);
-          // Format the date to Indonesian format
-          const options = {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: false, // 24-hour format
-            locale: "id-ID",
-          };
-          // Format date using Intl Format
-          const formattedDateTime = new Intl.DateTimeFormat(
-            "en-EN",
-            options
-          ).format(isoConvSendDate);
-          // then set to state
-          setLastTimeUpdate(formattedDateTime);
-
-          // Set offline status if the diff time more than 5 minutes from NOW()
-          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-            setOnLoading(false);
-            setSignal(false);
-            setChannel("Lost connection");
           } else {
+            // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
-            setChannel("Stable");
-            setOnLoading(false);
-          }
-          // checkpoint to check network performance
-          const endTime = performance.now();
-          setResponseTime(endTime - startTime);
 
-          return data.monitoring["data"]["datacurrents"];
+            const currentDate = new Date();
+            const sendDate =
+              data?.monitoring["data"]["datacurrents"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Lost connection");
+            } else {
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
+            }
+            // checkpoint to check network performance
+            const endTime = performance.now();
+            setResponseTime(endTime - startTime);
+
+            return data.monitoring["data"]["datacurrents"];
+          }
         }
         // if device list is null?
         else {
@@ -475,15 +475,21 @@ export default function Current() {
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
     localTenant && selectedLocation.code
-      ? [
-          "/api/tools/location/getlocation",
-          localTenant,
-          param2.length === 0
-            ? JSON.stringify(selectedLocation.code)
-            : selectedLocation.code,
-          "2023-01-01 00:00:00",
-          "2024-12-30 00:00:00",
-        ]
+      ? param2.length === 0
+        ? [
+            "/api/tools/location/getlocation",
+            localTenant,
+            JSON.stringify(selectedLocation.code),
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ]
+        : [
+            "/api/tools/location/getlocation",
+            localTenant,
+            selectedLocation.code,
+            "2023-01-01 00:00:00",
+            "2024-12-30 00:00:00",
+          ]
       : null,
     ([url, tenant, side, start_date, end_date]) =>
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
@@ -640,12 +646,14 @@ export default function Current() {
       const parsedParam1 = parseJSON(param1);
 
       // Check and Set initial selectLoc if none provided by user
-      parsedParam1 === undefined
-        ? setSelectedLocation({
-            code: locationsData.data[0].code,
-            name: locationsData.data[0].name,
-          })
-        : setSelectedLocation({ code: parsedParam1[0], name: parsedParam1[1] });
+      setSelectedLocation(
+        parsedParam1 === undefined
+          ? {
+              code: locationsData.data[0].code,
+              name: locationsData.data[0].name,
+            }
+          : { code: parsedParam1[0], name: parsedParam1[1] }
+      );
 
       setLocationList(locationsData.data);
     }
@@ -663,12 +671,11 @@ export default function Current() {
       const parsedParam2 = parseJSON(param2);
 
       // Set initial selectDev if none provided by user
-      parsedParam2 === undefined
-        ? setSelectDevice({
-            code: devicesData.data[0].code,
-            name: devicesData.data[0].name,
-          })
-        : setSelectDevice({ code: parsedParam2[0], name: parsedParam2[1] });
+      setSelectDevice(
+        parsedParam2 === undefined
+          ? { code: devicesData.data[0].code, name: devicesData.data[0].name }
+          : { code: parsedParam2[0], name: parsedParam2[1] }
+      );
 
       setDeviceList(devicesData.data);
     }

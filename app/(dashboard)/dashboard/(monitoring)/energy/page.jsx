@@ -63,22 +63,22 @@ export default function Energy() {
 
   // Temporary memory to handle null/undefined value from Rest API
   const defaultEnergyValues = {
-    kwh_r_input: 220,
-    kwh_s_input: 220,
-    kwh_t_input: 220,
-    kwh_total_input: 220,
-    kwh_r_output: 220,
-    kwh_s_output: 220,
-    kwh_t_output: 220,
-    kwh_total_output: 220,
-    kvarh_r_input: 220,
-    kvarh_s_input: 220,
-    kvarh_t_input: 220,
-    kvarh_total_input: 220,
-    kvarh_r_output: 220,
-    kvarh_s_output: 220,
-    kvarh_t_output: 220,
-    kvarh_total_output: 220,
+    kwh_r_input: 0,
+    kwh_s_input: 0,
+    kwh_t_input: 0,
+    kwh_total_input: 0,
+    kwh_r_output: 0,
+    kwh_s_output: 0,
+    kwh_t_output: 0,
+    kwh_total_output: 0,
+    kvarh_r_input: 0,
+    kvarh_s_input: 0,
+    kvarh_t_input: 0,
+    kvarh_total_input: 0,
+    kvarh_r_output: 0,
+    kvarh_s_output: 0,
+    kvarh_t_output: 0,
+    kvarh_total_output: 0,
   };
   const [lastDataEnergy, setLastDataEnergy] = useState(defaultEnergyValues);
   /**
@@ -274,59 +274,60 @@ export default function Energy() {
           setSignal(true);
           // Check if data energy length is null
           if (
-            data.monitoring["data"]["dataenergys"][0] === undefined ||
-            data.monitoring["data"]["dataenergys"][0] === null
+            data.monitoring["data"]["dataenergys"] === undefined ||
+            data.monitoring["data"]["dataenergys"] === null
           ) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          }
-
-          // We will check the difference about last send_date from API and current date from NOW()
-          setSignal(true);
-
-          const currentDate = new Date();
-          const sendDate = data?.monitoring["data"]["dataenergys"][0].send_date;
-          // format the send_date value
-          const isoConvSendDate = new Date(sendDate);
-          // count the diff
-          const diffTime = currentDate - isoConvSendDate;
-          // set the minutes value
-          const minutes = Math.floor(diffTime / 60000);
-          // Format the date to Indonesian format
-          const options = {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: false, // 24-hour format
-            locale: "id-ID",
-          };
-          // Format date using Intl Format
-          const formattedDateTime = new Intl.DateTimeFormat(
-            "en-EN",
-            options
-          ).format(isoConvSendDate);
-          // then set to state
-          setLastTimeUpdate(formattedDateTime);
-
-          // Set offline status if the diff time more than 5 minutes from NOW()
-          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-            setOnLoading(false);
-            setSignal(false);
-            setChannel("Lost connection");
           } else {
+            // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
-            setChannel("Stable");
-            setOnLoading(false);
-          }
-          // checkpoint to check network performance
-          const endTime = performance.now();
-          setResponseTime(endTime - startTime);
 
-          return data.monitoring["data"]["dataenergys"];
+            const currentDate = new Date();
+            const sendDate =
+              data?.monitoring["data"]["dataenergys"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Lost connection");
+            } else {
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
+            }
+            // checkpoint to check network performance
+            const endTime = performance.now();
+            setResponseTime(endTime - startTime);
+
+            return data.monitoring["data"]["dataenergys"];
+          }
         }
         // if device list is null?
         else {

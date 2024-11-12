@@ -63,8 +63,8 @@ export default function PowerFactor() {
 
   // Temporary memory to handle null/undefined value from Rest API
   const defaultPFValues = {
-    cosphi_input: 0,
-    cosphi_output: 0,
+    cosphi_input: 1,
+    cosphi_output: 1,
   };
   const [lastDataPF, setLastDataPF] = useState(defaultPFValues);
 
@@ -262,60 +262,60 @@ export default function PowerFactor() {
           setSignal(true);
           // Check if data pf length is null
           if (
-            data.monitoring["data"]["dataPowerFactors"][0] === undefined ||
-            data.monitoring["data"]["dataPowerFactors"][0] === null
+            data.monitoring["data"]["dataPowerFactors"] === undefined ||
+            data.monitoring["data"]["dataPowerFactors"] === null
           ) {
             // Give signal to offline, and set channel to unreachable
             setOnLoading(false);
             setSignal(false);
             setChannel("Device unreachable");
-          }
-
-          // We will check the difference about last send_date from API and current date from NOW()
-          setSignal(true);
-
-          const currentDate = new Date();
-          const sendDate =
-            data?.monitoring["data"]["dataPowerFactors"][0].send_date;
-          // format the send_date value
-          const isoConvSendDate = new Date(sendDate);
-          // count the diff
-          const diffTime = currentDate - isoConvSendDate;
-          // set the minutes value
-          const minutes = Math.floor(diffTime / 60000);
-          // Format the date to Indonesian format
-          const options = {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: false, // 24-hour format
-            locale: "id-ID",
-          };
-          // Format date using Intl Format
-          const formattedDateTime = new Intl.DateTimeFormat(
-            "en-EN",
-            options
-          ).format(isoConvSendDate);
-          // then set to state
-          setLastTimeUpdate(formattedDateTime);
-
-          // Set offline status if the diff time more than 5 minutes from NOW()
-          if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
-            setOnLoading(false);
-            setSignal(false);
-            setChannel("Lost connection");
           } else {
+            // We will check the difference about last send_date from API and current date from NOW()
             setSignal(true);
-            setChannel("Stable");
-            setOnLoading(false);
-          }
-          // checkpoint to check network performance
-          const endTime = performance.now();
-          setResponseTime(endTime - startTime);
 
-          return data.monitoring["data"]["dataPowerFactors"];
+            const currentDate = new Date();
+            const sendDate =
+              data?.monitoring["data"]["dataPowerFactors"][0].send_date;
+            // format the send_date value
+            const isoConvSendDate = new Date(sendDate);
+            // count the diff
+            const diffTime = currentDate - isoConvSendDate;
+            // set the minutes value
+            const minutes = Math.floor(diffTime / 60000);
+            // Format the date to Indonesian format
+            const options = {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: false, // 24-hour format
+              locale: "id-ID",
+            };
+            // Format date using Intl Format
+            const formattedDateTime = new Intl.DateTimeFormat(
+              "en-EN",
+              options
+            ).format(isoConvSendDate);
+            // then set to state
+            setLastTimeUpdate(formattedDateTime);
+
+            // Set offline status if the diff time more than 5 minutes from NOW()
+            if (minutes >= process.env.NEXT_PUBLIC_MAX_LAST_TRIGGER_MINUTE) {
+              setOnLoading(false);
+              setSignal(false);
+              setChannel("Lost connection");
+            } else {
+              setSignal(true);
+              setChannel("Stable");
+              setOnLoading(false);
+            }
+            // checkpoint to check network performance
+            const endTime = performance.now();
+            setResponseTime(endTime - startTime);
+
+            return data.monitoring["data"]["dataPowerFactors"];
+          }
         }
         // if device list is null?
         else {
