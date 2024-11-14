@@ -308,9 +308,7 @@ function LoginForm() {
       setUsername("");
       setPassword("");
       clearSensitiveDatas().then(() =>
-        setError(
-          "We found that your account is in another session. Please revalidate your account!"
-        )
+        setError("Revalidate your credentials to continue!")
       );
     } else {
       clearSensitiveDatas();

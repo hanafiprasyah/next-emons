@@ -2,20 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import PrelineScript from "@/components/PrelineScript";
-import Image from "next/image";
-import dynamic from "next/dynamic";
 import useSWR, { mutate } from "swr";
 import { useOnlineStatus } from "@/lib/hook/connection-hook";
-
-const DynamicAlert = dynamic(() =>
-  import("@/components/alerts/SlowConnectionAlert")
-);
+import LostConnectionAlert from "@/components/alerts/OfflineAlert";
+import SlowConnectionAlert from "@/components/alerts/SlowConnectionAlert";
+import dynamic from "next/dynamic";
 
 const DynamicMap = dynamic(() => import("@/components/maps/NewGoogleMaps"), {
-  ssr: true,
+  ssr: false,
 });
-
-// import Maps from "@/components/maps/NewGoogleMaps";
 
 export default function DashboardMaps() {
   // local Value
@@ -32,7 +27,7 @@ export default function DashboardMaps() {
   // Used to set pin color based on SWR Connection
   const [deviceStatus, setDeviceStatus] = useState(false);
 
-  // Function to fetch the /tools/location/getlocation API [REALTIME]
+  // TODO: Function to fetch the /tools/location/getlocation API [REALTIME]
   const fetchDeviceRealtime = async (
     url,
     tenant,
@@ -192,20 +187,14 @@ export default function DashboardMaps() {
     };
   }, [isOnline, responseTime]);
 
-  if (!isOnline) {
-    return (
-      <span className="text-sm text-white text-wrap text-clip">
-        You are offline.
-      </span>
-    );
-  }
-
   return (
     <div className="h-[calc(100dvh-78px)]">
       <>
+        <LostConnectionAlert connectionFromParent={isOnline} />
+        <SlowConnectionAlert unstable={isConnectionUnstable} />
         {/* Maps */}
         <section id="map-layout">
-          <div className="bg-white border shadow-sm border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+          <div className="bg-white border shadow-sm border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700 animate-fade-in">
             {/* Body */}
             <div className="grid grid-cols-8 divide-stone-200 dark:divide-neutral-600">
               {/* Header of Body */}
@@ -248,14 +237,13 @@ export default function DashboardMaps() {
               {/* End Header of Body */}
               {/* Map Layout */}
               <div className="col-span-8 pt-2 pb-4 ps-4 pe-4">
-                {/* Maps component */}
                 <div
                   id="hs-pro-tabs-dtsch-revenue"
                   role="tabpanel"
                   aria-labelledby="hs-pro-tabs-dtsch-item-revenue"
-                  hidden={false} // Change this dynamically based on active state
                 >
-                  {isOnline && data && !error && localTenant ? (
+                  {/* Maps component */}
+                  {isOnline && data && localTenant ? (
                     <DynamicMap
                       key={"Google Map for React/NextJS"}
                       mapData={data}
@@ -264,7 +252,7 @@ export default function DashboardMaps() {
                       deviceStatus={deviceStatus}
                       tenantRef={localTenant}
                     ></DynamicMap>
-                  ) : (
+                  ) : isOnline ? (
                     <div
                       className="animate-spin inline-block size-3 border-[2px] border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500"
                       role="status"
@@ -272,9 +260,13 @@ export default function DashboardMaps() {
                     >
                       <span className="sr-only">Loading...</span>
                     </div>
+                  ) : (
+                    <span className="text-xs md:text-sm">
+                      Please check your connection..
+                    </span>
                   )}
+                  {/* End Maps component */}
                 </div>
-                {/* End Maps component */}
               </div>
               {/* End Map Layout */}
             </div>

@@ -1,10 +1,39 @@
-import React from "react";
+"use client";
 
-export default function SlowConnectionAlert() {
+import React, { useEffect, useState } from "react";
+
+export default function SlowConnectionAlert({ unstable }) {
+  const [hideAlert, setHideAlert] = useState(true);
+  const [initialRender, setInitialRender] = useState(true);
+
+  useEffect(() => {
+    setInitialRender(false);
+
+    return () => setInitialRender(true);
+  }, [initialRender]);
+
+  useEffect(() => {
+    if (unstable) {
+      // Show alert
+      setHideAlert(false);
+    } else {
+      // Hide alert
+      setHideAlert(true);
+    }
+
+    return () => setHideAlert(true);
+  }, [unstable]);
+
   return (
     <div
       id="hs-pro-shchal"
-      className="mb-5 transition-opacity duration-300 ease-in-out animate-fade-in p-4 sm:ps-16 relative overflow-hidden bg-gradient-to-r from-orange-100 via-purple-200 via-70% to-indigo-200 rounded-lg dark:from-orange-800 dark:via-amber-800/40 dark:to-neutral-800/0"
+      className={`${
+        initialRender
+          ? "hidden"
+          : hideAlert
+          ? "animate-fade-out"
+          : "animate-fade-in"
+      } bottom-0 fixed left-0 transform -translate-x-1/2 z-50 w-full transition-opacity duration-300 ease-in-out animate-fade-in p-4 sm:ps-16 overflow-hidden bg-gradient-to-r from-orange-100 via-purple-200 via-70% to-indigo-200 rounded-t-lg dark:from-orange-800 dark:via-amber-800/40 dark:to-neutral-800/0`}
       role="alert"
       tabIndex={-1}
       aria-labelledby="hs-pro-shchal-label"
