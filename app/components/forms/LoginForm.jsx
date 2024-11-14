@@ -27,26 +27,30 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setLoggedIn] = useState(false);
   const [errors, setError] = useState(null);
+  const [errorTitle, setErrorTitle] = useState(null);
   const router = useRouter();
 
   function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setErrorTitle(null);
     setLoading(true);
 
     const regex = /\\$/;
 
     // First, we will check if user input their data or not
     if (username == "" || password == "") {
-      isLoggedIn(false);
+      setLoggedIn(false);
       setLoading(false);
       setError("Please fill in the username and password!");
+      setErrorTitle(null);
     }
     // then check if user input their team name or not
     else if (!username.includes("/")) {
-      isLoggedIn(false);
+      setLoggedIn(false);
       setLoading(false);
       setError("Authentication failed! Please check your form again.");
+      setErrorTitle(null);
     }
     // then check if user input on username field completely or not
     else if (
@@ -54,13 +58,15 @@ function LoginForm() {
       username.endsWith("\\") ||
       regex.test(username)
     ) {
-      isLoggedIn(false);
+      setLoggedIn(false);
       setLoading(false);
       setError("Fill in the form correctly!");
+      setErrorTitle("Oops! Something wrong..");
     }
     // if all clear, continue the process
     else {
       setError(null);
+      setErrorTitle(null);
       setLoading(true);
 
       // Patch the value of substringUsername(input) value
@@ -88,7 +94,8 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while feeding the salt");
-          setError("Internal server error");
+          setError("500 code. Internal server error!");
+          setError("Connection interrupted");
           setLoading(false);
         }
       };
@@ -107,7 +114,8 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while encrypt the password");
-          setError("Internal server error(2)");
+          setError("500 code. Internal server error! (2)");
+          setErrorTitle("Connection interrupted");
           setLoading(false);
         }
       };
@@ -129,7 +137,8 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while logging in user");
-          setError("Internal server error(3)");
+          setError("500 code. Internal server error! (3)");
+          setErrorTitle("Connection interrupted");
           setLoading(false);
         }
       };
@@ -148,9 +157,10 @@ function LoginForm() {
           // }
 
           if (data.datas["salt"] === null || data.datas["ecript"] === null) {
-            isLoggedIn(false);
+            setLoggedIn(false);
             setLoading(false);
-            setError("Failed to authenticate your username");
+            setError("We cannot authenticate your username");
+            setErrorTitle("Auth failed");
             process.env.NODE_ENV === "development" ??
               console.warn("Check the salt process on server actions!");
           }
@@ -173,11 +183,12 @@ function LoginForm() {
               // }
 
               if (data2.passdata["ecript"] === null) {
-                isLoggedIn(false);
+                setLoggedIn(false);
                 setLoading(false);
                 setError(
-                  "Failed to encrypt your password. The login flow is not safe!"
+                  "We cannot provide encrypted text for the password. The login flow is not safe!"
                 );
+                setErrorTitle("Auth failed");
                 process.env.NODE_ENV === "development" ??
                   console.warn(
                     "Check the encrypted password process on server actions!"
@@ -219,11 +230,12 @@ function LoginForm() {
                 const decryptFallback = dataLoggedIn.datalogin["decript"];
 
                 if (decryptFallback === null) {
-                  isLoggedIn(false);
+                  setLoggedIn(false);
                   setLoading(false);
                   setError(
-                    "Failed to logged you in. Please check your network signal!"
+                    "Something happened when we signed you in. Please check your network signal!"
                   );
+                  setErrorTitle("Auth failed");
                   process.env.NODE_ENV === "development" ??
                     console.warn(
                       "Check the final login process on server actions!"
@@ -232,6 +244,7 @@ function LoginForm() {
                   if (dataLoggedIn.message === "Login successfully") {
                     setLoggedIn(true);
                     setError(null);
+                    setErrorTitle(null);
                     // Set the username to localstorage
                     localStorage.setItem("userName", `${decryptFallback}`);
                     // Set the tenant to localstorage
@@ -296,6 +309,7 @@ function LoginForm() {
       setLoading(false);
       setLoggedIn(true);
       setError(null);
+      setErrorTitle(null);
       router.replace("/dashboard/");
       // if (process.env.NODE_ENV === "development") {
       //   console.log("Local key: " + storedUsernameOnLocal);
@@ -307,9 +321,10 @@ function LoginForm() {
       setLoggedIn(false);
       setUsername("");
       setPassword("");
-      clearSensitiveDatas().then(() =>
-        setError("Revalidate your credentials to continue!")
-      );
+      clearSensitiveDatas().then(() => {
+        setError("Revalidate your credentials to continue!");
+        setErrorTitle("Token mismatch");
+      });
     } else {
       clearSensitiveDatas();
       setLoading(false);
@@ -317,6 +332,7 @@ function LoginForm() {
       setUsername("");
       setPassword("");
       setError(null);
+      setErrorTitle(null);
     }
   }, [isLoggedIn, router]);
 
@@ -335,7 +351,7 @@ function LoginForm() {
               <div className="flex">
                 <div className="shrink-0">
                   <svg
-                    className="shrink-0 size-4 mt-0.5"
+                    className="mt-0 shrink-0 size-4"
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
                     height="24"
@@ -356,9 +372,13 @@ function LoginForm() {
                     id="hs-with-description-label"
                     className="text-sm font-semibold xl:text-lg"
                   >
-                    Oops! Something happened..
+                    {errorTitle}
                   </h3>
-                  <div className="mt-1 text-xs text-yellow-700 xl:text-sm">
+                  <div
+                    className={`${
+                      errorTitle ? "mt-1" : "mt-0"
+                    }  text-xs text-yellow-700 xl:text-sm`}
+                  >
                     {errors}
                   </div>
                 </div>
