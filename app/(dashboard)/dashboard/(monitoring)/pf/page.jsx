@@ -8,10 +8,8 @@ import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
 import ErrorImage from "../../../../../public/images/error500.svg";
 import { useOnlineStatus } from "../../../../lib/hook/connection-hook";
-
-const DynamicAlert = dynamic(() =>
-  import("@/components/alerts/SlowConnectionAlert")
-);
+import LostConnectionAlert from "@/components/alerts/OfflineAlert";
+import SlowConnectionAlert from "@/components/alerts/SlowConnectionAlert";
 
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/PowerFactorRadialGauge"),
@@ -735,9 +733,10 @@ export default function PowerFactor() {
 
   return (
     <div id="pf-template" className="grid grid-cols-1 gap-0 mt-2">
-      {/* Alert on slow loading */}
-      {isSlowLoad || isConnectionUnstable ? <DynamicAlert /> : null}
-      {/* End Alert on slow loading */}
+      {/* Alert */}
+      <LostConnectionAlert connectionFromParent={isOnline} />
+      <SlowConnectionAlert unstable={isConnectionUnstable} />
+      {/* End Alert */}
 
       {/* Page Heading */}
       <div className="px-2 pb-2 md:px-1 sm:pb-4">

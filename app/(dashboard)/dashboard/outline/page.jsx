@@ -14,12 +14,9 @@ import Image from "next/image";
 import useSWR, { mutate } from "swr";
 import ErrorImage from "../../../../public/images/error500.svg";
 import { useOnlineStatus } from "../../../lib/hook/connection-hook";
+import LostConnectionAlert from "@/components/alerts/OfflineAlert";
+import SlowConnectionAlert from "@/components/alerts/SlowConnectionAlert";
 import dynamic from "next/dynamic";
-
-const DynamicAlert = dynamic(
-  () => import("@/components/alerts/SlowConnectionAlert"),
-  { ssr: false }
-);
 
 const RealTimeVoltageInputSplineChart = dynamic(
   () => import("@/components/charts/line/VoltageInputChart"),
@@ -1438,9 +1435,10 @@ export default function DashboardOutline() {
 
   return (
     <div id="outline-template" className="max-w-full h-fit">
-      {/* Alert on slow loading */}
-      {isSlowLoad || isConnectionUnstable ? <DynamicAlert /> : null}
-      {/* End Alert on slow loading */}
+      {/* Alert */}
+      <LostConnectionAlert connectionFromParent={isOnline} />
+      <SlowConnectionAlert unstable={isConnectionUnstable} />
+      {/* End Alert */}
 
       {/* Page Heading */}
       <div className="grid items-center grid-cols-1 px-2 py-2 mx-2 mt-2 mb-4 align-middle border rounded-lg bg-neutral-900 border-neutral-800 md:grid-cols-2 justify-evenly gap-x-4">
