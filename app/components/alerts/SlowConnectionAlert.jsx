@@ -4,13 +4,6 @@ import React, { useEffect, useState } from "react";
 
 export default function SlowConnectionAlert({ unstable }) {
   const [hideAlert, setHideAlert] = useState(true);
-  const [initialRender, setInitialRender] = useState(true);
-
-  useEffect(() => {
-    setInitialRender(false);
-
-    return () => setInitialRender(true);
-  }, [initialRender]);
 
   useEffect(() => {
     if (unstable) {
@@ -28,12 +21,10 @@ export default function SlowConnectionAlert({ unstable }) {
     <div
       id="hs-pro-shchal"
       className={`${
-        initialRender
-          ? "hidden"
-          : hideAlert
-          ? "animate-fade-out"
+        hideAlert
+          ? "opacity-0 duration-200 ease-in-out transition-opacity"
           : "animate-fade-in"
-      } bottom-0 fixed left-0 transform -translate-x-1/2 z-50 w-full transition-opacity duration-300 ease-in-out animate-fade-in p-4 sm:ps-16 overflow-hidden bg-gradient-to-r from-orange-100 via-purple-200 via-70% to-indigo-200 rounded-t-lg dark:from-orange-800 dark:via-amber-800/40 dark:to-neutral-800/0`}
+      } bottom-0 fixed left-0 transform -translate-x-1/2 z-50 w-full p-4 sm:ps-16 overflow-hidden bg-gradient-to-r from-orange-100 via-purple-200 via-70% to-indigo-200 rounded-t-lg dark:from-orange-800 dark:via-amber-800/40 dark:to-neutral-800/0`}
       role="alert"
       tabIndex={-1}
       aria-labelledby="hs-pro-shchal-label"

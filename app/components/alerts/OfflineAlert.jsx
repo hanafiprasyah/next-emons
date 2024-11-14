@@ -4,13 +4,6 @@ import React, { useEffect, useState } from "react";
 
 export default function OfflineAlert({ connectionFromParent }) {
   const [hideAlert, setHideAlert] = useState(true);
-  const [initialRender, setInitialRender] = useState(true);
-
-  useEffect(() => {
-    setInitialRender(false);
-
-    return () => setInitialRender(true);
-  }, [initialRender]);
 
   useEffect(() => {
     if (!connectionFromParent) {
@@ -27,10 +20,8 @@ export default function OfflineAlert({ connectionFromParent }) {
   return (
     <div
       className={` ${
-        initialRender
-          ? "hidden"
-          : hideAlert
-          ? "animate-fade-out"
+        hideAlert
+          ? "opacity-0 duration-200 ease-in-out transition-opacity"
           : "animate-fade-in"
       } fixed left-0 z-50 justify-center w-full text-center transform -translate-x-1/2 bg-transparent top-1/2 h-fit`}
     >
