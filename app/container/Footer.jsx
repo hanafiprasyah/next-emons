@@ -13,12 +13,12 @@ function Footer() {
             href={"/"}
             aria-label="EMONS"
           >
-            EMONS
+            Electrical Monitoring System
           </Link>
         </div>
 
         <div className="mt-3">
-          <p className="text-gray-500 dark:text-neutral-500">
+          {/* <p className="text-gray-500 dark:text-neutral-500">
             We are part of the{" "}
             <Link
               className="font-semibold text-blue-600 transition-all duration-200 ease-in-out hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
@@ -29,9 +29,9 @@ function Footer() {
               WISE
             </Link>{" "}
             family.
-          </p>
+          </p> */}
           <p className="text-gray-500 dark:text-neutral-500">
-            © EMONS. 2024 Wibawa Solusi Elektrik. All rights reserved.
+            © EMONS. 2024. All rights reserved.
           </p>
         </div>
       </div>

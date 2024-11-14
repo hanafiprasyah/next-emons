@@ -38,11 +38,13 @@ function LoginForm() {
 
     // First, we will check if user input their data or not
     if (username == "" || password == "") {
+      isLoggedIn(false);
       setLoading(false);
       setError("Please fill in the username and password!");
     }
     // then check if user input their team name or not
     else if (!username.includes("/")) {
+      isLoggedIn(false);
       setLoading(false);
       setError("Authentication failed! Please check your form again.");
     }
@@ -52,6 +54,7 @@ function LoginForm() {
       username.endsWith("\\") ||
       regex.test(username)
     ) {
+      isLoggedIn(false);
       setLoading(false);
       setError("Fill in the form correctly!");
     }
@@ -145,6 +148,7 @@ function LoginForm() {
           // }
 
           if (data.datas["salt"] === null || data.datas["ecript"] === null) {
+            isLoggedIn(false);
             setLoading(false);
             setError("Failed to authenticate your username");
             process.env.NODE_ENV === "development" ??
@@ -169,6 +173,7 @@ function LoginForm() {
               // }
 
               if (data2.passdata["ecript"] === null) {
+                isLoggedIn(false);
                 setLoading(false);
                 setError(
                   "Failed to encrypt your password. The login flow is not safe!"
@@ -207,11 +212,14 @@ function LoginForm() {
                 //   );
                 //   console.log("Status: " + dataLoggedIn.message);
                 //   console.log(
-                //     "Data/Object: " + dataLoggedIn.datalogin["decript"]
+                //     "Data/Object: " + decryptFallback
                 //   );
                 // }
 
-                if (dataLoggedIn.datalogin["decript"] === null) {
+                const decryptFallback = dataLoggedIn.datalogin["decript"];
+
+                if (decryptFallback === null) {
+                  isLoggedIn(false);
                   setLoading(false);
                   setError(
                     "Failed to logged you in. Please check your network signal!"
@@ -220,24 +228,23 @@ function LoginForm() {
                     console.warn(
                       "Check the final login process on server actions!"
                     );
-                }
-
-                if (dataLoggedIn.message === "Login successfully") {
-                  setLoggedIn(true);
-                  setError(null);
-                  localStorage.setItem(
-                    "userName",
-                    `${dataLoggedIn.datalogin["decript"]}`
-                  );
-                  localStorage.setItem("tenant", `${pureTenant}`);
-                  // Ensure session storage is clear before replace to dashboard
-                  sessionStorage.clear();
-                  // Redirect to dashboard after successful login
-                  router.replace("/dashboard/");
                 } else {
-                  setLoading(false);
-                  setLoggedIn(false);
-                  setError("Please check your data again.");
+                  if (dataLoggedIn.message === "Login successfully") {
+                    setLoggedIn(true);
+                    setError(null);
+                    // Set the username to localstorage
+                    localStorage.setItem("userName", `${decryptFallback}`);
+                    // Set the tenant to localstorage
+                    localStorage.setItem("tenant", `${pureTenant}`);
+                    // Set the boolean key to session storage
+                    // sessionStorage.setItem("auth_status", true);
+                    // Redirect to dashboard after successful login
+                    router.replace("/dashboard/");
+                  } else {
+                    setLoggedIn(false);
+                    setLoading(false);
+                    setError("Please check your data again.");
+                  }
                 }
               });
             });
@@ -268,33 +275,50 @@ function LoginForm() {
   // TODO:Direct to login after tenant check
   useEffect(() => {
     // Check if user and tenant details are stored
-    const storedLocalValue = localStorage.getItem("userName");
+    const storedUsernameOnLocal = localStorage.getItem("userName");
     const storedTenantOnLocal = localStorage.getItem("tenant");
+    // const storedSessionAuthStatus = sessionStorage.getItem("auth_status");
+
+    const clearSensitiveDatas = async () => {
+      await localStorage.clear();
+      await sessionStorage.clear();
+    };
 
     // Determine if the user is logged in and if tenant info is available
     const isAuthenticated =
-      isLoggedIn && storedLocalValue && storedTenantOnLocal;
+      isLoggedIn && storedUsernameOnLocal && storedTenantOnLocal;
 
+    // Determine if the user is not logged in yet but the localStorage is not empty
     const dizzyAuthenticated =
-      !isLoggedIn && storedLocalValue && storedTenantOnLocal;
+      storedUsernameOnLocal && storedTenantOnLocal && !isLoggedIn;
 
     if (isAuthenticated) {
       setLoading(false);
       setLoggedIn(true);
+      setError(null);
       router.replace("/dashboard/");
       // if (process.env.NODE_ENV === "development") {
-      //   console.log("Local key: " + storedLocalValue);
+      //   console.log("Local key: " + storedUsernameOnLocal);
       // }
     }
     // check if user is not logged in but localStorage is not empty
     else if (dizzyAuthenticated) {
+      setLoading(false);
       setLoggedIn(false);
-      localStorage.clear();
-      router.refresh();
+      setUsername("");
+      setPassword("");
+      clearSensitiveDatas().then(() =>
+        setError(
+          "We found that your account is in another session. Please revalidate your account!"
+        )
+      );
     } else {
+      clearSensitiveDatas();
+      setLoading(false);
       setLoggedIn(false);
-      localStorage.clear();
-      router.replace("/login/");
+      setUsername("");
+      setPassword("");
+      setError(null);
     }
   }, [isLoggedIn, router]);
 
@@ -303,7 +327,7 @@ function LoginForm() {
       <form onSubmit={handleSubmit}>
         {/* If they had an error, show the message */}
         {errors ? (
-          <div className="mb-4 transition-opacity duration-300 ease-in-out opacity-0 animate-fade-in md:mt-2 md:mb-6">
+          <div className="mb-8 transition-opacity duration-300 ease-in-out opacity-0 animate-fade-in md:mt-2 md:mb-6">
             <div
               className="p-4 text-sm text-yellow-800 border border-yellow-200 rounded-lg bg-yellow-50 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500"
               role="alert"
@@ -332,11 +356,13 @@ function LoginForm() {
                 <div className="ms-4">
                   <h3
                     id="hs-with-description-label"
-                    className="text-sm font-semibold"
+                    className="text-sm font-semibold xl:text-lg"
                   >
                     Oops! Something happened..
                   </h3>
-                  <div className="mt-1 text-sm text-yellow-700">{errors}</div>
+                  <div className="mt-1 text-xs text-yellow-700 xl:text-sm">
+                    {errors}
+                  </div>
                 </div>
               </div>
             </div>
@@ -454,7 +480,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="py-2.5 duration-200 ease-in-out transition px-3 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg  bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none shadow-lg"
+              className="py-2.5 duration-200 ease-in-out transition px-3 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg  bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-1 dark:focus:outline-none dark:focus:outline-sky-800 shadow-lg"
             >
               {loading && (
                 <div
