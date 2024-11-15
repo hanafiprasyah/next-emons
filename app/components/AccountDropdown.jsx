@@ -25,9 +25,21 @@ export default function AccountDropdown() {
         method: "POST",
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        // Clear storage if response OK
-        localStorage.clear();
+        if (data.message == "User signed out successfully") {
+          // Clear storage if response OK
+          await localStorage.clear();
+          await sessionStorage.clear();
+          setLoading(false);
+          router.replace("/login/");
+        } else {
+          setLoading(false);
+          router.refresh();
+        }
+      } else {
+        setLoading(false);
         router.refresh();
       }
     } catch (error) {

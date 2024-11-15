@@ -32,10 +32,12 @@ function LoginForm() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    // Set to default for all state on first execution
     setError(null);
     setErrorTitle(null);
     setLoading(true);
 
+    // Regural expression default checker char
     const regex = /\\$/;
 
     // First, we will check if user input their data or not
@@ -65,6 +67,7 @@ function LoginForm() {
     }
     // if all clear, continue the process
     else {
+      // Set to default for all state to continue to the next execution step (if all clear)
       setError(null);
       setErrorTitle(null);
       setLoading(true);
@@ -73,12 +76,12 @@ function LoginForm() {
       const pureUsername = substringUsername(username).username;
       const pureTenant = substringUsername(username).tenant;
 
-      // if (process.env.NODE_ENV === "development") {
-      //   console.log("=====");
-      //   console.log("Pure username after substring: " + pureUsername);
-      //   console.log("Pure tenant after substring: " + pureTenant);
-      //   console.log("=====");
-      // }
+      if (process.env.NODE_ENV === "development") {
+        console.warn("=====");
+        console.log("Pure username after substring: " + pureUsername);
+        console.log("Pure tenant after substring: " + pureTenant);
+        console.warn("=====");
+      }
 
       // TODO: Salt and username encryption
       const saltPost = async () => {
@@ -146,70 +149,91 @@ function LoginForm() {
       // TODO: Processing
       saltPost()
         .then((data) => {
-          // if (process.env.NODE_ENV === "development") {
-          //   console.log("===== Salt started =====");
-          //   console.log(
-          //     "Salt: " +
-          //       data.datas["salt"] +
-          //       " and username ecript: " +
-          //       data.datas["ecript"]
-          //   );
-          // }
-
-          if (data.datas["salt"] === null || data.datas["ecript"] === null) {
+          if (
+            data.message == "Failed to seed" ||
+            data.message == "Method not allowed" ||
+            data.message == "Internal server error" ||
+            data.message == "Failed to connect"
+          ) {
             setLoggedIn(false);
             setLoading(false);
             setError("We cannot authenticate your username");
             setErrorTitle("Auth failed");
-            process.env.NODE_ENV === "development" ??
+            if (process.env.NODE_ENV === "development") {
               console.warn("Check the salt process on server actions!");
-          }
+            }
 
-          return {
-            salt: data.datas["salt"],
-            username: data.datas["ecript"],
-          };
+            return {
+              salt: null,
+              username: null,
+            };
+          } else {
+            if (process.env.NODE_ENV === "development") {
+              console.warn("===== Salt started =====");
+              console.log("Salt: " + data.datas["salt"]);
+              console.log("Encrypted Username: " + data.datas["ecript"]);
+            }
+
+            return {
+              salt: data.datas["salt"],
+              username: data.datas["ecript"],
+            };
+          }
         })
         .then((dataSaltPost) => {
-          // if (process.env.NODE_ENV === "development") {
-          //   console.log("Ok then we will encrypt the password like below:");
-          // }
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              "=== Ok then we will encrypt the password like below:"
+            );
+          }
 
           passEnc()
             .then((data2) => {
-              // if (process.env.NODE_ENV === "development") {
-              //   console.log("===== Password encrypt started =====");
-              //   console.log("Encrypted password: " + data2.passdata["ecript"]);
-              // }
-
-              if (data2.passdata["ecript"] === null) {
+              if (
+                data2.message === "Encrypted failed" ||
+                data2.message === "Internal server error" ||
+                data2.message === "Method not allowed" ||
+                data2.message === "Failed to connect"
+              ) {
                 setLoggedIn(false);
                 setLoading(false);
                 setError(
                   "We cannot provide encrypted text for the password. The login flow is not safe!"
                 );
                 setErrorTitle("Auth failed");
-                process.env.NODE_ENV === "development" ??
+                if (process.env.NODE_ENV === "development") {
                   console.warn(
                     "Check the encrypted password process on server actions!"
                   );
-              }
+                }
 
-              return {
-                password: data2.passdata["ecript"],
-              };
+                return {
+                  password: null,
+                };
+              } else {
+                if (process.env.NODE_ENV === "development") {
+                  console.warn("===== Password encrypt started =====");
+                  console.log(
+                    "Encrypted password: " + data2.passdata["ecript"]
+                  );
+                }
+
+                return {
+                  password: data2.passdata["ecript"],
+                };
+              }
             })
             .then((dataPassEnc) => {
-              // if (process.env.NODE_ENV === "development") {
-              //   console.log(
-              //     "===== Great! Then at the final stage we get this things already: ====="
-              //   );
-              //   console.log("1. Encrypted Username: " + dataSaltPost.username);
-              //   console.log("2. Encrypted Password: " + dataPassEnc.password);
-              //   console.log("3. Salt: " + dataSaltPost.salt);
-              //   console.log("4. Tenant: " + pureTenant);
-              //   console.log("================================");
-              // }
+              if (process.env.NODE_ENV === "development") {
+                console.warn(
+                  "===== Great! Then at the final stage we get this things already: ====="
+                );
+                console.log("1. Encrypted Username: " + dataSaltPost.username);
+                console.log("2. Encrypted Password: " + dataPassEnc.password);
+                console.log("3. Salt: " + dataSaltPost.salt);
+                console.log("4. Tenant: " + pureTenant);
+                console.warn("================================");
+              }
 
               loggedIn(
                 `${pureTenant}`,
@@ -217,36 +241,61 @@ function LoginForm() {
                 `${dataPassEnc.password}`,
                 `${dataSaltPost.salt}`
               ).then((dataLoggedIn) => {
-                // if (process.env.NODE_ENV === "development") {
-                //   console.log(
-                //     "===== Logged In running on server side and this is the data:"
-                //   );
-                //   console.log("Status: " + dataLoggedIn.message);
-                //   console.log(
-                //     "Data/Object: " + decryptFallback
-                //   );
-                // }
-
-                const decryptFallback = dataLoggedIn.datalogin["decript"];
-
-                if (decryptFallback === null) {
+                if (
+                  dataLoggedIn.message == "Failed to connect" ||
+                  dataLoggedIn.message == "Login failed" ||
+                  dataLoggedIn.message == "Method not allowed"
+                ) {
                   setLoggedIn(false);
                   setLoading(false);
-                  setError(
-                    "Something happened when we signed you in. Please check your network signal!"
-                  );
+                  setError("We can't recognize you. Please try again!");
                   setErrorTitle("Auth failed");
-                  process.env.NODE_ENV === "development" ??
+                  if (process.env.NODE_ENV === "development") {
                     console.warn(
                       "Check the final login process on server actions!"
                     );
+                  }
+                } else if (dataLoggedIn.message == "Error setting cookie") {
+                  setLoggedIn(false);
+                  setLoading(false);
+                  setError("Your connection is not safe.");
+                  setErrorTitle("Auth failed");
+                  if (process.env.NODE_ENV === "development") {
+                    console.warn(
+                      "Check the final login process on server actions! Cache is unset!"
+                    );
+                  }
+                } else if (dataLoggedIn.message == "Internal server error") {
+                  setLoggedIn(false);
+                  setLoading(false);
+                  setError(
+                    "Error while trying to connect to server. Please try again later."
+                  );
+                  setErrorTitle("Server not response");
+                  if (process.env.NODE_ENV === "development") {
+                    console.warn(
+                      "Check the final login process on server actions! Try catch on fetching process is failed!"
+                    );
+                  }
                 } else {
+                  if (process.env.NODE_ENV === "development") {
+                    console.warn(
+                      "===== Logged In running on server side and this is the data:"
+                    );
+                    console.log("Status: " + dataLoggedIn.message);
+                    console.log("Cookie Token: ", dataLoggedIn.cookie_token);
+                    console.log("Cookie Salt: ", dataLoggedIn.cookie_salt);
+                    console.log(
+                      "Data/Object: " + dataLoggedIn.datalogin["decript"]
+                    );
+                  }
                   if (dataLoggedIn.message === "Login successfully") {
+                    const decrpytUsername = dataLoggedIn.datalogin["decript"];
                     setLoggedIn(true);
                     setError(null);
                     setErrorTitle(null);
                     // Set the username to localstorage
-                    localStorage.setItem("userName", `${decryptFallback}`);
+                    localStorage.setItem("userName", `${decrpytUsername}`);
                     // Set the tenant to localstorage
                     localStorage.setItem("tenant", `${pureTenant}`);
                     // Set the boolean key to session storage

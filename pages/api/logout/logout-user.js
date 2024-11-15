@@ -8,17 +8,15 @@ export default async function handler(req, res) {
   }
 
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
+  const siteType = process.env.NODE_ENV === "production" ? "Strict" : "Lax";
 
   try {
-    res.setHeader(
-      "Set-Cookie",
-      `enc-header-site=; Path=/; HttpOnly; ${secureFlag}; SameSite=Lax; Max-Age=0`
-    );
+    res.setHeader("Set-Cookie", [
+      `enc-header-salt=; Path=/; HttpOnly; ${secureFlag}; SameSite=${siteType}; Max-Age=0`,
+      `enc-header-token=; Path=/; HttpOnly; ${secureFlag}; SameSite=${siteType}; Max-Age=0`,
+    ]);
     res.status(200).json({ message: "User signed out successfully" });
   } catch (e) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(e);
-    }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
