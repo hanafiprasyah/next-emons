@@ -372,7 +372,7 @@ export default function Frequency() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !localTenant,
+      isPaused: () => !localTenant || (!sessionToken && !sessionSalt),
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -425,7 +425,8 @@ export default function Frequency() {
     ([url, tenant, side, start_date, end_date]) =>
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
-      isPaused: () => !localTenant && !selectedLocation.code,
+      isPaused: () =>
+        !localTenant && !selectedLocation.code && !sessionToken && !sessionSalt,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -482,7 +483,12 @@ export default function Frequency() {
     ([url, localTenant, locationid, start_date]) =>
       fetchFrequencyRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () => !localTenant && !selectedDevice.code && !hoursAgo,
+      isPaused: () =>
+        !localTenant &&
+        !selectedDevice.code &&
+        !hoursAgo &&
+        !sessionToken &&
+        !sessionSalt,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 3000,
       revalidateOnMount: true,
