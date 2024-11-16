@@ -1,13 +1,8 @@
 "use server";
 
-import { NextResponse, NextRequest } from "next/server";
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    if (process.env.NODE_ENV === "development") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
-    throw new Error("Error 405");
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const {
@@ -21,6 +16,19 @@ export default async function handler(req, res) {
     tenant,
   } = req.body;
 
+  const cookies = req.headers.cookie
+    ? Object.fromEntries(
+        req.headers.cookie.split("; ").map((c) => {
+          const [name, ...rest] = c.split("="); // Split only on the first `=`
+          return [name, rest.join("=")]; // Rejoin the rest to preserve `=` in the value
+        })
+      )
+    : {};
+
+  const currentToken = cookies["enc-header-token"];
+  const currentSalt = cookies["enc-header-salt"];
+
+  // Pagination query
   const { page = 1, limit = 10 } = req.query;
 
   try {
@@ -30,20 +38,9 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.BASE_URL,
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          "Cache-Control": "s-maxage=3600, max-age=3600",
-          "X-Content-Type-Options": "nosniff",
-          "X-Frame-Options": "SAMEORIGIN",
-          "Strict-Transport-Security":
-            "max-age=31536000; includeSubDomains; preload",
-          "X-XSS-Protection": "1; mode=block",
-          "X-API-Version": "1.0.0",
           tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          Authorize: currentSalt,
+          token: currentToken,
         },
         body: JSON.stringify({
           locationid: locationid,
@@ -59,23 +56,23 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      if (process.env.NODE_ENV === "development") {
-        res
-          .status(response.status)
-          .json({ message: "Status: " + response.status });
+      if (response.status === 401) {
+        return res.status(401).json({
+          message: "Unauthorized: Check token and salt values",
+          salt: currentSalt,
+          token: currentToken,
+        });
+      } else {
+        res.status(response.status).json({
+          message: "Failed to connect",
+        });
       }
-      throw new Error("Service Unavailable");
     }
 
     const result = await response.json();
 
-    res
-      .status(200)
-      .json({ message: response.statusText, voltage: result.data });
+    res.status(200).json({ message: "Success", voltage: result.data });
   } catch (e) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(e);
-    }
     res.status(500).json({ error: "Internal server error" });
   }
 }
