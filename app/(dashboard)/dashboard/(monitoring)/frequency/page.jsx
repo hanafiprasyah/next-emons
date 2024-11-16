@@ -24,6 +24,8 @@ export default function Frequency() {
    */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
+  const [sessionSalt, setSessionSalt] = useState("");
+  const [sessionToken, setSessionToken] = useState("");
 
   // Connection state
   const isOnline = useOnlineStatus();
@@ -125,12 +127,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
           tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          token: sessionToken,
+          Authorize: sessionSalt,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -145,21 +144,26 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.site;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchSiteRealtime: ", err);
+        console.error("Error catch in fetchSiteRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -176,12 +180,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
           tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          token: sessionToken,
+          Authorize: sessionSalt,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -196,21 +197,26 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.loc;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchDeviceRealtime: ", err);
+        console.error("Error in fetchDeviceRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -229,12 +235,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
           tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          token: sessionToken,
+          Authorize: sessionSalt,
         },
         body: JSON.stringify({
           tenant: tenant,
@@ -249,15 +252,13 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchFrequencyRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
       // Check response message
-      if (data.message === "OK") {
+      if (data.message === "Success") {
         setSignal(true);
 
         // Check if data frequency length is null
@@ -523,19 +524,27 @@ export default function Frequency() {
   // TODO: Get local tenant item
   useEffect(() => {
     const currentUser = localStorage.getItem("tenant");
+    const validSalt = sessionStorage.getItem("private_salt");
+    const validToken = sessionStorage.getItem("private_token");
 
     // If tenant local storage is undefined or null
-    if (!currentUser) {
+    if (!currentUser && !validSalt && !validToken) {
       // set local tenant state to null
       setLocalTenant("");
+      setSessionSalt("");
+      setSessionToken("");
       return;
     }
 
     // save local tenant value to state
     setLocalTenant(currentUser.toString());
+    setSessionSalt(validSalt.toString());
+    setSessionToken(validToken.toString());
 
     return () => {
       setLocalTenant("");
+      setSessionSalt("");
+      setSessionToken("");
     };
   }, []);
 
