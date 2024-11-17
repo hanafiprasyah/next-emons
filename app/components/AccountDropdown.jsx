@@ -67,6 +67,7 @@ export default function AccountDropdown() {
 
   return (
     <div
+      role="menu"
       className="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-10 bg-white rounded-xl shadow-[0_10px_40px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_10px_rgba(0,0,0,0.2)] dark:bg-neutral-900"
       aria-labelledby="hs-pro-dnad"
     >
