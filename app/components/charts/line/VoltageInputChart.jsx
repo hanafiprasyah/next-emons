@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import {
   ChartComponent,
@@ -11,15 +13,22 @@ import {
   DataLabel,
   Crosshair,
 } from "@syncfusion/ej2-react-charts";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
-const fetcher = async (url, tenant, locationid) => {
+const fetcher = async (
+  url,
+  localTenant,
+  locationid,
+  cookieToken,
+  cookieSalt
+) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      tenant: tenant,
-      token: process.env.AUTH_TOKEN,
+      tenant: localTenant,
+      Authorize: cookieSalt,
+      token: cookieToken,
     },
     body: JSON.stringify({
       locationid: locationid,
@@ -34,28 +43,35 @@ const fetcher = async (url, tenant, locationid) => {
   });
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+    throw new Error("Failed to fetch linear chart value");
   }
 
   const result = await response.json();
 
-  return result.voltage["data"].map((item) => ({
-    time: new Date(item.send_date).toLocaleTimeString(),
-    // Single phase
-    v_rn_input: item.v_rn_input,
-    v_sn_input: item.v_sn_input,
-    v_tn_input: item.v_tn_input,
-    v_rn_output: item.v_rn_output,
-    v_sn_output: item.v_sn_output,
-    v_tn_output: item.v_tn_output,
-    // Three phase (if exists)
-    v_rs_input: item.v_rs_input,
-    v_st_input: item.v_st_input,
-    v_rt_input: item.v_rt_input,
-    v_rs_output: item.v_rs_output,
-    v_st_output: item.v_st_output,
-    v_rt_output: item.v_rt_output,
-  }));
+  if (result.message === "Success") {
+    return result.voltage["data"].map((item) => ({
+      time: new Date(item.send_date).toLocaleTimeString(),
+      // Single phase
+      v_rn_input: item.v_rn_input,
+      v_sn_input: item.v_sn_input,
+      v_tn_input: item.v_tn_input,
+      v_rn_output: item.v_rn_output,
+      v_sn_output: item.v_sn_output,
+      v_tn_output: item.v_tn_output,
+      // Three phase (if exists)
+      v_rs_input: item.v_rs_input,
+      v_st_input: item.v_st_input,
+      v_rt_input: item.v_rt_input,
+      v_rs_output: item.v_rs_output,
+      v_st_output: item.v_st_output,
+      v_rt_output: item.v_rt_output,
+    }));
+  } else {
+    return null;
+    if (process.env.NODE_ENV === "development") {
+      console.log("Error in fetch Voltage Input Linear chart");
+    }
+  }
 };
 
 const RealTimeVoltageInputSplineChart = ({
@@ -63,6 +79,8 @@ const RealTimeVoltageInputSplineChart = ({
   locationid,
   online,
   unstableConnection,
+  cookieToken,
+  cookieSalt,
 }) => {
   const [chartData, setChartData] = useState([]);
   const [threePhase, setThreePhase] = useState(false);
@@ -79,12 +97,19 @@ const RealTimeVoltageInputSplineChart = ({
     isLoading,
     error,
   } = useSWR(
-    tenant && locationid
-      ? ["/api/monitoring/voltage/getdata", tenant, locationid]
+    tenant && locationid && cookieSalt && cookieToken
+      ? [
+          "/api/monitoring/voltage/getdata",
+          tenant,
+          locationid,
+          cookieToken,
+          cookieSalt,
+        ]
       : null,
-    ([url, tenant, locationid]) => fetcher(url, tenant, locationid),
+    ([url, localTenant, locationid, cookieToken, cookieSalt]) =>
+      fetcher(url, localTenant, locationid, cookieToken, cookieSalt),
     {
-      isPaused: () => !tenant && !locationid,
+      isPaused: () => !tenant && !locationid && !cookieToken && !cookieSalt,
       isOnline: () => online && !unstableConnection,
       refreshInterval: 3000,
       revalidateOnMount: true,
@@ -92,9 +117,7 @@ const RealTimeVoltageInputSplineChart = ({
       revalidateOnFocus: false,
       loadingTimeout: 10000,
       keepPreviousData: true,
-      onError: (err) => {
-        clearSWRCache();
-      },
+      onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
         if (error.status === 404) return;
@@ -105,6 +128,8 @@ const RealTimeVoltageInputSplineChart = ({
             "/api/monitoring/voltage/getdata",
             tenant,
             locationid,
+            cookieToken,
+            cookieSalt,
           ])
         )
           return;
@@ -140,7 +165,7 @@ const RealTimeVoltageInputSplineChart = ({
     </div>;
   }
 
-  if (error && !tenant && !locationid) {
+  if (error) {
     return (
       <div className="w-full text-center text-clip">
         <p className="text-sm font-thin text-white">Error: {error}</p>
