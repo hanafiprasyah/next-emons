@@ -15,6 +15,8 @@ const Default = ({
   mapLoading,
   deviceStatus,
   tenantRef,
+  tokenCookie,
+  saltCookie,
 }) => {
   // State to store selected device
   const [selectedDevice, setSelectDevice] = useState({
@@ -109,6 +111,8 @@ const Default = ({
                   lot={parseFloat(location.lot)}
                   markerLabel={location.name}
                   title={location.name}
+                  tokenCookie={tokenCookie}
+                  saltCookie={saltCookie}
                 />
               ) : null
             )

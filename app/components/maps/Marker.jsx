@@ -18,6 +18,8 @@ const Marker = ({
   title,
   markerLabel,
   signal = false,
+  tokenCookie,
+  saltCookie,
 }) => {
   // marker state
   const [markerRef, marker] = useAdvancedMarkerRef();
@@ -70,12 +72,9 @@ const Marker = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
           tenant: tenantRef,
-          token: process.env.AUTH_TOKEN,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: locationid,
@@ -90,23 +89,26 @@ const Marker = ({
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchSite on marker! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data;
       }
-
-      return;
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchSite on marker: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -117,12 +119,9 @@ const Marker = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
           tenant: tenantRef,
-          token: process.env.AUTH_TOKEN,
+          Authorize: saltCookie,
+          token: tokenCookie,
         },
         body: JSON.stringify({
           tenant: tenantRef,
@@ -137,14 +136,12 @@ const Marker = ({
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetch data at marker! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data?.message === "OK") {
+      if (data?.message === "Success") {
         if (
           data?.monitoring["data"]["datacurrents"] === null ||
           data?.monitoring["data"]["dataenergys"] === null ||
@@ -184,7 +181,7 @@ const Marker = ({
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetch marker data: ", err);
       }
-      throw new Error("500. An error occured.");
+      throw new Error("Error fetching monitoring data");
     }
   };
 
@@ -205,18 +202,14 @@ const Marker = ({
     isLoading: isMonitoringLoading,
     error: isMonitoringError,
   } = useSWR(
-    tenantRef !== "" && tenantRef !== undefined && tenantRef !== null
+    tenantRef && tokenCookie && saltCookie
       ? ["/api/monitoring/getmonitoring", tenantRef, locationid, hoursAgo]
       : null,
     ([url, tenantRef, locationid, start_date]) =>
       fetchDataRealtime2(url, tenantRef, locationid, start_date),
     {
       isPaused: () =>
-        (tenantRef == "" && tenantRef == undefined) ||
-        (locationid === null && locationid === undefined) ||
-        (hoursAgo == "" && hoursAgo == undefined)
-          ? true
-          : false,
+        !tenantRef && !locationid && !hoursAgo && !tokenCookie && !saltCookie,
       isOnline: () => signal,
       refreshInterval: 6000,
       revalidateOnMount: true,
@@ -299,10 +292,13 @@ const Marker = ({
   }, []);
 
   useEffect(() => {
+    if (!tokenCookie && !saltCookie) return;
+
     if (monitoring) {
       setConnection(true);
       if (signal) {
         setConnection(true);
+
         fetchSite(tenantRef, locationid).then((data) => {
           const siteData = data.siteloc["data"][0].site;
           if (siteData) {
@@ -432,7 +428,7 @@ const Marker = ({
       //   console.log("Data -> error(Data Undefined)");
       // }
     }
-  }, [monitoring, signal, locationid, tenantRef]);
+  }, [monitoring, signal, locationid, tenantRef, tokenCookie, saltCookie]);
 
   return (
     <>
