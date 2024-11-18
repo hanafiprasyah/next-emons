@@ -457,14 +457,15 @@ export default function DashboardSidebar() {
                 {/* Alarm Log */}
                 <li className="px-5 mb-0.5">
                   <Link
-                    className={`flex items-center px-3 py-2 transition duration-200 ease-in-out text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
+                    className={`flex items-center px-3 py-2 transition duration-200 ease-in-out cursor-not-allowed text-sm bg-gray-100 text-gray-800 rounded-lg gap-x-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:focus:bg-neutral-700 ${
                       path === "/dashboard/alarm-logger/"
                         ? "active-link dark:bg-neutral-700"
                         : "dark:bg-neutral-800"
                     }`}
-                    data-hs-overlay="#hs-pro-sidebar"
-                    aria-controls="hs-pro-sidebar"
+                    // data-hs-overlay="#hs-pro-sidebar"
+                    // aria-controls="hs-pro-sidebar"
                     aria-label="Toggle navigation"
+                    onClick={handleDisableClick.bind(null)}
                     href="/dashboard/alarm-logger"
                   >
                     <span className="flex items-center justify-center text-white bg-blue-600 rounded-md size-6 dark:bg-blue-500">
@@ -484,6 +485,9 @@ export default function DashboardSidebar() {
                       </svg>
                     </span>
                     Alarm Log
+                    <span className="inline-flex items-center gap-x-0.5 py-0 px-1.5 rounded-lg text-[9px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-500">
+                      Soon
+                    </span>
                   </Link>
                 </li>
                 {/* Database Log */}
