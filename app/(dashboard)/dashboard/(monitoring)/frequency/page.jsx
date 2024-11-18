@@ -8,6 +8,7 @@ import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
 import ErrorImage from "../../../../../public/images/error500.svg";
 import { useOnlineStatus } from "../../../../lib/hook/connection-hook";
+import { useRouter } from "next/navigation";
 import LostConnectionAlert from "@/components/alerts/OfflineAlert";
 import SlowConnectionAlert from "@/components/alerts/SlowConnectionAlert";
 
@@ -24,13 +25,14 @@ export default function Frequency() {
    */
   // local Value
   const [localTenant, setLocalTenant] = useState("");
-  const [sessionSalt, setSessionSalt] = useState("");
-  const [sessionToken, setSessionToken] = useState("");
 
   // Connection state
   const isOnline = useOnlineStatus();
   const [responseTime, setResponseTime] = useState(null);
   const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
+  // Handle router
+  const router = useRouter();
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
@@ -127,9 +129,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          tenant: tenant,
-          token: sessionToken,
-          Authorize: sessionSalt,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -180,9 +182,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          tenant: tenant,
-          token: sessionToken,
-          Authorize: sessionSalt,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -235,9 +237,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          tenant: tenant,
-          token: sessionToken,
-          Authorize: sessionSalt,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           tenant: tenant,
@@ -348,7 +350,31 @@ export default function Frequency() {
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchFrequencyRealtime: ", err);
       }
-      throw err;
+      throw new Error("Error fetching monitoring data");
+    }
+  };
+
+  // TODO: Function to fetch the cookie [REALTIME]
+  const fetchCookieRealtime = async (url) => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch cookies");
+      } else {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error in fetchCookieRealtime: ", err);
+      }
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -359,9 +385,34 @@ export default function Frequency() {
       rollbackOnError: true,
     });
 
+  // TODO: to get cookies realtime
+  const { data: cookieData, error: cookieError } = useSWR(
+    ["/api/tools/cookie/get"],
+    ([url]) => fetchCookieRealtime(url),
+    {
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (JSON.stringify(key) === JSON.stringify(["/api/tools/cookie/get"]))
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    localTenant && cookieData?.hasCookie
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -372,7 +423,7 @@ export default function Frequency() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !localTenant || (!sessionToken && !sessionSalt),
+      isPaused: () => !localTenant && !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -413,7 +464,7 @@ export default function Frequency() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    localTenant && selectedLocation.code && cookieData?.hasCookie
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -426,7 +477,7 @@ export default function Frequency() {
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
       isPaused: () =>
-        !localTenant && !selectedLocation.code && !sessionToken && !sessionSalt,
+        !localTenant && !selectedLocation.code && !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -472,7 +523,7 @@ export default function Frequency() {
     isLoading: frequencyLoading,
     error: frequencyError,
   } = useSWR(
-    localTenant && selectedDevice.code && hoursAgo
+    localTenant && selectedDevice.code && hoursAgo && cookieData?.hasCookie
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -487,8 +538,7 @@ export default function Frequency() {
         !localTenant &&
         !selectedDevice.code &&
         !hoursAgo &&
-        !sessionToken &&
-        !sessionSalt,
+        !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 3000,
       revalidateOnMount: true,
@@ -530,29 +580,28 @@ export default function Frequency() {
   // TODO: Get local tenant item
   useEffect(() => {
     const currentUser = localStorage.getItem("tenant");
-    const validSalt = sessionStorage.getItem("private_salt");
-    const validToken = sessionStorage.getItem("private_token");
 
     // If tenant local storage is undefined or null
-    if (!currentUser && !validSalt && !validToken) {
+    if (!currentUser) {
       // set local tenant state to null
       setLocalTenant("");
-      setSessionSalt("");
-      setSessionToken("");
       return;
+    } else {
+      // save local tenant value to state
+      setLocalTenant(currentUser.toString());
     }
-
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
-    setSessionSalt(validSalt.toString());
-    setSessionToken(validToken.toString());
 
     return () => {
       setLocalTenant("");
-      setSessionSalt("");
-      setSessionToken("");
     };
   }, []);
+
+  // TODO: Redirect to login page when cookies are invalid or there's an error
+  useEffect(() => {
+    if (cookieData && !cookieData.hasCookie) {
+      router.refresh();
+    }
+  }, [cookieData, router]);
 
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
