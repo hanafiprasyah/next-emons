@@ -415,6 +415,7 @@ export default function Voltage() {
     }
   };
 
+  // TODO: Function to fetch the cookie [REALTIME]
   const fetchCookieRealtime = async (url) => {
     try {
       const response = await fetch(url, {
@@ -662,9 +663,9 @@ export default function Voltage() {
     return () => {
       setLocalTenant("");
     };
-  }, [router]);
+  }, []);
 
-  // Redirect to login page when cookies are invalid or there's an error
+  // TODO: Redirect to login page when cookies are invalid or there's an error
   useEffect(() => {
     if (cookieData && !cookieData.hasCookie) {
       router.refresh();
