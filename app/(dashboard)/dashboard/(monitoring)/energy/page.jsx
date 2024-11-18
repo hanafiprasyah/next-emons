@@ -1159,6 +1159,10 @@ export default function Energy() {
                             : energyValues.kwh_total_input
                         }
                         isConnected={isOnline && signal}
+                        cookieSalt={cookieData?.salt}
+                        cookieToken={cookieData?.token}
+                        locationid={selectedLocation?.code}
+                        tenant={localTenant}
                       />
                     ) : (
                       <div id={`kwh-input`}>
@@ -1211,6 +1215,10 @@ export default function Energy() {
                             : energyValues.kwh_total_output
                         }
                         isConnected={isOnline && signal}
+                        cookieSalt={cookieData?.salt}
+                        cookieToken={cookieData?.token}
+                        locationid={selectedLocation?.code}
+                        tenant={localTenant}
                       />
                     ) : (
                       <div id={`kwh-output`}>
@@ -1346,6 +1354,10 @@ export default function Energy() {
                             : energyValues.kvarh_total_input
                         }
                         isConnected={isOnline && signal}
+                        cookieSalt={cookieData?.salt}
+                        cookieToken={cookieData?.token}
+                        locationid={selectedLocation?.code}
+                        tenant={localTenant}
                       />
                     ) : (
                       <div id={`kvarh-input`}>
@@ -1398,6 +1410,10 @@ export default function Energy() {
                             : energyValues.kvarh_total_output
                         }
                         isConnected={isOnline && signal}
+                        cookieSalt={cookieData?.salt}
+                        cookieToken={cookieData?.token}
+                        locationid={selectedLocation?.code}
+                        tenant={localTenant}
                       />
                     ) : (
                       <div id={`kvarh-output`}>

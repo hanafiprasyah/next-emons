@@ -13,75 +13,137 @@ import {
   DataLabel,
   Crosshair,
 } from "@syncfusion/ej2-react-charts";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
-const fetcher = async (url) => {
+const fetcher = async (
+  url,
+  localTenant,
+  locationid,
+  cookieToken,
+  cookieSalt
+) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      tenant: "alif",
-      token: process.env.AUTH_TOKEN,
+      tenant: localTenant,
+      Authorize: cookieSalt,
+      token: cookieToken,
     },
     body: JSON.stringify({
-      locationid: 106,
+      locationid: locationid,
       lane: "",
       status: "",
       value: "",
       side: "",
       start_trancation_date: "",
       end_trancation_date: "",
-      tenant: "alif",
+      tenant: localTenant,
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+    throw new Error("Failed to fetch linear chart value");
   }
 
   const result = await response.json();
-  return result.energy["data"].map((item) => ({
-    time: new Date(item.send_date).toLocaleTimeString(),
-    // KWH input
-    kwh_r_input: item.kwh_r_input,
-    kwh_s_input: item.kwh_s_input,
-    kwh_t_input: item.kwh_t_input,
-    kwh_total_input: item.kwh_total_input,
-    // KWH output
-    kwh_r_output: item.kwh_r_output,
-    kwh_s_output: item.kwh_s_output,
-    kwh_t_output: item.kwh_t_output,
-    kwh_total_output: item.kwh_total_output,
-    // KVARH input
-    kvarh_r_input: item.kvarh_r_input,
-    kvarh_s_input: item.kvarh_s_input,
-    kvarh_t_input: item.kvarh_t_input,
-    kvarh_total_input: item.kvarh_total_input,
-    // KVARH output
-    kvarh_r_output: item.kvarh_r_output,
-    kvarh_s_output: item.kvarh_s_output,
-    kvarh_t_output: item.kvarh_t_output,
-    kvarh_total_output: item.kvarh_total_output,
-  }));
+
+  if (result.message === "Success") {
+    return result.energy["data"].map((item) => ({
+      time: new Date(item.send_date).toLocaleTimeString(),
+      // KWH input
+      kwh_r_input: item.kwh_r_input,
+      kwh_s_input: item.kwh_s_input,
+      kwh_t_input: item.kwh_t_input,
+      kwh_total_input: item.kwh_total_input,
+      // KWH output
+      kwh_r_output: item.kwh_r_output,
+      kwh_s_output: item.kwh_s_output,
+      kwh_t_output: item.kwh_t_output,
+      kwh_total_output: item.kwh_total_output,
+      // KVARH input
+      kvarh_r_input: item.kvarh_r_input,
+      kvarh_s_input: item.kvarh_s_input,
+      kvarh_t_input: item.kvarh_t_input,
+      kvarh_total_input: item.kvarh_total_input,
+      // KVARH output
+      kvarh_r_output: item.kvarh_r_output,
+      kvarh_s_output: item.kvarh_s_output,
+      kvarh_t_output: item.kvarh_t_output,
+      kvarh_total_output: item.kvarh_total_output,
+    }));
+  } else {
+    return null;
+    if (process.env.NODE_ENV === "development") {
+      console.log("Error in fetch KVARH Linear chart");
+    }
+  }
 };
 
-const EnergyKVARHLinearChart = ({ id, name, chartType }) => {
+const EnergyKVARHLinearChart = ({
+  id,
+  name,
+  chartType,
+  locationid,
+  tenant,
+  cookieToken,
+  cookieSalt,
+}) => {
   const [chartData, setChartData] = useState([]);
+
+  // TODO: Clear SWR Cache
+  const clearSWRCache = () =>
+    mutate(() => true, undefined, {
+      revalidate: false,
+      rollbackOnError: true,
+    });
 
   const {
     data: newData,
     isLoading,
     error,
-  } = useSWR("/api/monitoring/energy/getdata", fetcher, {
-    refreshInterval: 2000,
-    dedupingInterval: 500,
-    refreshWhenHidden: true,
-    refreshWhenOffline: false,
-    errorRetryInterval: 1000,
-    errorRetryCount: 10,
-    shouldRetryOnError: true,
-    keepPreviousData: true,
-  });
+  } = useSWR(
+    tenant && locationid && cookieSalt && cookieToken
+      ? [
+          "/api/monitoring/energy/getdata",
+          tenant,
+          locationid,
+          cookieToken,
+          cookieSalt,
+        ]
+      : null,
+    fetcher(url, localTenant, locationid, cookieToken, cookieSalt),
+    {
+      isPaused: () => !tenant && !locationid && !cookieToken && !cookieSalt,
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      keepPreviousData: true,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (
+          JSON.stringify(key) ===
+          JSON.stringify([
+            "/api/monitoring/energy/getdata",
+            tenant,
+            locationid,
+            cookieToken,
+            cookieSalt,
+          ])
+        )
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
 
   useEffect(() => {
     if (newData) {

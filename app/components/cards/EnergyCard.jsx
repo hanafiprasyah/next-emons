@@ -6,13 +6,13 @@ import dynamic from "next/dynamic";
 const EnergyKWHLinearChart = dynamic(
   () => import("@/components/charts/line/EnergyKWHLinearChart"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 const EnergyKVARHLinearChart = dynamic(
   () => import("@/components/charts/line/EnergyKVARHLinearChart"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 
@@ -26,6 +26,10 @@ const Default = ({
   valueT,
   valueTotal,
   isConnected,
+  cookieSalt,
+  cookieToken,
+  tenant,
+  locationid,
 }) => {
   return (
     <>
@@ -178,6 +182,10 @@ const Default = ({
                     id={id}
                     name={key}
                     chartType={id}
+                    cookieSalt={cookieSalt}
+                    cookieToken={cookieToken}
+                    locationid={locationid}
+                    tenant={tenant}
                   ></EnergyKWHLinearChart>
                 </div>
               ) : null
@@ -187,6 +195,10 @@ const Default = ({
                   id={id}
                   name={key}
                   chartType={id}
+                  cookieSalt={cookieSalt}
+                  cookieToken={cookieToken}
+                  locationid={locationid}
+                  tenant={tenant}
                 ></EnergyKVARHLinearChart>
               </div>
             ) : null}
