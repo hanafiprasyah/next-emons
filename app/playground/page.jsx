@@ -8,15 +8,12 @@ import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
 import ErrorImage from "../../public/images/error500.svg";
 import { useOnlineStatus } from "../lib/hook/connection-hook";
-
-const DynamicAlert = dynamic(() =>
-  import("@/components/alerts/SlowConnectionAlert")
-);
+import { useRouter } from "next/navigation";
 
 const RadialDynamicGauge = dynamic(
   () => import("@/components/charts/FrequencyRadialGauge"),
   {
-    ssr: true,
+    ssr: false,
   }
 );
 
@@ -31,6 +28,9 @@ export default function Frequency() {
   const isOnline = useOnlineStatus();
   const [responseTime, setResponseTime] = useState(null);
   const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
+  // Handle router
+  const router = useRouter();
 
   // Dates
   const [selectedDateExport, setSelectedDateExport] = useState({
@@ -71,12 +71,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -91,21 +88,26 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.site;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchSiteRealtime: ", err);
+        console.error("Error catch in fetchSiteRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -122,12 +124,9 @@ export default function Frequency() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -142,21 +141,26 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.loc;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchDeviceRealtime: ", err);
+        console.error("Error in fetchDeviceRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -170,20 +174,22 @@ export default function Frequency() {
   ) => {
     // main point to track unstable network
     const startTime = performance.now();
-    console.warn("Started to run fetchAlarmData");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Started to run fetchAlarmData");
+    }
 
     try {
-      console.warn("Trying..");
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Trying..");
+      }
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           tenant: tenant,
@@ -198,24 +204,34 @@ export default function Frequency() {
       });
 
       if (!response.ok) {
-        console.error("Data is not OK!");
+        if (process.env.NODE_ENV === "development") {
+          console.error("Data is not OK!");
+        }
+
         throw new Error(
           `HTTP error on fetchAlarmData! Status: ${response.statusText}`
         );
       }
 
       const data = await response.json();
-      console.log("Raw data: ", data);
-      console.log("Data length is", data.data.length);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Raw data: ", data);
+        console.log("Data length is", data.data.length);
+      }
 
       // Check response message
       if (data) {
-        console.log("Data is OK to serve!");
+        if (process.env.NODE_ENV === "development") {
+          console.log("Data is OK to serve!");
+        }
 
         const endTime = performance.now();
         setResponseTime(startTime - endTime);
 
-        console.log("data after filtering: ", data.data);
+        if (process.env.NODE_ENV === "development") {
+          console.log("data after filtering: ", data.data);
+        }
+
         return data;
       }
       // If response message is not OK
@@ -234,6 +250,30 @@ export default function Frequency() {
     }
   };
 
+  // TODO: Function to fetch the cookie [REALTIME]
+  const fetchCookieRealtime = async (url) => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch cookies");
+      } else {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error in fetchCookieRealtime: ", err);
+      }
+      throw new Error("Internal Server Error. Please try again!");
+    }
+  };
+
   // TODO: Clear SWR Cache
   const clearSWRCache = () =>
     mutate(() => true, undefined, {
@@ -241,9 +281,34 @@ export default function Frequency() {
       rollbackOnError: true,
     });
 
+  // TODO: to get cookies realtime
+  const { data: cookieData, error: cookieError } = useSWR(
+    ["/api/tools/cookie/get"],
+    ([url]) => fetchCookieRealtime(url),
+    {
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (JSON.stringify(key) === JSON.stringify(["/api/tools/cookie/get"]))
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    localTenant && cookieData?.hasCookie
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -254,13 +319,13 @@ export default function Frequency() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !isOnline && !localTenant,
-      isOnline: () => isOnline,
-      refreshInterval: 100,
+      isPaused: () => !localTenant && !cookieData?.hasCookie,
+      isOnline: () => isOnline && !isConnectionUnstable,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -295,7 +360,7 @@ export default function Frequency() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    localTenant && selectedLocation.code && cookieData?.hasCookie
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -308,13 +373,13 @@ export default function Frequency() {
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
       isPaused: () =>
-        !isOnline && (!localTenant || !selectedLocation.code ? true : false),
-      isOnline: () => isOnline,
-      refreshInterval: 100,
+        !localTenant && !selectedLocation.code && !cookieData?.hasCookie,
+      isOnline: () => isOnline && !isConnectionUnstable,
+      refreshInterval: 60000,
       revalidateOnMount: true,
       revalidateOnReconnect: true,
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onLoadingSlow: () => {
         setSlowLoad(true);
       },
@@ -354,7 +419,7 @@ export default function Frequency() {
     isLoading: alarmLoading,
     error: alarmError,
   } = useSWR(
-    selectedDevice.code
+    selectedDevice.code && cookieData?.hasCookie
       ? [
           `/api/table/alarm/getdata?page=${page}&limit=${limit}`,
           localTenant,
@@ -367,12 +432,10 @@ export default function Frequency() {
       fetchAlarmData(url, tenant, locationid, start_date, end_date),
     {
       isPaused: () =>
-        !isOnline &&
-        (selectedLocation.code === null ||
-          selectedDevice.code === null ||
-          !localTenant)
-          ? true
-          : false,
+        !localTenant &&
+        selectedLocation.code === null &&
+        selectedDevice.code === null &&
+        !cookieData?.hasCookie,
       isOnline: () => isOnline,
       refreshInterval: 60000, //refresh every 1 minute
       keepPreviousData: true,
@@ -392,11 +455,22 @@ export default function Frequency() {
       // set local tenant state to null
       setLocalTenant("");
       return;
+    } else {
+      // save local tenant value to state
+      setLocalTenant(currentUser.toString());
     }
 
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
+    return () => {
+      setLocalTenant("");
+    };
   }, []);
+
+  // TODO: Redirect to login page when cookies are invalid or there's an error
+  useEffect(() => {
+    if (cookieData && !cookieData.hasCookie) {
+      router.refresh();
+    }
+  }, [cookieData, router]);
 
   // TODO: Set defaults site when data is available
   useEffect(() => {
@@ -554,7 +628,7 @@ export default function Frequency() {
                 }`
               : "Error while fetch data"}
           </span>
-          <span className="py-2 text-sm">
+          {/* <span className="py-2 text-sm">
             &nbsp;Location list:{" "}
             <li>
               &nbsp;
@@ -568,15 +642,21 @@ export default function Frequency() {
                     )
                     .map((item, index) => (
                       <>
-                        <ul>Index: {index}</ul>
-                        <ul>Location Code: {item.code}</ul>
-                        <ul>Location Name: {item.name}</ul>
+                        <div key={`${item}-${index}`}>
+                          <ul key={`${item}-${index}`}>Index: {index}</ul>
+                          <ul key={`${item}-${index}`}>
+                            Location Code: {item.code}
+                          </ul>
+                          <ul key={`${item}-${index}`}>
+                            Location Name: {item.name}
+                          </ul>
+                        </div>
                       </>
                     ))
                 : null}
             </li>
-          </span>
-          <span className="py-2 text-sm">
+          </span> */}
+          {/* <span className="py-2 text-sm">
             &nbsp;Selected device list based on <strong>location list</strong>:{" "}
             <li>
               &nbsp;
@@ -590,14 +670,20 @@ export default function Frequency() {
                     )
                     .map((item, index) => (
                       <>
-                        <ul>Index: {index}</ul>
-                        <ul>Device Code: {item.code}</ul>
-                        <ul>Device Name: {item.name}</ul>
+                        <div key={`${item}-${index}`}>
+                          <ul key={`${item}-${index}`}>Index: {index}</ul>
+                          <ul key={`${item}-${index}`}>
+                            Device Code: {item.code}
+                          </ul>
+                          <ul key={`${item}-${index}`}>
+                            Device Name: {item.name}
+                          </ul>
+                        </div>
                       </>
                     ))
                 : null}
             </li>
-          </span>
+          </span> */}
           {/* <span className="py-2 text-sm">
             &nbsp;So here are the datas that you need to see!{" "}
             <strong>Alarm datas</strong>:{" "}
