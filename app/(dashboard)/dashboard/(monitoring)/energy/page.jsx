@@ -8,6 +8,7 @@ import PrelineScript from "@/components/PrelineScript";
 import dynamic from "next/dynamic";
 import ErrorImage from "../../../../../public/images/error500.svg";
 import { useOnlineStatus } from "../../../../lib/hook/connection-hook";
+import { useRouter } from "next/navigation";
 import LostConnectionAlert from "@/components/alerts/OfflineAlert";
 import SlowConnectionAlert from "@/components/alerts/SlowConnectionAlert";
 
@@ -29,6 +30,9 @@ export default function Energy() {
   const isOnline = useOnlineStatus();
   const [responseTime, setResponseTime] = useState(null);
   const [isConnectionUnstable, setIsConnectionUnstable] = useState(false);
+
+  // Handle router
+  const router = useRouter();
 
   // Dates
   const [hoursAgo, setHoursAgo] = useState("");
@@ -137,12 +141,9 @@ export default function Energy() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -157,21 +158,26 @@ export default function Energy() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchSiteRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.site;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchSiteRealtime: ", err);
+        console.error("Error catch in fetchSiteRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -188,12 +194,9 @@ export default function Energy() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           locationid: 0,
@@ -208,21 +211,26 @@ export default function Energy() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchDeviceRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
-      if (data.message === "OK") {
+      if (data.message === "Failed to connect") {
+        return null;
+      } else if (
+        data.message == "Internal Server Error" ||
+        data.message == "Fail"
+      ) {
+        return null;
+      } else {
         return data.loc;
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
-        console.log("Error in fetchDeviceRealtime: ", err);
+        console.error("Error in fetchDeviceRealtime: ", err);
       }
-      throw err;
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -236,12 +244,9 @@ export default function Energy() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: tenant,
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
           tenant: tenant,
@@ -256,15 +261,13 @@ export default function Energy() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP error on fetchEnergyRealtime! Status: ${response.statusText}`
-        );
+        throw new Error("Failed to fetch");
       }
 
       const data = await response.json();
 
       // Check response message
-      if (data.message === "OK") {
+      if (data.message === "Success") {
         setSignal(true);
 
         // Check if device list is not null
@@ -355,7 +358,31 @@ export default function Energy() {
       if (process.env.NODE_ENV === "development") {
         console.log("Error in fetchEnergyRealtime: ", err);
       }
-      throw err;
+      throw new Error("Error fetching monitoring data");
+    }
+  };
+
+  // TODO: Function to fetch the cookie [REALTIME]
+  const fetchCookieRealtime = async (url) => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch cookies");
+      } else {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error in fetchCookieRealtime: ", err);
+      }
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -366,9 +393,34 @@ export default function Energy() {
       rollbackOnError: true,
     });
 
+  // TODO: to get cookies realtime
+  const { data: cookieData, error: cookieError } = useSWR(
+    ["/api/tools/cookie/get"],
+    ([url]) => fetchCookieRealtime(url),
+    {
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (JSON.stringify(key) === JSON.stringify(["/api/tools/cookie/get"]))
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
   // TODO: to get site realtime
   const { data: locationsData, error: locationsError } = useSWR(
-    localTenant
+    localTenant && cookieData?.hasCookie
       ? [
           "/api/tools/site/getsite",
           localTenant,
@@ -379,7 +431,7 @@ export default function Energy() {
     ([url, tenant, start_date, end_date]) =>
       fetchSiteRealtime(url, tenant, start_date, end_date),
     {
-      isPaused: () => !localTenant,
+      isPaused: () => !localTenant && !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -420,7 +472,7 @@ export default function Energy() {
 
   // TODO: to get device realtime
   const { data: devicesData, error: devicesError } = useSWR(
-    localTenant && selectedLocation.code
+    localTenant && selectedLocation.code && cookieData?.hasCookie
       ? [
           "/api/tools/location/getlocation",
           localTenant,
@@ -432,7 +484,8 @@ export default function Energy() {
     ([url, tenant, side, start_date, end_date]) =>
       fetchDeviceRealtime(url, tenant, side, start_date, end_date),
     {
-      isPaused: () => !localTenant && !selectedLocation.code,
+      isPaused: () =>
+        !localTenant && !selectedLocation.code && !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 60000,
       revalidateOnMount: true,
@@ -478,7 +531,7 @@ export default function Energy() {
     isLoading: energyLoading,
     error: energyError,
   } = useSWR(
-    localTenant && selectedDevice.code && hoursAgo
+    localTenant && selectedDevice.code && hoursAgo && cookieData?.hasCookie
       ? [
           "/api/monitoring/getmonitoring",
           localTenant,
@@ -489,7 +542,11 @@ export default function Energy() {
     ([url, localTenant, locationid, start_date]) =>
       fetchEnergyRealtime(url, localTenant, locationid, start_date),
     {
-      isPaused: () => !localTenant && !selectedDevice.code && !hoursAgo,
+      isPaused: () =>
+        !localTenant &&
+        !selectedDevice.code &&
+        !hoursAgo &&
+        !cookieData?.hasCookie,
       isOnline: () => isOnline && !isConnectionUnstable,
       refreshInterval: 3000,
       revalidateOnMount: true,
@@ -537,15 +594,22 @@ export default function Energy() {
       // set local tenant state to null
       setLocalTenant("");
       return;
+    } else {
+      // save local tenant value to state
+      setLocalTenant(currentUser.toString());
     }
-
-    // save local tenant value to state
-    setLocalTenant(currentUser.toString());
 
     return () => {
       setLocalTenant("");
     };
   }, []);
+
+  // TODO: Redirect to login page when cookies are invalid or there's an error
+  useEffect(() => {
+    if (cookieData && !cookieData.hasCookie) {
+      router.refresh();
+    }
+  }, [cookieData, router]);
 
   // TODO: Get current datetime, this will be mounted at the first time
   useEffect(() => {
