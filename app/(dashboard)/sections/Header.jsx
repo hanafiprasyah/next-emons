@@ -6,7 +6,7 @@ import Image from "next/image";
 import MonitoringPicture from "../../../public/images/user-profile.png";
 import AccountDropdown from "@/components/AccountDropdown";
 import NotificationDropdown from "@/components/NotificationDropdown";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function DashboardHeader() {
   const getTitle = (pathname) => {
@@ -47,23 +47,40 @@ export default function DashboardHeader() {
 
   // State to control notification
   const [notifications, setNotifications] = useState([]);
+  const [localTenant, setLocalTenant] = useState("");
 
-  // Fetch function to call the API with the payload
+  // TODO: Get local tenant item
+  useEffect(() => {
+    const currentUser = localStorage.getItem("tenant");
+
+    // If tenant local storage is undefined or null
+    if (!currentUser) {
+      // set local tenant state to null
+      setLocalTenant("");
+      return;
+    } else {
+      // save local tenant value to state
+      setLocalTenant(currentUser.toString());
+    }
+
+    return () => {
+      setLocalTenant("");
+    };
+  }, []);
+
+  // TODO: Function to fetch the API [REALTIME]
   const fetchDeviceData = async (locationid) => {
     try {
       const response = await fetch("/api/monitoring/getmonitoring", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": `${process.env.BASE_URL}/`,
-          "Access-Control-Allow-Methods": "POST",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Accept, Origin, X-Requested-With",
-          tenant: "alif",
-          token: process.env.AUTH_TOKEN,
+          tenant: localTenant,
+          Authorize: cookieData?.salt,
+          token: cookieData?.token,
         },
         body: JSON.stringify({
-          tenant: "alif",
+          tenant: localTenant,
           locationid: locationid,
           lane: "",
           status: "",
@@ -78,10 +95,34 @@ export default function DashboardHeader() {
 
       return response.json();
     } catch (err) {
-      throw new Error("Interval server error", err);
       if (process.env.NODE_ENV === "development") {
         console.log("Error to try fetchDeviceData to get alarm value: ", err);
       }
+      throw new Error("Interval server error");
+    }
+  };
+
+  // TODO: Function to fetch the cookie [REALTIME]
+  const fetchCookieRealtime = async (url) => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch cookies");
+      } else {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error in fetchCookieRealtime: ", err);
+      }
+      throw new Error("Internal Server Error. Please try again!");
     }
   };
 
@@ -95,15 +136,45 @@ export default function DashboardHeader() {
       rollbackOnError: true,
     });
 
-  // Use SWR to fetch all device data in parallel
-  const { data, error } = useSWR(
-    "multiple-devices", // Unique key for the SWR fetch
-    () => Promise.all(deviceCodes.map((code) => fetchDeviceData(code))), // Parallel fetches with payloads
+  // TODO: to get cookies realtime
+  const { data: cookieData, error: cookieError } = useSWR(
+    ["/api/tools/cookie/get"],
+    ([url]) => fetchCookieRealtime(url),
     {
-      isPaused: () => (deviceCodes.length === 0 ? true : false),
+      refreshInterval: 3000,
+      revalidateOnMount: true,
+      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      loadingTimeout: 10000,
+      onError: (err) => clearSWRCache(),
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        // TODO: Never retry on 404
+        if (error.status === 404) return;
+        // TODO: Disable retry for spesific key
+        if (JSON.stringify(key) === JSON.stringify(["/api/tools/cookie/get"]))
+          return;
+        // TODO: Only 10 times retry
+        if (retryCount > 10) return;
+        // TODO: Retry interval
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
+    }
+  );
+
+  // TODO: fetch all device data in parallel
+  const { data, error } = useSWR(
+    localTenant && cookieData?.hasCookie
+      ? [
+          "multiple-devices",
+          () => Promise.all(deviceCodes.map((code) => fetchDeviceData(code))),
+        ]
+      : null,
+    {
+      isPaused: () =>
+        !localTenant && !deviceCodes.length && !cookieData?.hasCookie,
       refreshInterval: 3000, // Poll every 10 seconds for updates
       revalidateOnFocus: false,
-      loadingTimeout: 6000,
+      loadingTimeout: 10000,
       onError: (err) => clearSWRCache(),
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
         // TODO: Never retry on 404
