@@ -363,11 +363,17 @@ function LoginForm() {
 
     // Determine if the user is logged in and if tenant info is available
     const isAuthenticated =
-      isLoggedIn && storedUsernameOnLocal && storedTenantOnLocal;
+      isLoggedIn &&
+      storedUsernameOnLocal &&
+      storedTenantOnLocal &&
+      storedSessionAuthStatus;
 
     // Determine if the user is not logged in yet but the localStorage is not empty
     const dizzyAuthenticated =
-      !isLoggedIn && storedUsernameOnLocal && storedTenantOnLocal;
+      !isLoggedIn &&
+      storedUsernameOnLocal &&
+      storedTenantOnLocal &&
+      storedSessionAuthStatus;
 
     const userDirectCloseBrowser =
       (!isLoggedIn || isLoggedIn) && !storedSessionAuthStatus;
