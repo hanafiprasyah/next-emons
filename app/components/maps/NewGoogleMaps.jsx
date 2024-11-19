@@ -69,56 +69,58 @@ const Default = ({
   }
 
   return (
-    <APIProvider
-      version="weekly"
-      authReferrerPolicy="origin"
-      region="ID"
-      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-      onLoad={() =>
-        !mapData || (!selectedDevice.lat && !selectedDevice.lot)
-          ? setIsMapLoading(true)
-          : setIsMapLoading(false)
-      }
-    >
-      <Map
-        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
-        renderingType="RASTER"
-        // -0.6470361141413117, 115.40106170003429 => Center of Indonesia's Map
-        defaultCenter={{
-          lat: !selectedDevice?.lat
-            ? -0.6470361141413117
-            : parseFloat(selectedDevice?.lat),
-          lng: !selectedDevice?.lot
-            ? 115.40106170003429
-            : parseFloat(selectedDevice?.lot),
-        }}
-        defaultZoom={mapData?.loc["data"].length > 1 ? 13.2 : 21.2}
-        disableDefaultUI={true}
-        clickableIcons={true}
-        zoomControl={true}
-        fullscreenControl={true}
-        className="w-full h-[calc(100dvh-168px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
+    <div className="animate-fade-in">
+      <APIProvider
+        version="weekly"
+        authReferrerPolicy="origin"
+        region="ID"
+        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        onLoad={() =>
+          !mapData || (!selectedDevice.lat && !selectedDevice.lot)
+            ? setIsMapLoading(true)
+            : setIsMapLoading(false)
+        }
       >
-        {mapData
-          ? mapData?.loc["data"].map((location, index) =>
-              location.parent != 0 ? (
-                <DynamicMarkerWithInfo
-                  key={`${location.code}-${index}`}
-                  locationid={location.code}
-                  tenantRef={tenantRef}
-                  signal={deviceStatus}
-                  lat={parseFloat(location.lat)}
-                  lot={parseFloat(location.lot)}
-                  markerLabel={location.name}
-                  title={location.name}
-                  tokenCookie={tokenCookie}
-                  saltCookie={saltCookie}
-                />
-              ) : null
-            )
-          : null}
-      </Map>
-    </APIProvider>
+        <Map
+          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
+          renderingType="RASTER"
+          // -0.6470361141413117, 115.40106170003429 => Center of Indonesia's Map
+          defaultCenter={{
+            lat: !selectedDevice?.lat
+              ? -0.6470361141413117
+              : parseFloat(selectedDevice?.lat),
+            lng: !selectedDevice?.lot
+              ? 115.40106170003429
+              : parseFloat(selectedDevice?.lot),
+          }}
+          defaultZoom={mapData?.loc["data"].length > 1 ? 13.2 : 21.2}
+          disableDefaultUI={true}
+          clickableIcons={true}
+          zoomControl={true}
+          fullscreenControl={true}
+          className="w-full h-[calc(100dvh-168px)] overflow-hidden rounded-md shadow-md md:shadow-lg lg:rounded-lg"
+        >
+          {mapData
+            ? mapData?.loc["data"].map((location, index) =>
+                location.parent != 0 ? (
+                  <DynamicMarkerWithInfo
+                    key={`${location.code}-${index}`}
+                    locationid={location.code}
+                    tenantRef={tenantRef}
+                    signal={deviceStatus}
+                    lat={parseFloat(location.lat)}
+                    lot={parseFloat(location.lot)}
+                    markerLabel={location.name}
+                    title={location.name}
+                    tokenCookie={tokenCookie}
+                    saltCookie={saltCookie}
+                  />
+                ) : null
+              )
+            : null}
+        </Map>
+      </APIProvider>
+    </div>
   );
 };
 

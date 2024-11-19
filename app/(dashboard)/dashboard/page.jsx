@@ -265,7 +265,7 @@ export default function DashboardMaps() {
         <SlowConnectionAlert unstable={isConnectionUnstable} />
         {/* Maps */}
         <section id="map-layout">
-          <div className="bg-white border shadow-sm border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700 animate-fade-in">
+          <div className="bg-white border shadow-sm border-stone-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
             {/* Body */}
             <div className="grid grid-cols-8 divide-stone-200 dark:divide-neutral-600">
               {/* Header of Body */}
