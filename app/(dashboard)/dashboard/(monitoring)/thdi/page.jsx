@@ -592,8 +592,14 @@ export default function Thdi() {
   }, []);
 
   // TODO: Redirect to login page when cookies are invalid or there's an error
+  function isAuthenticated(cookieData) {
+    const storedSessionAuthStatus = sessionStorage.getItem("auth-user");
+    return cookieData?.hasCookie && storedSessionAuthStatus;
+  }
   useEffect(() => {
-    if (cookieData && !cookieData.hasCookie) {
+    // If cookies are invalid and no session status is stored, redirect to login
+    if (!isAuthenticated(cookieData)) {
+      // Redirect to login page
       router.refresh();
     }
   }, [cookieData, router]);
