@@ -79,6 +79,7 @@ export default function DashboardHeader() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           tenant: localTenant,
           locationid: locationid,

@@ -18,9 +18,11 @@ const fetcher = async (url) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      tenant: "alif",
-      token: process.env.AUTH_TOKEN,
+      tenant: localTenant,
+      Authorize: cookieSalt,
+      token: cookieToken,
     },
+    credentials: "include",
     body: JSON.stringify({
       locationid: 106,
       lane: "",

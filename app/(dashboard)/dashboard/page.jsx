@@ -50,6 +50,7 @@ export default function DashboardMaps() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           tenant: tenant,
           locationid: 0,

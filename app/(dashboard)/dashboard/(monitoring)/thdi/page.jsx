@@ -135,6 +135,7 @@ export default function Thdi() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           locationid: 0,
           lane: "",
@@ -188,6 +189,7 @@ export default function Thdi() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           locationid: 0,
           lane: "",
@@ -238,6 +240,7 @@ export default function Thdi() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           tenant: tenant,
           locationid: locationid,

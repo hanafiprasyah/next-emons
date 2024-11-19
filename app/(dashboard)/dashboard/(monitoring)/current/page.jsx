@@ -193,6 +193,7 @@ export default function Current() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           locationid: 0,
           lane: "",
@@ -246,6 +247,7 @@ export default function Current() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           locationid: 0,
           lane: "",
@@ -296,6 +298,7 @@ export default function Current() {
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           tenant: tenant,
           locationid: locationid,

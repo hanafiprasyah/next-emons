@@ -30,6 +30,7 @@ const fetcher = async (
       Authorize: cookieSalt,
       token: cookieToken,
     },
+    credentials: "include",
     body: JSON.stringify({
       locationid: locationid,
       lane: "",

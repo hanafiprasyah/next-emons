@@ -76,6 +76,7 @@ const Marker = ({
           Authorize: cookieData?.salt,
           token: cookieData?.token,
         },
+        credentials: "include",
         body: JSON.stringify({
           locationid: locationid,
           lane: "",
@@ -123,6 +124,7 @@ const Marker = ({
           Authorize: saltCookie,
           token: tokenCookie,
         },
+        credentials: "include",
         body: JSON.stringify({
           tenant: tenantRef,
           locationid: locationid,
