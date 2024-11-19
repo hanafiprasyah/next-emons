@@ -5,21 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PrelineScript from "@/components/PrelineScript";
 
-// TODO: To check username if contains uppercase or not
-function containsUppercase(input) {
-  return /[A-Z]/.test(input);
-}
-
-// TODO: Substring the string "after and before" char(/) to separate the value of tenant and username
-function substringUsername(input) {
-  return {
-    username: input.split("/").slice(1).join("/"),
-    tenant: containsUppercase(input.substring(0, input.indexOf("/")))
-      ? input.substring(0, input.indexOf("/")).toLowerCase()
-      : input.substring(0, input.indexOf("/")),
-  };
-}
-
 function LoginForm() {
   const [mobileStyle, setMobileStyle] = useState({});
   const [username, setUsername] = useState("");
@@ -30,6 +15,22 @@ function LoginForm() {
   const [errorTitle, setErrorTitle] = useState(null);
   const router = useRouter();
 
+  // TODO: To check username if contains uppercase or not
+  function containsUppercase(input) {
+    return /[A-Z]/.test(input);
+  }
+
+  // TODO: Substring the string "after and before" char(/) to separate the value of tenant and username
+  function substringUsername(input) {
+    return {
+      username: input.split("/").slice(1).join("/"),
+      tenant: containsUppercase(input.substring(0, input.indexOf("/")))
+        ? input.substring(0, input.indexOf("/")).toLowerCase()
+        : input.substring(0, input.indexOf("/")),
+    };
+  }
+
+  // TODO: Handle login process
   function handleSubmit(e) {
     e.preventDefault();
     // Set to default for all state on first execution
@@ -90,6 +91,7 @@ function LoginForm() {
             headers: {
               tenant: pureTenant,
             },
+            credentials: "include",
             method: "GET",
           });
 
@@ -97,6 +99,7 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while feeding the salt");
+          throw new Error("Internal server error");
           setError("500 code. Internal server error!");
           setError("Connection interrupted");
           setLoading(false);
@@ -110,6 +113,7 @@ function LoginForm() {
             headers: {
               tenant: pureTenant,
             },
+            credentials: "include",
             method: "GET",
           });
 
@@ -117,6 +121,7 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while encrypt the password");
+          throw new Error("Internal server error");
           setError("500 code. Internal server error! (2)");
           setErrorTitle("Connection interrupted");
           setLoading(false);
@@ -128,6 +133,7 @@ function LoginForm() {
         try {
           const response = await fetch("/api/login3/login", {
             method: "POST",
+            credentials: "include",
             body: JSON.stringify({
               tenant: tenant,
               userName: userName,
@@ -140,6 +146,7 @@ function LoginForm() {
         } catch (err) {
           process.env.NODE_ENV === "development" ??
             console.error("Something happened while logging in user");
+          throw new Error("Internal server error");
           setError("500 code. Internal server error! (3)");
           setErrorTitle("Connection interrupted");
           setLoading(false);
@@ -162,6 +169,7 @@ function LoginForm() {
             if (process.env.NODE_ENV === "development") {
               console.warn("Check the salt process on server actions!");
             }
+            throw new Error("Failed to logged in. Please try again!");
 
             return {
               salt: null,
@@ -206,6 +214,7 @@ function LoginForm() {
                     "Check the encrypted password process on server actions!"
                   );
                 }
+                throw new Error("Failed to logged in. Please try again!");
 
                 return {
                   password: null,
@@ -255,6 +264,7 @@ function LoginForm() {
                       "Check the final login process on server actions!"
                     );
                   }
+                  throw new Error("Failed to logged in. Please try again!");
                 } else if (dataLoggedIn.message == "Error setting cookie") {
                   setLoggedIn(false);
                   setLoading(false);
@@ -265,6 +275,7 @@ function LoginForm() {
                       "Check the final login process on server actions! Cache is unset!"
                     );
                   }
+                  throw new Error("Connection interrupted. Please try again!");
                 } else if (dataLoggedIn.message == "Internal server error") {
                   setLoggedIn(false);
                   setLoading(false);
@@ -277,6 +288,7 @@ function LoginForm() {
                       "Check the final login process on server actions! Try catch on fetching process is failed!"
                     );
                   }
+                  throw new Error("Server not response. Please try again!");
                 } else {
                   if (process.env.NODE_ENV === "development") {
                     console.warn(
@@ -298,6 +310,8 @@ function LoginForm() {
                     localStorage.setItem("userName", `${decrpytUsername}`);
                     // Set the tenant to localstorage
                     localStorage.setItem("tenant", `${pureTenant}`);
+                    // Set the login key to sessionStorage
+                    sessionStorage.setItem("auth-user", true);
                     // Set the boolean key to session storage
                     // sessionStorage.setItem("auth_status", true);
                     // Redirect to dashboard after successful login
@@ -306,6 +320,7 @@ function LoginForm() {
                     setLoggedIn(false);
                     setLoading(false);
                     setError("Please check your data again.");
+                    throw new Error("Failed to logged in. Please try again!");
                   }
                 }
               });
@@ -339,7 +354,7 @@ function LoginForm() {
     // Check if user and tenant details are stored
     const storedUsernameOnLocal = localStorage.getItem("userName");
     const storedTenantOnLocal = localStorage.getItem("tenant");
-    // const storedSessionAuthStatus = sessionStorage.getItem("auth_status");
+    const storedSessionAuthStatus = sessionStorage.getItem("auth-user");
 
     const clearSensitiveDatas = async () => {
       await localStorage.clear();
@@ -352,7 +367,10 @@ function LoginForm() {
 
     // Determine if the user is not logged in yet but the localStorage is not empty
     const dizzyAuthenticated =
-      storedUsernameOnLocal && storedTenantOnLocal && !isLoggedIn;
+      !isLoggedIn && storedUsernameOnLocal && storedTenantOnLocal;
+
+    const userDirectCloseBrowser =
+      (!isLoggedIn || isLoggedIn) && !storedSessionAuthStatus;
 
     if (isAuthenticated) {
       setLoading(false);
@@ -373,6 +391,15 @@ function LoginForm() {
       clearSensitiveDatas().then(() => {
         setError("Revalidate your credentials to continue!");
         setErrorTitle("Token mismatch");
+      });
+    } else if (userDirectCloseBrowser) {
+      setLoading(false);
+      setLoggedIn(false);
+      setUsername("");
+      setPassword("");
+      clearSensitiveDatas().then(() => {
+        setError("Revalidate your credentials to continue!");
+        setErrorTitle("Session disconnected");
       });
     } else {
       clearSensitiveDatas();

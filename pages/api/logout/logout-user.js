@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
-  const siteType = process.env.NODE_ENV === "production" ? "Strict" : "Lax";
+  const siteType = process.env.NODE_ENV === "production" ? "None" : "Lax";
 
   try {
     res.setHeader("Set-Cookie", [

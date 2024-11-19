@@ -10,7 +10,7 @@ async function handler(req, res) {
   }
 
   const secureFlag = process.env.NODE_ENV === "production" ? "Secure" : "";
-  const siteType = process.env.NODE_ENV === "production" ? "Strict" : "Lax";
+  const siteType = process.env.NODE_ENV === "production" ? "None" : "Lax";
 
   const { tenant, userName, password, salt } = JSON.parse(req.body);
 
@@ -20,9 +20,15 @@ async function handler(req, res) {
       {
         method: "POST",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Authorize, tenant, token",
           "Cache-Control":
-            "s-maxage=10, max-age=0, no-store, no-cache, must-revalidate",
+            "public, s-maxage=10, max-age=0, no-store, no-cache, must-revalidate",
           tenant: tenant,
           Authorize: process.env.AUTH_CODE,
           token: process.env.AUTH_TOKEN,
@@ -49,8 +55,8 @@ async function handler(req, res) {
     if (data) {
       try {
         await res.setHeader("Set-Cookie", [
-          `enc-header-token=${data.tokenheader}; HttpOnly; ${secureFlag}; SameSite=${siteType}; Path=/; Max-Age=3600`,
-          `enc-header-salt=${data.saltheader}; HttpOnly; ${secureFlag}; SameSite=${siteType}; Path=/; Max-Age=3600`,
+          `enc-header-token=${data.tokenheader}; HttpOnly; ${secureFlag}; SameSite=${siteType}; Path=/; Max-Age=86400`,
+          `enc-header-salt=${data.saltheader}; HttpOnly; ${secureFlag}; SameSite=${siteType}; Path=/; Max-Age=86400`,
         ]);
         res.status(response.status).json({
           message: "Login successfully",

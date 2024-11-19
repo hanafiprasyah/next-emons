@@ -13,7 +13,15 @@ export default async function handler(req, res) {
       {
         method: "GET",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "GET",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Authorize, tenant, token",
+          "Cache-Control":
+            "s-maxage=10, max-age=0, no-store, no-cache, must-revalidate",
           tenant: tenant,
           Authorize: process.env.AUTH_CODE,
           token: process.env.AUTH_TOKEN,
