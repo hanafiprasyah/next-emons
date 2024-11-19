@@ -34,7 +34,13 @@ export default async function handler(req, res) {
       {
         method: "POST",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "POST",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Accept, Authorize, tenant, token",
           tenant: tenant,
           token: currentToken,
           Authorize: currentSalt,
