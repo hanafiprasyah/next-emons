@@ -371,12 +371,11 @@ function LoginForm() {
     // Determine if the user is not logged in yet but the localStorage is not empty
     const dizzyAuthenticated =
       !isLoggedIn &&
+      !storedSessionAuthStatus &&
       storedUsernameOnLocal &&
-      storedTenantOnLocal &&
-      storedSessionAuthStatus;
-
-    const userDirectCloseBrowser =
-      (!isLoggedIn || isLoggedIn) && !storedSessionAuthStatus;
+      storedTenantOnLocal;
+    // const userDirectCloseBrowser =
+    //   (!isLoggedIn || isLoggedIn) && !storedSessionAuthStatus;
 
     if (isAuthenticated) {
       setLoading(false);
@@ -396,18 +395,20 @@ function LoginForm() {
       setPassword("");
       clearSensitiveDatas().then(() => {
         setError("Revalidate your credentials to continue!");
-        setErrorTitle("Token mismatch");
+        setErrorTitle("Session closed");
       });
-    } else if (userDirectCloseBrowser) {
-      setLoading(false);
-      setLoggedIn(false);
-      setUsername("");
-      setPassword("");
-      clearSensitiveDatas().then(() => {
-        setError("Revalidate your credentials to continue!");
-        setErrorTitle("Session disconnected");
-      });
-    } else {
+    }
+    // else if (userDirectCloseBrowser) {
+    //   setLoading(false);
+    //   setLoggedIn(false);
+    //   setUsername("");
+    //   setPassword("");
+    //   clearSensitiveDatas().then(() => {
+    //     setError("Revalidate your credentials to continue!");
+    //     setErrorTitle("Session disconnected");
+    //   });
+    // }
+    else {
       clearSensitiveDatas();
       setLoading(false);
       setLoggedIn(false);
