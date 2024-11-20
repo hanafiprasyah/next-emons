@@ -113,7 +113,8 @@ const EnergyKVARHLinearChart = ({
           cookieSalt,
         ]
       : null,
-    fetcher(url, localTenant, locationid, cookieToken, cookieSalt),
+    ([url, localTenant, locationid, cookieToken, cookieSalt]) =>
+      fetcher(url, localTenant, locationid, cookieToken, cookieSalt),
     {
       isPaused: () => !tenant && !locationid && !cookieToken && !cookieSalt,
       refreshInterval: 3000,
