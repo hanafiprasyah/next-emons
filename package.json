@@ -10,30 +10,30 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
-    "@preline/collapse": "^2.4.1",
-    "@preline/dropdown": "^2.4.1",
-    "@preline/overlay": "^2.4.1",
-    "@preline/scrollspy": "^2.4.1",
-    "@preline/select": "^2.4.1",
-    "@syncfusion/ej2-react-base": "^26.2.10",
-    "@syncfusion/ej2-react-charts": "^26.2.12",
-    "@syncfusion/ej2-react-circulargauge": "^26.2.10",
-    "@vis.gl/react-google-maps": "^1.1.1",
-    "contentful": "^10.15.0",
+    "@preline/collapse": "^2.5.2",
+    "@preline/dropdown": "^2.5.2",
+    "@preline/overlay": "^2.5.2",
+    "@preline/scrollspy": "^2.5.2",
+    "@preline/select": "^2.5.2",
+    "@syncfusion/ej2-react-base": "^28.1.38",
+    "@syncfusion/ej2-react-charts": "^28.1.38",
+    "@syncfusion/ej2-react-circulargauge": "^28.1.33",
+    "@vis.gl/react-google-maps": "^1.4.3",
+    "contentful": "^10.15.1",
     "next": "^14.2.8",
-    "preline": "^2.4.1",
+    "preline": "^2.7.0",
     "react": "^18",
     "react-dom": "^18",
     "sharp": "^0.33.5",
-    "swr": "^2.2.5"
+    "swr": "^2.3.0"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
-    "@types/node": "^20.14.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "@types/node": "^20.17.12",
     "@types/react": "18.3.3",
-    "eslint": "^8",
+    "eslint": "^8.57.1",
     "eslint-config-next": "14.2.4",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.4"
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
   }
 }
