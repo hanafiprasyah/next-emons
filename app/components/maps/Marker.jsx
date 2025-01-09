@@ -66,15 +66,15 @@ const Marker = ({
   );
 
   // TODO: Function to fetch the /tool/dataside API
-  const fetchSite = async (tenantRef, locationid) => {
+  const fetchSite = async (tenantRef, locationid, Authorize, token) => {
     try {
       const response = await fetch("/api/tools/getsiteloc", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           tenant: tenantRef,
-          Authorize: cookieData?.salt,
-          token: cookieData?.token,
+          Authorize: Authorize,
+          token: token,
         },
         credentials: "include",
         body: JSON.stringify({
@@ -301,13 +301,15 @@ const Marker = ({
       if (signal) {
         setConnection(true);
 
-        fetchSite(tenantRef, locationid).then((data) => {
-          const siteData = data.siteloc["data"][0].site;
-          if (siteData) {
-            setParentName(siteData.name);
-            setParentCode(siteData.code);
+        fetchSite(tenantRef, locationid, saltCookie, tokenCookie).then(
+          (data) => {
+            const siteData = data.siteloc["data"][0].site;
+            if (siteData) {
+              setParentName(siteData.name);
+              setParentCode(siteData.code);
+            }
           }
-        });
+        );
 
         const dataVoltage = monitoring?.monitoring["data"].datavoltages[0];
         const dataGround = monitoring?.monitoring["data"].datagrounds[0];
