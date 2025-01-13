@@ -85,7 +85,7 @@ const Default = ({ id, key, alt, title, value, signalStatus }) => {
                       offset: 0,
                       font: {
                         color: "white",
-                        size: "12px",
+                        size: "10px",
                         fontWeight: "Normal",
                       },
                     }}
@@ -95,9 +95,9 @@ const Default = ({ id, key, alt, title, value, signalStatus }) => {
                     radius="100%"
                     majorTicks={{
                       interval: 1,
-                      color: "#00379e",
+                      color: "#fff",
                       height: 10,
-                      width: 3,
+                      width: 2,
                       position: "Inside",
                       offset: 0,
                     }}
@@ -107,7 +107,7 @@ const Default = ({ id, key, alt, title, value, signalStatus }) => {
                       height: 4,
                       width: 1,
                       position: "Inside",
-                      offset: 5,
+                      offset: 6,
                     }}
                     lineStyle={{
                       width: 0,
