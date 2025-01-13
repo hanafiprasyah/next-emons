@@ -38,7 +38,7 @@ export default function ScrollToTopButton() {
     <div
       className={`fixed bottom-8 right-8 ${
         showButton ? " opacity-100 translate-y-0" : " opacity-0 translate-y-24"
-      } transition duration-300 ease-in-out`}
+      } transition duration-300 ease-in-out z-50`}
     >
       <button
         aria-label="Scroll to top"
