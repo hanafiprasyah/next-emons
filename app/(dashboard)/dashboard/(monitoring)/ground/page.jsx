@@ -116,7 +116,7 @@ export default function Grounding() {
     const hasParams = param1.length !== 0 && param2.length !== 0;
 
     const clearParams = async () => {
-      await router.replace("/dashboard/voltage");
+      await router.replace("/dashboard/ground/");
     };
 
     setSignal(false);

@@ -120,7 +120,7 @@ export default function Current() {
     const hasParams = param1.length !== 0 && param2.length !== 0;
 
     const clearParams = async () => {
-      await router.replace("/dashboard/voltage");
+      await router.replace("/dashboard/current/");
     };
 
     setSignal(false);
