@@ -26,6 +26,11 @@ export default function Energy() {
   // local Value
   const [localTenant, setLocalTenant] = useState("");
 
+  // Handle show button after scroll
+  const [showButton, setShowButton] = useState(true);
+  const [showToast, setShowToast] = useState(true);
+  const [showExitButton, setShowExitButton] = useState(true);
+
   // Connection state
   const isOnline = useOnlineStatus();
   const [responseTime, setResponseTime] = useState(null);
@@ -130,6 +135,16 @@ export default function Energy() {
       return;
     } else {
       setSelectDevice({ code: null, name: null });
+    }
+  };
+
+  const handleScroll = () => {
+    if (window.scrollY > 20) {
+      setShowButton(false);
+      setShowExitButton(false);
+    } else {
+      setShowButton(true);
+      setShowExitButton(true);
     }
   };
   // End of Scripts
@@ -794,6 +809,14 @@ export default function Energy() {
     };
   }, [isOnline, responseTime]);
 
+  // TODO: Show/Hide Button based on scroll
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   // TODO: Set energy values based on valid data or fallback to last known values
   const energyValues = {
     kwh_r_input:
@@ -938,8 +961,15 @@ export default function Energy() {
       {/* End Alert */}
 
       {/* Page Heading */}
-      <div className="px-2 pb-2 md:px-1 sm:pb-4">
-        <div className="-ms-[5px] flex justify-between items-center gap-1 sm:gap-2">
+      {/* Show the dropdown */}
+      <div
+        className={`fixed transition duration-300 disabled:pointer-events-none ease-in-out z-50 px-2 pb-2 bottom-2 right-2 md:bottom-4 md:right-[26rem] md:left-[26rem] sm:pb-4 bg-cyan-900/90 rounded-lg ${
+          showButton
+            ? " opacity-100 translate-x-0"
+            : " opacity-0 translate-y-24"
+        }`}
+      >
+        <div className="-ms-[5px] pt-2 pb-0 pl-4 pr-4 flex justify-center items-center gap-2">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* Select Location */}
             <div className="relative inline-block">
@@ -1086,30 +1116,47 @@ export default function Energy() {
             </div>
             {/* End Select Device */}
           </div>
-          {/* Reset Button */}
-          <button
-            type="button"
-            disabled={selectedDevice.length === 0 ? true : false}
-            className="py-[7px] duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none  "
-            onClick={handleResetButton.bind(null)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="shrink-0 size-3.5 hidden md:block"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-              />
-            </svg>
-            Reset
-          </button>
-          {/* End Reset Button */}
+        </div>
+      </div>
+      {/* Reset Button */}
+      <button
+        type="button"
+        disabled={selectedDevice.length === 0 ? true : false}
+        className={`${
+          showExitButton
+            ? "opacity-100 translate-y-0 md:translate-x-0"
+            : "opacity-0 -translate-y-24 md:translate-x-96"
+        } fixed top-3.5 right-32 md:top-24 md:right-8 z-50 py-[7px] duration-200 ease-in-out transition px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none focus:outline-none`}
+        onClick={handleResetButton.bind(null)}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="shrink-0 size-3.5 hidden md:block"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+          />
+        </svg>
+        Reset
+      </button>
+      {/* End Reset Button */}
+      {/* Show the toast information about location and device */}
+      <div
+        className={`fixed transition duration-300 ease-in-out z-50 p-2 top-16 right-8 left-8 md:top-2.5 md:right-96 md:left-96 bg-emerald-900/90 rounded-lg flex items-center justify-center ${
+          showToast ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-24"
+        }`}
+      >
+        <div className="text-center">
+          <span className="text-xs">
+            Location: {selectedLocation.name ?? "Loading"}, Device:{" "}
+            {selectedDevice.name ?? "Loading"}
+          </span>
         </div>
       </div>
       {/* End Page Heading */}
@@ -1117,7 +1164,7 @@ export default function Energy() {
       {/* Energy card list */}
       <>
         {/* Energy KWH */}
-        <div className="flex flex-col mt-2 mb-4 bg-white border border-gray-200 md:mt-0 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="flex flex-col mt-0 mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
@@ -1312,7 +1359,7 @@ export default function Energy() {
         </div>
 
         {/* Energy KVARH */}
-        <div className="flex flex-col mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="flex flex-col mt-0 mb-2 bg-white border border-gray-200 rounded-xl dark:bg-neutral-800 dark:border-neutral-700">
           {/* Header */}
           <div className="grid grid-cols-3 p-3 md:pt-5 md:px-5 gap-x-2">
             <div>
