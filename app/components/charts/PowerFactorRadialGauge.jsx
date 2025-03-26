@@ -131,7 +131,7 @@ const Default = ({ id, key, alt, title, value, signalStatus }) => {
                         radius="74%"
                         // roundedCornerRadius={4}
                       ></RangeDirective>
-                      {/* Red */}
+                      {/* Green */}
                       <RangeDirective
                         color="#1bd155"
                         start={0.9}
