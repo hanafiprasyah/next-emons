@@ -30,7 +30,7 @@ const nextConfig = {
   // Optimize fonts for performance
   optimizeFonts: true,
   // Image opt on production, disable it on development mode
-  output: "standalone",
+  // output: "standalone",
   // Images
   images: {
     // Use modern formats for images
